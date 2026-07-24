@@ -60,6 +60,13 @@ export default function HistoricoNegociacao({ proposta, itemAtual, onRegistrarRo
           >
             Aceitar e fechar
           </button>
+          <button
+            type="button"
+            onClick={onRecusar}
+            className="rounded bg-ayamo-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Recusar proposta
+          </button>
         </div>
       )}
 

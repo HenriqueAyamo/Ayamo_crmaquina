@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
+import CampoNumerico from '../../components/CampoNumerico.jsx'
 
 export default function ModalRodada({ open, tipo, itemAtual, onClose, onConfirmar }) {
   const exigePreco = tipo === 'Contraproposta do cliente'
@@ -52,25 +53,10 @@ export default function ModalRodada({ open, tipo, itemAtual, onClose, onConfirma
         {exigePreco && (
           <div className="grid grid-cols-2 gap-3">
             <Field label={`Preço (${itemAtual.precoVenda.moeda})`} required>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className={inputClass}
-                required
-                value={preco}
-                onChange={(e) => setPreco(e.target.value)}
-              />
+              <CampoNumerico required value={preco} onChange={setPreco} />
             </Field>
             <Field label="Quantidade" required>
-              <input
-                type="number"
-                min="0"
-                className={inputClass}
-                required
-                value={quantidade}
-                onChange={(e) => setQuantidade(e.target.value)}
-              />
+              <CampoNumerico required value={quantidade} onChange={setQuantidade} />
             </Field>
           </div>
         )}

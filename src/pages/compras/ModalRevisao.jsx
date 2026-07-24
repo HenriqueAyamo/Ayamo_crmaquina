@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
+import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { MOEDAS } from '../../data/unidades.js'
 
 export default function ModalRevisao({ open, onClose, atual }) {
@@ -64,7 +65,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
       <form id="revisao-form" onSubmit={salvar} className="flex flex-col gap-4">
         <div className="grid grid-cols-3 gap-3">
           <Field label="Novo preço" required>
-            <input type="number" min="0" step="0.01" className={inputClass} required value={valor} onChange={(e) => setValor(e.target.value)} />
+            <CampoNumerico required value={valor} onChange={setValor} />
           </Field>
           <Field label="Moeda" required>
             <select className={inputClass} value={moeda} onChange={(e) => setMoeda(e.target.value)}>
@@ -76,14 +77,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
             </select>
           </Field>
           <Field label="Quantidade" required>
-            <input
-              type="number"
-              min="0"
-              className={inputClass}
-              required
-              value={quantidade}
-              onChange={(e) => setQuantidade(e.target.value)}
-            />
+            <CampoNumerico required value={quantidade} onChange={setQuantidade} />
           </Field>
         </div>
         <Field label="Status da revisão" required>

@@ -22,7 +22,7 @@ const TONE_STATUS = {
 export default function VendasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { propostas, getEmpresa, getUsuario, getProduto, calcularResumoProposta } = useData()
+  const { propostas, getEmpresa, getUsuario, getProduto, calcularResumoProposta, ajustarEstoqueOferta } = useData()
 
   const [perfil, setPerfil] = useState('Vendedor')
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false)
@@ -62,6 +62,11 @@ export default function VendasDetalhe() {
       'Escalar para comprador': 'Em negociação',
       'Solicitar aprovação do diretor': 'Aguardando aprovação',
       'Aceite e fechamento': 'Aceita',
+      'Recusar proposta': 'Recusada',
+    }
+
+    if (tipo === 'Recusar proposta') {
+      ajustarEstoqueOferta(itemPrincipal.ofertaCodigo, itemPrincipal.quantidade)
     }
 
     propostas.editar(proposta.id, {
@@ -74,6 +79,10 @@ export default function VendasDetalhe() {
   function handleAceitarFechar() {
     registrarRodada('Aceite e fechamento', { observacao: 'Proposta aceita e fechada.' })
     setModalFechamentoAberto(true)
+  }
+
+  function handleRecusar() {
+    registrarRodada('Recusar proposta', { observacao: 'Proposta recusada pelo cliente.' })
   }
 
   const nota = obterNotaCambio(itemPrincipal.precoCusto, itemPrincipal.precoVenda)
@@ -180,6 +189,7 @@ export default function VendasDetalhe() {
         itemAtual={itemPrincipal}
         onRegistrarRodada={registrarRodada}
         onAceitarFechar={handleAceitarFechar}
+        onRecusar={handleRecusar}
       />
 
       <ModalFechamento

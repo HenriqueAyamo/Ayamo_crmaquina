@@ -11,7 +11,7 @@ export const ofertas = [
     unidade: 'ton',
     status: 'Disponível',
     data: '2026-06-02',
-    usuarioId: 5,
+    usuarioId: 3,
     observacao: 'Oferta padrão do mês.',
   },
 ]
