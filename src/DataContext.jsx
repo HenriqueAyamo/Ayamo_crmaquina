@@ -11,6 +11,7 @@ import { propostas as propostasMock } from './data/propostas.js'
 import { documentos as documentosMock } from './data/documentos.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
+import { formatarPreco } from './utils/formato.js'
 
 const DataContext = createContext(null)
 
@@ -161,7 +162,7 @@ export function DataProvider({ children }) {
           autor: 'Comprador',
           tipo: 'Novo preço registrado com o fornecedor',
           data: new Date().toISOString().slice(0, 10),
-          observacao: dados.observacao || `Preço atualizado para ${dados.valor} ${dados.moeda}/${ofertaAtual.unidade}.`,
+          observacao: dados.observacao || `Preço atualizado para ${formatarPreco(dados.valor, dados.moeda, ofertaAtual.unidade)}.`,
         },
       ],
     })
