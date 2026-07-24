@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ayamo-primary:   #1F3864;
+  --ayamo-accent:    #B08D57;
+  --ayamo-bg:        #F7F8FA;
+  --ayamo-surface:   #FFFFFF;
+  --ayamo-border:    #E2E5EA;
+  --ayamo-text:      #1A1D22;
+  --ayamo-text-mut:  #6B7280;
+  --ayamo-success:   #16794C;
+  --ayamo-warning:   #B45309;
+  --ayamo-danger:    #B42318;
+}
+
+body {
+  background-color: var(--ayamo-bg);
+  color: var(--ayamo-text);
+}
