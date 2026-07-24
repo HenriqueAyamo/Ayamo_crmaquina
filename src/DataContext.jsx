@@ -8,6 +8,7 @@ import { empresas as empresasMock } from './data/empresas.js'
 import { contatos as contatosMock } from './data/contatos.js'
 import { ofertas as ofertasMock } from './data/ofertas.js'
 import { propostas as propostasMock } from './data/propostas.js'
+import { documentos as documentosMock } from './data/documentos.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
 
@@ -81,7 +82,7 @@ export function DataProvider({ children }) {
   const contatos = useCollection('contatos', contatosMock)
   const ofertas = useCollection('ofertas', ofertasMock)
   const propostas = useCollection('propostas', propostasMock)
-  const documentos = useCollection('documentos', [])
+  const documentos = useCollection('documentos', documentosMock)
 
   const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
     const salvo = carregarStorage('usuarioLogadoId', null)

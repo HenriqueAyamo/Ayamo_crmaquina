@@ -1,1 +1,14 @@
-export const produtos = []
+export const produtos = [
+  { id: 1, nome: 'Frozen Chicken Leg Quarters', apelido: 'CLQ', familiaId: 1, situacao: 'Ativo' },
+  { id: 2, nome: 'Frozen Chicken Meat Mechanically Separated', apelido: 'Chicken MDM', familiaId: 1, situacao: 'Ativo' },
+  { id: 3, nome: 'Frozen Pork Boneless Meat - Shoulder', apelido: 'Pork Shoulder Boneless Skinless', familiaId: 2, situacao: 'Ativo' },
+  { id: 4, nome: 'Frozen Pork Boneless Meat - Leg', apelido: 'Pork Leg Boneless Skinless', familiaId: 2, situacao: 'Ativo' },
+  { id: 5, nome: 'Frozen Yellow Croaker Whole Round 250-500g', apelido: 'Yellow Croaker WR 250-500g', familiaId: 3, situacao: 'Ativo' },
+  { id: 6, nome: 'Frozen Tilapia Gutted & Scaled 750-950g', apelido: 'Tilapia G&S 750-950g', familiaId: 3, situacao: 'Ativo' },
+  { id: 7, nome: 'Fresh Black Tilapia Whole Round 800g up', apelido: 'Fresh Black Tilapia WR 800g up', familiaId: 4, situacao: 'Ativo' },
+  { id: 8, nome: 'Fresh Tilapia Fillets Deep Skinned 5-7oz', apelido: 'Tilapia Fillets 5-7oz', familiaId: 4, situacao: 'Ativo' },
+  { id: 9, nome: 'Fish Meal 60% Protein', apelido: 'Fish Meal 60%', familiaId: 5, situacao: 'Ativo' },
+  { id: 10, nome: 'Fish Meal 55% Protein', apelido: 'Fish Meal 55%', familiaId: 5, situacao: 'Ativo' },
+  { id: 11, nome: 'Refined Fish Oil DRFO28', apelido: 'Fish Oil DRFO28', familiaId: 6, situacao: 'Ativo' },
+  { id: 12, nome: 'Fish Oil min 20% EPA/DHA', apelido: 'Fish Oil 20% EPA/DHA', familiaId: 6, situacao: 'Ativo' },
+]

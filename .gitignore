@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Planilhas com dados reais da empresa (nunca commitar em repo publico)
+*.xls
+*.xlsx
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -1,0 +1,26 @@
+export const documentos = [
+  {
+    id: 1,
+    tipo: 'PO',
+    numero: 'PO-2000',
+    propostaId: 1,
+    propostaNumero: 'PROP-1001',
+    clienteNome: 'The Purefoods',
+    valor: 660000,
+    moeda: 'USD',
+    data: '2026-06-05',
+    statusEnvio: 'Enviado',
+  },
+  {
+    id: 2,
+    tipo: 'Proforma Invoice',
+    numero: 'PI-3000',
+    propostaId: 1,
+    propostaNumero: 'PROP-1001',
+    clienteNome: 'The Purefoods',
+    valor: 660000,
+    moeda: 'USD',
+    data: '2026-06-05',
+    statusEnvio: 'Enviado',
+  },
+]
