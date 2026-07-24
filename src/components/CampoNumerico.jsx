@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { inputClass } from './Field.jsx'
 
 function separadorDecimal(locale) {
@@ -38,7 +38,7 @@ export default function CampoNumerico({ value, onChange, locale = 'pt-BR', requi
     setTexto(formatar(value, locale))
   }, [value, locale, editando])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (cursorPendente.current != null && inputRef.current) {
       inputRef.current.setSelectionRange(cursorPendente.current, cursorPendente.current)
       cursorPendente.current = null
