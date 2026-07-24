@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --ayamo-primary:   #1F3864;
-  --ayamo-accent:    #B08D57;
+  --ayamo-primary:   #255ab6;
+  --ayamo-accent:    #e2cc4d;
   --ayamo-bg:        #F7F8FA;
   --ayamo-surface:   #FFFFFF;
   --ayamo-border:    #E2E5EA;
