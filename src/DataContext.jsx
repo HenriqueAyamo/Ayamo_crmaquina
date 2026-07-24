@@ -8,7 +8,8 @@ import { empresas as empresasMock } from './data/empresas.js'
 import { contatos as contatosMock } from './data/contatos.js'
 import { ofertas as ofertasMock } from './data/ofertas.js'
 import { propostas as propostasMock } from './data/propostas.js'
-import { calcularMargem } from './data/cambio.js'
+import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
+import { calcularPendencias } from './utils/pendencias.js'
 
 const DataContext = createContext(null)
 
@@ -110,101 +111,80 @@ export function DataProvider({ children }) {
     ofertas.editar(oferta.id, { quantidade: novaQuantidade, status: novoStatus })
   }
 
-  function calcularResumoProposta(proposta) {
-    let custoUSD = 0
-    let vendaUSD = 0
-
-    proposta.itens.forEach((item) => {
-      const m = calcularMargem(
-        { valor: item.precoCusto.valor, moeda: item.precoCusto.moeda },
-        { valor: item.precoVenda.valor, moeda: item.precoVenda.moeda },
-      )
-      custoUSD += m.custoUSD * item.quantidade
-      vendaUSD += m.vendaUSD * item.quantidade
+  function registrarRevisaoOferta(ofertaAtual, dados) {
+    const novaOferta = ofertas.criar({
+      codigo: `${ofertaAtual.codigoBase}-R${ofertaAtual.versao + 1}`,
+      codigoBase: ofertaAtual.codigoBase,
+      versao: ofertaAtual.versao + 1,
+      produtoId: ofertaAtual.produtoId,
+      fornecedorId: ofertaAtual.fornecedorId,
+      precoCusto: { valor: dados.valor, moeda: dados.moeda, unidade: ofertaAtual.unidade },
+      quantidade: dados.quantidade,
+      unidade: ofertaAtual.unidade,
+      status: dados.status,
+      data: new Date().toISOString().slice(0, 10),
+      usuarioId: usuarioLogado.id,
+      observacao: dados.observacao,
     })
 
-    const margemUSD = vendaUSD - custoUSD
-    const margemPercentual = custoUSD !== 0 ? (margemUSD / custoUSD) * 100 : 0
-
-    return { custoUSD, vendaUSD, margemUSD, margemPercentual }
-  }
-
-  function getPendencias(usuario) {
-    if (!usuario) return []
-    const pendencias = []
-
-    if (usuario.perfil === 'Vendedor') {
-      propostas.items
-        .filter((p) => p.vendedorId === usuario.id)
-        .forEach((p) => {
-          const ultima = p.historicoNegociacao[p.historicoNegociacao.length - 1]
-          const precisaAgir = p.status === 'Rascunho' || (p.status === 'Em negociação' && ultima?.autor === 'Cliente')
-          if (!precisaAgir) return
-          pendencias.push({
-            tipo: 'proposta',
-            id: p.numero,
-            titulo: p.numero,
-            descricao:
-              p.status === 'Rascunho'
-                ? 'Rascunho aguardando envio ao cliente'
-                : `Cliente enviou contraproposta — ${getEmpresa(p.clienteId)?.nome ?? ''}`,
-            data: ultima?.data ?? p.dataEnvio,
-          })
-        })
-    }
-
-    if (usuario.perfil === 'Comprador') {
-      const divisoesResp = usuario.responsabilidades.map((r) => r.divisaoId)
-
-      propostas.items.forEach((p) => {
-        const ultima = p.historicoNegociacao[p.historicoNegociacao.length - 1]
-        if (ultima?.tipo !== 'Escalar para comprador') return
-        const divisaoItem = getDivisaoIdDeProduto(p.itens[0].produtoId)
-        if (!divisoesResp.includes(divisaoItem)) return
-        pendencias.push({
-          tipo: 'proposta',
-          id: p.numero,
-          titulo: p.numero,
-          descricao: `Escalada pelo vendedor ${getUsuario(p.vendedorId)?.nome ?? ''}`,
-          data: ultima.data,
+    // Qualquer proposta de venda ainda aberta que dependa deste código de oferta
+    // recebe o novo custo automaticamente e volta para o vendedor decidir (margem recalculada).
+    propostas.items
+      .filter(
+        (p) =>
+          !['Aceita', 'Recusada', 'Expirada'].includes(p.status) &&
+          p.itens.some((item) => item.ofertaCodigo === ofertaAtual.codigo),
+      )
+      .forEach((p) => {
+        const novosItens = p.itens.map((item) =>
+          item.ofertaCodigo === ofertaAtual.codigo
+            ? { ...item, ofertaCodigo: novaOferta.codigo, precoCusto: { ...novaOferta.precoCusto } }
+            : item,
+        )
+        propostas.editar(p.id, {
+          status: 'Em negociação',
+          itens: novosItens,
+          historicoNegociacao: [
+            ...p.historicoNegociacao,
+            {
+              rodada: p.historicoNegociacao.length + 1,
+              autor: 'Comprador',
+              tipo: 'Novo custo do fornecedor',
+              preco: { ...novaOferta.precoCusto },
+              quantidade: novosItens[0].quantidade,
+              data: novaOferta.data,
+              observacao: `Custo atualizado (${novaOferta.codigo}). Margem recalculada — aguardando decisão do vendedor.`,
+            },
+          ],
         })
       })
 
-      ofertas.items
-        .filter((o) => o.usuarioId === usuario.id && o.status === 'Em revisão')
-        .forEach((o) => {
-          pendencias.push({
-            tipo: 'oferta',
-            id: o.codigoBase,
-            titulo: o.codigo,
-            descricao: `Oferta em revisão — ${getProduto(o.produtoId)?.nome ?? ''}`,
-            data: o.data,
-          })
-        })
-    }
+    return novaOferta
+  }
 
-    if (usuario.perfil === 'Diretor') {
-      propostas.items
-        .filter((p) => p.status === 'Aguardando aprovação')
-        .forEach((p) => {
-          const vendedor = getUsuario(p.vendedorId)
-          const divisaoItem = getDivisaoIdDeProduto(p.itens[0].produtoId)
-          const souEuOAprovador = vendedor?.responsabilidades.some(
-            (r) => r.divisaoId === divisaoItem && r.diretorId === usuario.id,
-          )
-          if (!souEuOAprovador) return
-          const ultima = p.historicoNegociacao[p.historicoNegociacao.length - 1]
-          pendencias.push({
-            tipo: 'proposta',
-            id: p.numero,
-            titulo: p.numero,
-            descricao: `Aprovação de margem solicitada por ${vendedor?.nome ?? ''}`,
-            data: ultima?.data ?? p.dataEnvio,
-          })
-        })
+  function verificarLimiteCredito(clienteId, valorNegocioUSD) {
+    const empresa = getEmpresa(clienteId)
+    if (!empresa) return { bloqueado: true, motivo: 'Cliente não encontrado.' }
+    if (!empresa.limiteCredito || empresa.limiteCredito <= 0) {
+      return { bloqueado: true, motivo: 'Cliente sem limite de crédito cadastrado — fechamento bloqueado pelo Financeiro.' }
     }
+    const limiteUSD = converterParaUSD(empresa.limiteCredito, empresa.moedaPadrao)
+    const utilizadoUSD = converterParaUSD(empresa.creditoUtilizado, empresa.moedaPadrao)
+    if (utilizadoUSD + valorNegocioUSD > limiteUSD) {
+      return { bloqueado: true, motivo: 'Fechamento excede o limite de crédito disponível do cliente — bloqueado pelo Financeiro.' }
+    }
+    return { bloqueado: false }
+  }
 
-    return pendencias.sort((a, b) => (a.data < b.data ? 1 : -1))
+  function registrarUsoCreditoCliente(clienteId, valorNegocioUSD) {
+    const empresa = getEmpresa(clienteId)
+    if (!empresa) return
+    const acrescimo = converterDeUSD(valorNegocioUSD, empresa.moedaPadrao)
+    empresas.editar(empresa.id, { creditoUtilizado: empresa.creditoUtilizado + acrescimo })
+  }
+
+  function getPendencias(usuario) {
+    return calcularPendencias(usuario, { ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto })
   }
 
   const value = {
@@ -229,6 +209,9 @@ export function DataProvider({ children }) {
     calcularResumoProposta,
     getPendencias,
     ajustarEstoqueOferta,
+    registrarRevisaoOferta,
+    verificarLimiteCredito,
+    registrarUsoCreditoCliente,
   }
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

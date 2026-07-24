@@ -24,6 +24,23 @@ export function converterParaUSD(valor, moeda) {
   }
 }
 
+export function converterDeUSD(valorUSD, moeda) {
+  switch (moeda) {
+    case 'USD':
+      return valorUSD
+    case 'BRL':
+      return valorUSD * TAXAS_CAMBIO.USD_BRL
+    case 'EUR':
+      return valorUSD / TAXAS_CAMBIO.EUR_USD
+    case 'GBP':
+      return valorUSD / TAXAS_CAMBIO.GBP_USD
+    case 'CNY':
+      return valorUSD / TAXAS_CAMBIO.CNY_USD
+    default:
+      throw new Error(`Moeda desconhecida: ${moeda}`)
+  }
+}
+
 export function calcularMargem(itemCompra, itemVenda) {
   const custoUSD = converterParaUSD(itemCompra.valor, itemCompra.moeda)
   const vendaUSD = converterParaUSD(itemVenda.valor, itemVenda.moeda)
@@ -37,6 +54,25 @@ export function calcularMargem(itemCompra, itemVenda) {
     margemPercentual,
     moedasDiferentes: itemCompra.moeda !== itemVenda.moeda,
   }
+}
+
+export function calcularResumoProposta(proposta) {
+  let custoUSD = 0
+  let vendaUSD = 0
+
+  proposta.itens.forEach((item) => {
+    const m = calcularMargem(
+      { valor: item.precoCusto.valor, moeda: item.precoCusto.moeda },
+      { valor: item.precoVenda.valor, moeda: item.precoVenda.moeda },
+    )
+    custoUSD += m.custoUSD * item.quantidade
+    vendaUSD += m.vendaUSD * item.quantidade
+  })
+
+  const margemUSD = vendaUSD - custoUSD
+  const margemPercentual = custoUSD !== 0 ? (margemUSD / custoUSD) * 100 : 0
+
+  return { custoUSD, vendaUSD, margemUSD, margemPercentual }
 }
 
 const NOMES_TAXA = {

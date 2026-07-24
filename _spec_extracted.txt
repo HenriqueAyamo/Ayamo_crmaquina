@@ -1,0 +1,274 @@
+AYAMO GLOBAL FOODS
+Especificação Funcional
+CRM "Máquina de Vendas"
+Versão 0.1 — Documento de trabalho
+Data: 24 de julho de 2026
+Responsável: Controladoria — Ayamo Global Foods
+
+Sumário
+1. Visão Geral e Objetivo
+2. Módulo de Compras
+3. Módulo de Vendas
+4. Cadastros (Contato, Empresa, Produto, Responsáveis, Unidades e Moedas)
+5. Integração WhatsApp
+6. Importação e IA
+7. Filtros e Listas
+8. Log / Histórico e Controle de Acesso
+9. Financeiro
+10. Documentos (PO e Proforma Invoice)
+11. Fluxo de Contraproposta (Compra ↔ Venda)
+12. Envio de Documentos por E-mail
+13. Regras Já Definidas (Resumo)
+14. Pontos em Aberto — Perguntas para Definição
+15. Modelo de Dados Preliminar (Entidades)
+16. Próximos Passos
+
+1. Visão Geral e Objetivo
+Este documento formaliza a especificação funcional do CRM "Máquina de Vendas", sistema interno da Ayamo Global Foods para gestão do ciclo completo de compra e venda de produtos (proteína animal, seafood, etc.), desde o recebimento da oferta do fornecedor até o fechamento da venda com o cliente e a emissão dos documentos formais (Purchase Order e Proforma Invoice).
+O núcleo do sistema é o fluxo de negociação: uma oferta de compra gera uma proposta de venda; o cliente pode contestar preço e/ou quantidade; essa contraproposta pode escalar de volta ao comprador para uma nova rodada de negociação com o fornecedor. Todo o histórico de rodadas é preservado, e os valores só são travados no fechamento.
+O documento está organizado em módulos funcionais (seções 2 a 12), um resumo das regras já definidas (seção 13), os pontos que ainda precisam de decisão (seção 14), um modelo de dados preliminar (seção 15) e os próximos passos (seção 16).
+2. Módulo de Compras
+Fluxo de entrada de ofertas de fornecedores no sistema.
+O comprador recebe a imagem de uma oferta de um fornecedor (geralmente por WhatsApp).
+A imagem é processada por IA, que gera uma planilha estruturada com produto, unidade, preço e quantidade.
+Cada oferta recebe um código de identificação único (ex.: OF-0234).
+O preço registrado nesta etapa é sempre o preço de custo — o valor pago pela Ayamo ao fornecedor.
+Uma contraproposta do cliente pode levar o comprador a reabrir a negociação com o fornecedor por um novo preço de custo (fluxo detalhado na seção 11).
+3. Módulo de Vendas
+Fluxo de montagem e envio de propostas comerciais.
+3.1 Montagem da proposta
+O vendedor visualiza as ofertas lançadas pelos compradores: produto, unidade de medida, preço, quantidade disponível.
+Pode pesquisar e filtrar por produto específico.
+Monta uma lista de produtos (proposta), escolhendo quanto ofertar de cada item.
+Envia a lista aos clientes escolhidos.
+O preço registrado nesta etapa é o preço de venda.
+3.2 Resposta do cliente
+O vendedor seleciona, oferta a oferta, quanto o cliente quer de cada produto.
+Registra o preço acordado, que pode divergir do valor inicial via negociação (seção 11).
+4. Cadastros
+4.1 Contato (pessoa do cliente)
+Contato é a pessoa que trabalha na empresa cliente ou fornecedora. O cadastro de contatos é feito dentro do registro da empresa — não existe criação de contato avulso, já que todo contato pertence obrigatoriamente a uma empresa. Uma tela de consulta consolidada permite buscar contatos de todas as empresas ao mesmo tempo, mas apenas para localização e leitura.
+Campo
+Descrição
+Nome
+Nome completo do contato.
+Cargo
+Função do contato dentro da empresa.
+Telefone
+Usado para disparo via WhatsApp.
+E-mail
+Usado para envio de documentos (PO / Proforma Invoice).
+Categoria
+Multisseleção a partir da tabela de categorias de contato (seção 4.3). Define quem recebe disparos em massa e quem é citado nominalmente nos e-mails.
+Empresa vinculada
+Empresa à qual o contato pertence — obrigatório.
+4.2 Empresa
+Campo
+Descrição
+Dados básicos
+Razão social, dados cadastrais gerais.
+Contatos vinculados
+Múltiplos contatos, cada um com sua(s) categoria(s).
+Responsável Ayamo
+Colaborador da Ayamo responsável pela conta (necessário cadastro próprio de responsáveis).
+Nome duplicado
+Podem existir empresas com nomes repetidos; a diferenciação entre elas é feita pelo nome completo/razão social cadastrada.
+4.3 Produto, Família e Divisão
+A classificação de produtos é hierárquica em três níveis, e cada nível é uma tabela cadastrável pelo próprio usuário — não uma lista fixa definida no sistema. Cadastrar uma nova divisão, família ou categoria não pode exigir intervenção de TI.
+Campo
+Descrição
+Divisão
+Nível mais alto da classificação. Campos: nome, situação. Ex.: Seafood, Meat, Animal Nutrition.
+Família
+Subgrupo, sempre vinculado a uma divisão. Campos: nome, divisão, situação. Ex.: Chicken leg e Frozen chicken pertencem a Meat; Shrimp pertence a Seafood.
+Produto
+Campos: nome, apelido, família, situação. A divisão é derivada automaticamente da família, não digitada. Ex.: chicken leg quarter, apelido CLQ.
+Categoria de contato
+Tabela cadastrável usada na classificação dos contatos. Ex.: Comercial, TI, Controladoria, Financeiro, Logística. A categoria Comercial tem tratamento especial: define quem recebe o disparo de WhatsApp e quem é citado nominalmente nos e-mails.
+Todos os seletores e filtros do sistema — em compras, vendas, relatórios e cadastros — devem ler dessas tabelas. Um item cadastrado passa a estar disponível imediatamente em todas as telas.
+4.4 Usuários Ayamo e Hierarquia de Aprovação
+Conceito distinto de contato: usuário é o colaborador da Ayamo que faz login e opera o sistema. Enquanto o contato pertence a uma empresa externa, o usuário pertence à Ayamo e possui perfil de acesso.
+Campo
+Descrição
+Nome e e-mail
+Identificação e credencial de acesso.
+Perfil
+Comprador, Vendedor, Diretor, Financeiro, Controladoria ou Administrador. Define o que o usuário enxerga — comprador acessa dados de compra, vendedor acessa dados de venda.
+Responsabilidades
+Lista de combinações divisão + diretor aprovador. Um mesmo vendedor pode ter várias linhas: atuar em Seafood respondendo ao diretor A e em Meat respondendo ao diretor B.
+Situação
+Ativo ou inativo.
+A tabela de responsabilidades é o que o sistema consulta quando uma proposta cai abaixo da margem mínima e precisa determinar a quem escalar a aprovação. Sem ela, o fluxo da seção 11 não tem destinatário definido.
+4.5 Unidades de Medida e Moedas
+Todo valor registrado no sistema — tanto em ofertas de compra quanto em propostas de venda — é composto por três informações inseparáveis: o número, a moeda e a unidade de medida. O sistema deve suportar todas as combinações abaixo, e nenhum preço pode ser gravado sem que moeda e unidade estejam definidas.
+Campo
+Descrição
+Moedas
+BRL (R$ — real), USD (US$ — dólar americano), EUR (€ — euro), GBP (£ — libra esterlina), além de outras que venham a ser necessárias conforme o mercado de destino.
+Unidades de peso
+kg (quilograma), g (grama), ton (tonelada métrica), lb (libra/pound).
+Unidades de embalagem
+caixa, pallet, container, unidade.
+Formato do preço
+Sempre expresso como moeda por unidade — por exemplo, USD/ton, BRL/kg, EUR/lb. Nunca apenas o número.
+Exibição
+O valor deve aparecer na tela sempre acompanhado da moeda e da unidade, com formatação numérica adequada à moeda (ex.: R$ 1.180,00 e US$ 1,180.00).
+Consequência para o cálculo de margem: quando a compra e a venda ocorrem em moedas ou unidades diferentes, a margem só pode ser calculada após conversão para uma base comum. As regras de câmbio e de conversão de unidades estão listadas como pontos em aberto nº 14, 15 e 16.
+5. Integração WhatsApp
+Botão de disparo em massa dentro do módulo de vendas.
+O bot identifica, dentro da empresa cliente, os contatos da categoria "comercial" e envia apenas a eles — se houver mais de um contato nessa categoria, todos recebem.
+Intervalo randômico entre mensagens (3–9 segundos) para reduzir o risco de bloqueio por spam pela Meta.
+Ponto em aberto: definir se o envio será via API oficial (Meta Business) ou automação (RPA) sobre um número comum — ver ponto nº 7.
+6. Importação e IA
+Importação manual de planilha com dados de oferta — passa pela IA para padronização e importação dos dados.
+A IA também preenche automaticamente os campos da oferta a partir da imagem enviada pelo fornecedor.
+7. Filtros e Listas
+Filtros por produto, família, divisão, faixa de preço, quantidade disponível, fornecedor, entre outros a detalhar.
+Criação de listas de venda personalizadas por vendedor.
+Envio segmentado para N clientes.
+8. Log / Histórico e Controle de Acesso
+Toda proposta mantém histórico completo: criador, alterações de preço, negociações e contrapropostas, data de envio, destinatários e status de resposta.
+Acesso ao sistema via login individual.
+Permissões: comprador visualiza apenas dados de compra (preço de custo); vendedor visualiza apenas dados de venda (preço de venda) — regra já definida.
+9. Financeiro
+Preenchimento e controle de limite de crédito por empresa/cliente.
+Regra já definida: o Financeiro define o limite; o sistema bloqueia a venda automaticamente se o cliente estourar o limite ou não tiver limite cadastrado.
+10. Documentos (Contratos e PDFs)
+Compra: o comprador gera um Purchase Order (PO) em PDF.
+Venda: o vendedor gera uma Proforma Invoice em PDF.
+Os PDFs são preenchidos automaticamente com variáveis do sistema — falta definir um template com um exemplo de cada documento (ponto nº 9).
+Assinatura: inserção de imagem digitalizada da assinatura, sem uso de certificado digital.
+11. Fluxo de Contraproposta (Compra ↔ Venda)
+Cenário: o cliente responde à proposta de venda pedindo um preço e/ou quantidade diferente do ofertado inicialmente.
+Passo 1 — Cliente contesta
+O vendedor registra a contraproposta dentro da própria proposta de venda: preço pedido, quantidade pedida (pode vir junto), data/hora e observação livre. Isso gera um novo item de negociação vinculado à proposta original — não sobrescreve o valor inicial, apenas adiciona uma nova versão, preservando o histórico completo de todas as rodadas.
+Passo 2 — Vendedor avalia
+O sistema mostra a margem atual (preço de venda atual − preço de custo) e calcula a margem resultante caso o preço pedido pelo cliente seja aceito. Duas situações:
+Margem ainda dentro da faixa mínima configurável → o vendedor aceita diretamente, sem envolver o comprador (regra de faixa mínima a definir — ponto nº 2).
+Margem abaixo do mínimo → o vendedor precisa de um novo preço de custo e escala para o comprador; pode também solicitar aprovação direta do diretor responsável pelo setor do produto.
+Passo 3 — Escalonamento para o comprador
+O sistema cria uma solicitação de revisão de preço vinculada à oferta de compra original (código de identificação), ao produto específico e à proposta de venda que originou o pedido. O comprador vê, em fila própria: produto, quantidade solicitada, preço de custo atual, preço que o cliente topa pagar e margem mínima necessária.
+Passo 4 — Comprador renegocia com o fornecedor
+Ocorre fora do sistema (WhatsApp, e-mail, ligação) ou reenviando uma nova imagem de oferta pelo fluxo de IA. O comprador registra o novo preço de custo como uma nova versão da oferta, mantendo o código original mais um número de revisão (ex.: OF-0234-R1), preservando o histórico da negociação com o fornecedor.
+Passo 5 — Retorno ao vendedor
+O vendedor é notificado do novo preço de custo. O sistema recalcula a margem com o novo custo em relação ao preço pedido pelo cliente. O vendedor decide entre: aceitar o preço do cliente com a nova margem (fecha e gera a Proforma Invoice); contrapropor novamente com um preço intermediário (nova rodada); ou recusar, encerrando a proposta.
+Passo 6 — Fechamento
+Ao aceitar, por qualquer lado, o sistema trava os valores finais (custo, venda, quantidade) na proposta e gera automaticamente o PO (com o custo final, enviado ao fornecedor) e a Proforma Invoice (com a venda final, enviada ao cliente). Todo o histórico de rodadas — quantas contrapropostas, quem pediu o quê e quando — fica registrado e consultável na proposta.
+12. Envio de Documentos por E-mail
+PO (compra): enviado ao fornecedor.
+Proforma Invoice (venda): enviada a todos os contatos cadastrados da empresa cliente, mas o corpo do e-mail cita nominalmente apenas os contatos da categoria comercial (ex.: "Fulano, X and Y").
+Corpo do e-mail: texto básico + informações de venda (quantity, brand, incoterm, shipment — lista de campos a fechar, ponto nº 8).
+13. Regras Já Definidas (Resumo)
+Decisões que já constam no levantamento original e não exigem nova validação:
+Permissões: comprador só vê dados de compra; vendedor só vê dados de venda.
+Vínculo entre oferta de compra e lista de venda: não é 1:1 — o vendedor pode misturar produtos de ofertas e fornecedores diferentes numa mesma lista.
+Limite de crédito: controlado pelo Financeiro, com bloqueio automático de venda em caso de estouro de limite ou ausência de limite cadastrado.
+Existe uma margem mínima que precisa de aprovação de um dos diretores quando não é atingida.
+É necessário cadastro de líderes de setor, já que um mesmo vendedor pode responder a diretores diferentes conforme o produto/departamento.
+14. Pontos em Aberto — Perguntas para Definição
+A tabela abaixo reúne todas as questões levantadas no documento original que ainda precisam de uma decisão formal antes do início do desenvolvimento, além das já resolvidas (marcadas como "Definido", incluídas aqui para referência única).
+Nº
+Tema
+Descrição / impacto
+Decisão
+1
+Limite de rodadas de negociação
+Existe um número máximo de contrapropostas (cliente ↔ vendedor ↔ comprador ↔ fornecedor) antes de escalar automaticamente para um gestor/diretor?
+Em aberto
+2
+Margem mínima: fixa ou configurável
+A margem mínima é um valor único do sistema, ou configurável por produto, família, divisão ou cliente? Já há indicação de que precisa de aprovação de diretor quando abaixo do mínimo — falta definir onde esse valor é parametrizado.
+Em aberto
+3
+Escopo da atualização de custo
+Quando o comprador atualiza o preço de custo numa renegociação (seção 9.5), isso vale só para aquela negociação específica, ou atualiza também a oferta "padrão" (OF-XXXX) para vendas futuras?
+Em aberto
+4
+Concorrência entre ofertas e listas
+Se dois vendedores usam a mesma oferta de compra em listas diferentes e uma negociação gera uma revisão de preço (R1), o que acontece com a lista do outro vendedor que referenciava a versão anterior?
+Em aberto
+5
+Controle de quantidade / overselling
+A quantidade disponível de uma oferta é decrementada conforme é vendida? Se sim, como evitar que dois vendedores fechem, ao mesmo tempo, mais do que a quantidade disponível?
+Em aberto
+6
+Status possíveis de uma proposta
+Definir a lista final de status (ex.: enviada, em negociação, aceita, recusada, expirada) e as transições permitidas entre eles.
+Em aberto
+7
+WhatsApp: API oficial vs. RPA
+Já indicado como RPA (automação via número comum) em vez da API oficial (Meta Business). Confirmar se esse é o caminho definitivo, considerando o risco de bloqueio por spam mesmo com o intervalo randômico (3–9s) e a ausência de SLA de entrega.
+Em aberto
+8
+Campos de "sales information" no e-mail
+Além de quantity, brand, incoterm e shipment, quais outros campos devem compor o corpo do e-mail da Proforma Invoice?
+Em aberto
+9
+Layout de PO e Proforma Invoice
+Levantar exemplos reais em uso hoje para servirem de template (campos, ordem, identidade visual, numeração).
+Em aberto
+10
+Cadastro de líderes por setor / hierarquia de aprovação
+Um mesmo vendedor pode atender mais de um setor (ex.: seafood e meat) respondendo a diretores diferentes conforme o produto. É necessário modelar a aprovação por combinação pessoa + família/divisão, não apenas por pessoa.
+Em aberto
+11
+Vínculo oferta de compra ↔ lista de venda
+Já definido: o vendedor pode misturar produtos de ofertas e fornecedores diferentes numa mesma lista (não é vínculo 1:1).
+Definido
+12
+Permissão de visualização de preços
+Já definido: comprador vê apenas dados de compra; vendedor vê apenas dados de venda.
+Definido
+13
+Regra de limite de crédito
+Já definido: controlado pelo Financeiro; sistema bloqueia a venda automaticamente se o cliente estourar o limite ou não tiver limite cadastrado.
+Definido
+14
+Margem entre moedas diferentes
+Se a compra é feita em uma moeda (ex.: BRL) e a venda em outra (ex.: USD), a margem deixa de ser uma subtração direta. É preciso definir: qual é a moeda de referência para o cálculo da margem, de onde vem a taxa de câmbio (manual, API, tabela do Financeiro) e em que momento ela é travada — na criação da oferta, no envio da proposta ou no fechamento.
+Em aberto
+15
+Conversão entre unidades de peso
+Uma oferta pode estar em toneladas e o cliente pedir em libras, ou vice-versa. Definir se o sistema converte automaticamente entre unidades da mesma grandeza (kg, g, ton, lb) ou se cada oferta fica travada na unidade em que foi cadastrada.
+Em aberto
+16
+Limite de crédito em qual moeda
+Se o cliente compra em moedas diferentes, o limite de crédito é controlado numa moeda única convertida, ou há um limite por moeda?
+Em aberto
+
+STATUS: aguardando decisão da diretoria / controladoria nos itens marcados como "Em aberto"
+15. Modelo de Dados Preliminar (Entidades)
+Levantamento inicial das entidades principais identificadas no documento, como ponto de partida para o desenho do banco de dados. Este modelo será refinado na etapa de arquitetura técnica.
+Campo
+Descrição
+Oferta de Compra
+Código único, revisão (ex.: OF-0234-R1), produto, fornecedor, preço de custo, moeda, unidade de medida, quantidade, data.
+Proposta de Venda
+Lista de ofertas selecionadas, cliente, vendedor responsável, moeda de venda, status, data de envio.
+Item de Negociação
+Vinculado à proposta; versionado por rodada — preço pedido, moeda, quantidade pedida, unidade, data/hora, observação.
+Taxa de Câmbio
+Par de moedas, valor da taxa, data de referência, origem (manual ou automática) e momento em que foi travada.
+Empresa
+Dados cadastrais, responsável Ayamo, contatos vinculados.
+Contato
+Nome, cargo, telefone, e-mail, categoria(s), empresa vinculada (obrigatória).
+Divisão
+Nome, situação.
+Família
+Nome, divisão vinculada, situação.
+Produto
+Nome, apelido, família vinculada, situação. Divisão derivada da família.
+Categoria de Contato
+Nome, situação.
+Usuário Ayamo
+Nome, e-mail, perfil de acesso, situação.
+Responsabilidade
+Vincula usuário + divisão + diretor aprovador. Um usuário pode ter várias.
+Documento (PO / Proforma Invoice)
+Tipo, proposta ou oferta de origem, valores travados, PDF gerado, data de envio, destinatários.
+16. Próximos Passos
+Validar com a diretoria os pontos em aberto da seção 14.
+Definir a stack técnica do frontend e a estrutura de telas iniciais (cadastros, compras, vendas, clientes/empresas).
+Construir um protótipo navegável das telas principais para validação de uso no dia a dia.
+Formalizar o modelo de dados definitivo e a arquitetura de backend.

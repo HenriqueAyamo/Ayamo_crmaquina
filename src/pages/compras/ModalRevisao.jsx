@@ -6,7 +6,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { MOEDAS } from '../../data/unidades.js'
 
 export default function ModalRevisao({ open, onClose, atual }) {
-  const { ofertas, usuarioLogado } = useData()
+  const { registrarRevisaoOferta } = useData()
 
   const [valor, setValor] = useState('')
   const [moeda, setMoeda] = useState(atual.precoCusto.moeda)
@@ -25,20 +25,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
 
   function salvar(e) {
     e.preventDefault()
-    ofertas.criar({
-      codigo: `${atual.codigoBase}-R${atual.versao + 1}`,
-      codigoBase: atual.codigoBase,
-      versao: atual.versao + 1,
-      produtoId: atual.produtoId,
-      fornecedorId: atual.fornecedorId,
-      precoCusto: { valor: Number(valor), moeda, unidade: atual.unidade },
-      quantidade: Number(quantidade),
-      unidade: atual.unidade,
-      status,
-      data: new Date().toISOString().slice(0, 10),
-      usuarioId: usuarioLogado.id,
-      observacao,
-    })
+    registrarRevisaoOferta(atual, { valor: Number(valor), moeda, quantidade: Number(quantidade), status, observacao })
     fecharEResetar()
   }
 

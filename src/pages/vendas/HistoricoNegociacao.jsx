@@ -1,19 +1,22 @@
 import { useState } from 'react'
+import { useData } from '../../DataContext.jsx'
 import ModalRodada from './ModalRodada.jsx'
 import { formatarData, formatarPreco } from '../../utils/formato.js'
 
 const ACOES = [
-  { tipo: 'Contraproposta do cliente', label: 'Registrar contraproposta do cliente' },
-  { tipo: 'Escalar para comprador', label: 'Escalar para comprador' },
-  { tipo: 'Solicitar aprovação do diretor', label: 'Solicitar aprovação do diretor' },
+  { tipo: 'Contraproposta do cliente', label: 'Registrar contraproposta do cliente', perfis: ['Vendedor', 'Comprador', 'Administrador'] },
+  { tipo: 'Escalar para comprador', label: 'Escalar para comprador', perfis: ['Vendedor'] },
+  { tipo: 'Solicitar aprovação do diretor', label: 'Solicitar aprovação do diretor', perfis: ['Vendedor', 'Comprador', 'Administrador'] },
 ]
 
 const STATUS_ENCERRADOS = ['Aceita', 'Recusada', 'Expirada']
 
 export default function HistoricoNegociacao({ proposta, itemAtual, onRegistrarRodada, onAceitarFechar, onRecusar }) {
+  const { usuarioLogado } = useData()
   const [modalTipo, setModalTipo] = useState(null)
 
   const encerrada = STATUS_ENCERRADOS.includes(proposta.status)
+  const acoesVisiveis = ACOES.filter((acao) => acao.perfis.includes(usuarioLogado.perfil))
 
   function confirmarRodada(dados) {
     onRegistrarRodada(modalTipo, dados)
@@ -43,7 +46,7 @@ export default function HistoricoNegociacao({ proposta, itemAtual, onRegistrarRo
 
       {!encerrada && (
         <div className="flex flex-wrap gap-3">
-          {ACOES.map((acao) => (
+          {acoesVisiveis.map((acao) => (
             <button
               key={acao.tipo}
               type="button"

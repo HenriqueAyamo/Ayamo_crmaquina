@@ -22,10 +22,20 @@ const TONE_STATUS = {
 export default function VendasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { propostas, getEmpresa, getUsuario, getProduto, calcularResumoProposta, ajustarEstoqueOferta } = useData()
+  const {
+    propostas,
+    getEmpresa,
+    getUsuario,
+    getProduto,
+    calcularResumoProposta,
+    ajustarEstoqueOferta,
+    verificarLimiteCredito,
+    registrarUsoCreditoCliente,
+  } = useData()
 
   const [perfil, setPerfil] = useState('Vendedor')
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false)
+  const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
 
@@ -77,7 +87,14 @@ export default function VendasDetalhe() {
   }
 
   function handleAceitarFechar() {
+    const { bloqueado, motivo } = verificarLimiteCredito(proposta.clienteId, resumoMargem.vendaUSD)
+    if (bloqueado) {
+      setErroCredito(motivo)
+      return
+    }
+    setErroCredito(null)
     registrarRodada('Aceite e fechamento', { observacao: 'Proposta aceita e fechada.' })
+    registrarUsoCreditoCliente(proposta.clienteId, resumoMargem.vendaUSD)
     setModalFechamentoAberto(true)
   }
 
@@ -182,6 +199,12 @@ export default function VendasDetalhe() {
         >
           Ver resumo de fechamento
         </button>
+      )}
+
+      {erroCredito && (
+        <p className="mb-4 rounded border border-ayamo-danger bg-ayamo-danger/10 px-4 py-3 text-sm text-ayamo-danger">
+          {erroCredito}
+        </p>
       )}
 
       <HistoricoNegociacao
