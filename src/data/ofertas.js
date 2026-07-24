@@ -13,5 +13,6 @@ export const ofertas = [
     data: '2026-06-02',
     usuarioId: 3,
     observacao: 'Oferta padrão do mês.',
+    historicoNegociacao: [],
   },
 ]

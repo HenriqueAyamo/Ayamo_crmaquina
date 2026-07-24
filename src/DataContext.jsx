@@ -111,6 +111,17 @@ export function DataProvider({ children }) {
     ofertas.editar(oferta.id, { quantidade: novaQuantidade, status: novoStatus })
   }
 
+  function registrarNotaOferta(ofertaAtual, dados) {
+    const hoje = new Date().toISOString().slice(0, 10)
+    ofertas.editar(ofertaAtual.id, {
+      status: dados.novoStatus ?? ofertaAtual.status,
+      historicoNegociacao: [
+        ...(ofertaAtual.historicoNegociacao ?? []),
+        { autor: 'Comprador', tipo: dados.tipo, data: hoje, observacao: dados.observacao },
+      ],
+    })
+  }
+
   function registrarRevisaoOferta(ofertaAtual, dados) {
     const novaOferta = ofertas.criar({
       codigo: `${ofertaAtual.codigoBase}-R${ofertaAtual.versao + 1}`,
@@ -125,6 +136,15 @@ export function DataProvider({ children }) {
       data: new Date().toISOString().slice(0, 10),
       usuarioId: usuarioLogado.id,
       observacao: dados.observacao,
+      historicoNegociacao: [
+        ...(ofertaAtual.historicoNegociacao ?? []),
+        {
+          autor: 'Comprador',
+          tipo: 'Novo preço registrado com o fornecedor',
+          data: new Date().toISOString().slice(0, 10),
+          observacao: dados.observacao || `Preço atualizado para ${dados.valor} ${dados.moeda}/${ofertaAtual.unidade}.`,
+        },
+      ],
     })
 
     // Qualquer proposta de venda ainda aberta que dependa deste código de oferta
@@ -209,6 +229,7 @@ export function DataProvider({ children }) {
     calcularResumoProposta,
     getPendencias,
     ajustarEstoqueOferta,
+    registrarNotaOferta,
     registrarRevisaoOferta,
     verificarLimiteCredito,
     registrarUsoCreditoCliente,

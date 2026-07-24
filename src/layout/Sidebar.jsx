@@ -25,7 +25,7 @@ export default function Sidebar() {
   return (
     <nav className="flex h-full w-[220px] flex-shrink-0 flex-col bg-ayamo-primary py-4">
       <div className="px-5 pb-6 text-sm font-semibold tracking-wide text-white">
-        MÁQUINA DE VENDAS
+        AYAMO SALES INTELLIGENCE
       </div>
       <ul className="flex flex-1 flex-col gap-1 px-2">
         {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (

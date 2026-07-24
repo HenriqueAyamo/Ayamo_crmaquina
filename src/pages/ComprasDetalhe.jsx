@@ -5,6 +5,7 @@ import { useData } from '../DataContext.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalRevisao from './compras/ModalRevisao.jsx'
+import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -17,8 +18,10 @@ const TONE_STATUS = {
 export default function ComprasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { ofertas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes } = useData()
+  const { ofertas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado } = useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
+  const [modalNotaAberto, setModalNotaAberto] = useState(false)
+  const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
 
   const versoes = ofertas.items
     .filter((o) => o.codigoBase === id)
@@ -54,13 +57,24 @@ export default function ComprasDetalhe() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge label={atual.status} tone={TONE_STATUS[atual.status] ?? 'neutral'} />
-            <button
-              type="button"
-              onClick={() => setModalRevisaoAberto(true)}
-              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-            >
-              Registrar revisão
-            </button>
+            {podeNegociar && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setModalNotaAberto(true)}
+                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
+                >
+                  Registrar contato com fornecedor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalRevisaoAberto(true)}
+                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+                >
+                  Registrar revisão
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -88,6 +102,25 @@ export default function ComprasDetalhe() {
         </dl>
       </div>
 
+      {atual.historicoNegociacao?.length > 0 && (
+        <>
+          <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de negociação com o fornecedor</h2>
+          <ol className="mb-6 flex flex-col gap-3">
+            {atual.historicoNegociacao.map((n, index) => (
+              <li key={index} className="rounded border border-ayamo-border bg-ayamo-surface p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-ayamo-text">
+                    {n.tipo} ({n.autor})
+                  </span>
+                  <span className="text-xs text-ayamo-text-mut">{formatarData(n.data)}</span>
+                </div>
+                {n.observacao && <p className="text-sm text-ayamo-text-mut">{n.observacao}</p>}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
       <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de revisões</h2>
 
       <ol className="flex flex-col gap-0">
@@ -114,6 +147,7 @@ export default function ComprasDetalhe() {
       </ol>
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
+      <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />
     </div>
   )
 }

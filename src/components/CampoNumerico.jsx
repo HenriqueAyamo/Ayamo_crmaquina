@@ -10,19 +10,19 @@ function formatar(valor, locale) {
   return Number(valor).toLocaleString(locale, { maximumFractionDigits: 2 })
 }
 
-function contarDigitosAte(texto, posicao) {
+function contarUnidadesAte(texto, posicao, separador) {
   let count = 0
   for (let i = 0; i < posicao && i < texto.length; i++) {
-    if (/[0-9]/.test(texto[i])) count++
+    if (/[0-9]/.test(texto[i]) || texto[i] === separador) count++
   }
   return count
 }
 
-function posicaoParaDigitos(texto, digitosAlvo) {
+function posicaoParaUnidades(texto, separador, unidadesAlvo) {
   let count = 0
   for (let i = 0; i < texto.length; i++) {
-    if (count === digitosAlvo) return i
-    if (/[0-9]/.test(texto[i])) count++
+    if (count === unidadesAlvo) return i
+    if (/[0-9]/.test(texto[i]) || texto[i] === separador) count++
   }
   return texto.length
 }
@@ -47,8 +47,8 @@ export default function CampoNumerico({ value, onChange, locale = 'pt-BR', requi
 
   function aoDigitar(e) {
     const bruto = e.target.value
-    const digitosAntesDoCursor = contarDigitosAte(bruto, e.target.selectionStart)
     const separador = separadorDecimal(locale)
+    const unidadesAntesDoCursor = contarUnidadesAte(bruto, e.target.selectionStart, separador)
 
     let inteiros = ''
     let decimais = ''
@@ -57,9 +57,10 @@ export default function CampoNumerico({ value, onChange, locale = 'pt-BR', requi
       if (/[0-9]/.test(ch)) {
         if (viuDecimal) decimais += ch
         else inteiros += ch
-      } else if ((ch === ',' || ch === '.') && !viuDecimal) {
+      } else if (ch === separador && !viuDecimal) {
         viuDecimal = true
       }
+      // qualquer outro caractere (ex.: o ponto de milhar inserido pela formatação) é ignorado
     }
     decimais = decimais.slice(0, 2)
 
@@ -72,7 +73,7 @@ export default function CampoNumerico({ value, onChange, locale = 'pt-BR', requi
 
     const novoTexto = Number(inteiros || '0').toLocaleString(locale) + (viuDecimal ? separador + decimais : '')
     setTexto(novoTexto)
-    cursorPendente.current = posicaoParaDigitos(novoTexto, digitosAntesDoCursor)
+    cursorPendente.current = posicaoParaUnidades(novoTexto, separador, unidadesAntesDoCursor)
     onChange(Number(`${inteiros || '0'}.${decimais || '0'}`))
   }
 
