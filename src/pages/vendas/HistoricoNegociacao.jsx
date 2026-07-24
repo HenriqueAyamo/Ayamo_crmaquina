@@ -1,22 +1,21 @@
 import { useState } from 'react'
-import { useData } from '../../DataContext.jsx'
 import ModalRodada from './ModalRodada.jsx'
 import { formatarData, formatarPreco } from '../../utils/formato.js'
 
-const ACOES = [
-  { tipo: 'Contraproposta do cliente', label: 'Registrar contraproposta do cliente', perfis: ['Vendedor', 'Comprador', 'Administrador'] },
+const ACOES_RODADA = [
+  { tipo: 'Contraproposta do cliente', label: 'Registrar contraproposta do cliente', perfis: ['Vendedor', 'Comprador'] },
   { tipo: 'Escalar para comprador', label: 'Escalar para comprador', perfis: ['Vendedor'] },
-  { tipo: 'Solicitar aprovação do diretor', label: 'Solicitar aprovação do diretor', perfis: ['Vendedor', 'Comprador', 'Administrador'] },
+  { tipo: 'Solicitar aprovação do diretor', label: 'Solicitar aprovação do diretor', perfis: ['Vendedor', 'Comprador'] },
 ]
 
 const STATUS_ENCERRADOS = ['Aceita', 'Recusada', 'Expirada']
 
-export default function HistoricoNegociacao({ proposta, itemAtual, onRegistrarRodada, onAceitarFechar, onRecusar }) {
-  const { usuarioLogado } = useData()
+export default function HistoricoNegociacao({ proposta, itemAtual, perfil, onRegistrarRodada, onAceitarFechar, onRecusar }) {
   const [modalTipo, setModalTipo] = useState(null)
 
   const encerrada = STATUS_ENCERRADOS.includes(proposta.status)
-  const acoesVisiveis = ACOES.filter((acao) => acao.perfis.includes(usuarioLogado.perfil))
+  const acoesVisiveis = ACOES_RODADA.filter((acao) => acao.perfis.includes(perfil))
+  const podeFechar = perfil === 'Vendedor'
 
   function confirmarRodada(dados) {
     onRegistrarRodada(modalTipo, dados)
@@ -56,20 +55,24 @@ export default function HistoricoNegociacao({ proposta, itemAtual, onRegistrarRo
               {acao.label}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={onAceitarFechar}
-            className="rounded bg-ayamo-success px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Aceitar e fechar
-          </button>
-          <button
-            type="button"
-            onClick={onRecusar}
-            className="rounded bg-ayamo-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Recusar proposta
-          </button>
+          {podeFechar && (
+            <>
+              <button
+                type="button"
+                onClick={onAceitarFechar}
+                className="rounded bg-ayamo-success px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                Aceitar e fechar
+              </button>
+              <button
+                type="button"
+                onClick={onRecusar}
+                className="rounded bg-ayamo-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                Recusar proposta
+              </button>
+            </>
+          )}
         </div>
       )}
 

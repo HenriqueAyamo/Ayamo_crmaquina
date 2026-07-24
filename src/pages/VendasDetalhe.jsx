@@ -48,7 +48,7 @@ export default function VendasDetalhe() {
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
-    const autor = tipo === 'Contraproposta do cliente' ? 'Cliente' : 'Vendedor'
+    const autor = tipo === 'Contraproposta do cliente' ? 'Cliente' : perfil
     const hoje = new Date().toISOString().slice(0, 10)
 
     const novaEntrada = {
@@ -210,6 +210,7 @@ export default function VendasDetalhe() {
       <HistoricoNegociacao
         proposta={proposta}
         itemAtual={itemPrincipal}
+        perfil={perfil}
         onRegistrarRodada={registrarRodada}
         onAceitarFechar={handleAceitarFechar}
         onRecusar={handleRecusar}
