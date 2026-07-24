@@ -5,7 +5,7 @@ import { useData } from '../../DataContext.jsx'
 const COLUNAS_ESPERADAS = 'Produto, Fornecedor, Preço, Moeda, Unidade, Quantidade'
 
 export default function ImportarPlanilha({ onImportado }) {
-  const { produtos, empresas, usuarioLogado } = useData()
+  const { ofertas, produtos, empresas, usuarioLogado } = useData()
   const inputRef = useRef(null)
   const [resumo, setResumo] = useState(null)
 
@@ -20,7 +20,8 @@ export default function ImportarPlanilha({ onImportado }) {
   }
 
   function processarLinhas(linhas) {
-    const importadas = []
+    const jaImportadas = ofertas.items.filter((o) => o.codigo.startsWith('OF-IMP-')).length
+    let importadas = 0
     const erros = []
     const hoje = new Date().toISOString().slice(0, 10)
 
@@ -50,9 +51,11 @@ export default function ImportarPlanilha({ onImportado }) {
         return
       }
 
-      importadas.push({
-        codigo: `OF-IMP-${importadas.length + 1}`,
-        codigoBase: `OF-IMP-${importadas.length + 1}`,
+      const codigo = `OF-IMP-${jaImportadas + importadas + 1}`
+      importadas += 1
+      ofertas.criar({
+        codigo,
+        codigoBase: codigo,
         versao: 0,
         produtoId: produto.id,
         fornecedorId: fornecedor.id,
@@ -63,11 +66,12 @@ export default function ImportarPlanilha({ onImportado }) {
         data: hoje,
         usuarioId: usuarioLogado.id,
         observacao: 'Importado de planilha.',
+        historicoNegociacao: [],
       })
     })
 
-    setResumo({ total: linhas.length, importadas: importadas.length, erros })
-    onImportado(importadas)
+    setResumo({ total: linhas.length, importadas, erros })
+    onImportado?.()
   }
 
   function processarArquivo(arquivo) {

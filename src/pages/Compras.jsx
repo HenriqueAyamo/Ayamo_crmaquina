@@ -8,7 +8,6 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
-import { ofertas as ofertasExemplo } from '../data/ofertas.js'
 
 const ImportarPlanilha = lazy(() => import('./compras/ImportarPlanilha.jsx'))
 
@@ -19,12 +18,6 @@ const TONE_STATUS = {
   Expirada: 'danger',
 }
 
-const MODOS = [
-  { id: 'exemplos', label: 'Exemplos' },
-  { id: 'vazio', label: 'Vazio' },
-  { id: 'importado', label: 'Importado' },
-]
-
 export default function Compras() {
   const { ofertas, produtos, empresas, divisoes, getDivisaoIdDeProduto, getProduto, getEmpresa } = useData()
   const navigate = useNavigate()
@@ -34,17 +27,10 @@ export default function Compras() {
   const [fornecedorFiltro, setFornecedorFiltro] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
-  const [modo, setModo] = useState('exemplos')
+  const [importarAberto, setImportarAberto] = useState(false)
 
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
   const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
-
-  function mudarModo(novoModo) {
-    setModo(novoModo)
-    if (novoModo === 'vazio') ofertas.substituir([])
-    if (novoModo === 'exemplos') ofertas.substituir(ofertasExemplo.map((o) => ({ ...o })))
-    if (novoModo === 'importado') ofertas.substituir([])
-  }
 
   const ofertasOrdenadas = useMemo(
     () => [...ofertas.items].sort((a, b) => a.codigoBase.localeCompare(b.codigoBase) || a.versao - b.versao),
@@ -67,26 +53,20 @@ export default function Compras() {
     <div>
       <PageHeader title="Compras" actionLabel="Nova oferta" onAction={() => setModalAberto(true)} />
 
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Modo:</span>
-        {MODOS.map((m) => (
-          <button
-            key={m.id}
-            type="button"
-            onClick={() => mudarModo(m.id)}
-            className={`rounded px-3 py-1 text-xs font-medium ${
-              modo === m.id ? 'bg-ayamo-primary text-white' : 'border border-ayamo-border text-ayamo-text-mut'
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
+      <div className="mb-4">
+        <button
+          type="button"
+          onClick={() => setImportarAberto((atual) => !atual)}
+          className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
+        >
+          {importarAberto ? 'Fechar importação' : 'Importar planilha de ofertas'}
+        </button>
       </div>
 
-      {modo === 'importado' && (
+      {importarAberto && (
         <div className="mb-4">
           <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
-            <ImportarPlanilha onImportado={(itensImportados) => ofertas.substituir(itensImportados)} />
+            <ImportarPlanilha />
           </Suspense>
         </div>
       )}

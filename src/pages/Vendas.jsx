@@ -19,6 +19,10 @@ const TONE_STATUS = {
   Expirada: 'neutral',
 }
 
+function nomesProdutos(item, getProduto) {
+  return item.itens.map((i) => getProduto(i.produtoId)?.nome ?? '—').join(', ')
+}
+
 function toneMargem(margemPercentual, margemMinima) {
   if (margemPercentual < margemMinima) return 'text-ayamo-danger'
   if (margemPercentual < margemMinima + 3) return 'text-ayamo-warning'
@@ -26,7 +30,7 @@ function toneMargem(margemPercentual, margemMinima) {
 }
 
 export default function Vendas() {
-  const { propostas, empresas, usuarios, getEmpresa, getUsuario, calcularResumoProposta } = useData()
+  const { propostas, empresas, usuarios, getEmpresa, getUsuario, getProduto, calcularResumoProposta } = useData()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -94,6 +98,12 @@ export default function Vendas() {
             header: 'Vendedor',
             render: (item) => getUsuario(item.vendedorId)?.nome ?? '—',
             sortValue: (item) => getUsuario(item.vendedorId)?.nome ?? '',
+          },
+          {
+            key: 'produto',
+            header: 'Produto',
+            render: (item) => nomesProdutos(item, getProduto),
+            sortValue: (item) => nomesProdutos(item, getProduto),
           },
           { key: 'itens', header: 'Itens', render: (item) => item.itens.length, sortValue: (item) => item.itens.length },
           {

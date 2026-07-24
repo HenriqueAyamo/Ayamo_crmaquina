@@ -7,6 +7,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import HistoricoNegociacao from './vendas/HistoricoNegociacao.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
+import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import { formatarPreco, formatarData, formatarPercentual } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -24,6 +25,7 @@ export default function VendasDetalhe() {
   const navigate = useNavigate()
   const {
     propostas,
+    ofertas,
     getEmpresa,
     getUsuario,
     getProduto,
@@ -35,6 +37,7 @@ export default function VendasDetalhe() {
 
   const [perfil, setPerfil] = useState('Vendedor')
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false)
+  const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
@@ -45,6 +48,7 @@ export default function VendasDetalhe() {
 
   const itemPrincipal = proposta.itens[0]
   const resumoMargem = calcularResumoProposta(proposta)
+  const ofertaVinculada = ofertas.items.find((o) => o.codigo === itemPrincipal.ofertaCodigo)
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
@@ -207,6 +211,21 @@ export default function VendasDetalhe() {
         </p>
       )}
 
+      {perfil === 'Comprador' && ofertaVinculada && (
+        <div className="mb-4 flex items-center justify-between rounded border border-ayamo-border bg-ayamo-surface p-3">
+          <p className="text-sm text-ayamo-text-mut">
+            Esta proposta depende da oferta <span className="font-medium text-ayamo-text">{ofertaVinculada.codigo}</span>.
+          </p>
+          <button
+            type="button"
+            onClick={() => setModalNotaAberto(true)}
+            className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+          >
+            Registrar contato com fornecedor
+          </button>
+        </div>
+      )}
+
       <HistoricoNegociacao
         proposta={proposta}
         itemAtual={itemPrincipal}
@@ -224,6 +243,10 @@ export default function VendasDetalhe() {
         produtoNome={getProduto(itemPrincipal.produtoId)?.nome}
         resumoMargem={resumoMargem}
       />
+
+      {ofertaVinculada && (
+        <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={ofertaVinculada} />
+      )}
     </div>
   )
 }

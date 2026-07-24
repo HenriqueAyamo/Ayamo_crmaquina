@@ -13,68 +13,86 @@ import { calcularPendencias } from './utils/pendencias.js'
 
 const DataContext = createContext(null)
 
-function gerarDocumentosSeed() {
-  let idCounter = 1
-  const docs = []
+const STORAGE_PREFIX = 'ayamo_crm_v1_'
 
-  propostasMock
-    .filter((p) => p.status === 'Aceita')
-    .forEach((p, index) => {
-      const cliente = empresasMock.find((e) => e.id === p.clienteId)
-      const item = p.itens[0]
-      const valorTotal = item.precoVenda.valor * item.quantidade
-      const base = { propostaId: p.id, propostaNumero: p.numero, clienteNome: cliente?.nome ?? '—', valor: valorTotal, moeda: item.precoVenda.moeda, data: p.dataEnvio, statusEnvio: 'Enviado' }
-      docs.push({ id: idCounter++, tipo: 'PO', numero: `PO-${2000 + index * 2}`, ...base })
-      docs.push({ id: idCounter++, tipo: 'Proforma Invoice', numero: `PI-${3000 + index * 2}`, ...base })
-    })
-
-  return docs
+function carregarStorage(chave, seed) {
+  try {
+    const bruto = localStorage.getItem(STORAGE_PREFIX + chave)
+    return bruto ? JSON.parse(bruto) : seed
+  } catch {
+    return seed
+  }
 }
 
-function useCollection(initialData) {
-  const [items, setItems] = useState(initialData)
-  const proximoId = useRef(initialData.reduce((max, item) => Math.max(max, item.id), 0) + 1)
+function salvarStorage(chave, valor) {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + chave, JSON.stringify(valor))
+  } catch {
+    // localStorage indisponível (modo privado, quota excedida) — segue só em memória
+  }
+}
+
+function useCollection(chave, seed) {
+  const [items, setItems] = useState(() => carregarStorage(chave, seed))
+  const proximoId = useRef(items.reduce((max, item) => Math.max(max, item.id), 0) + 1)
+
+  function atualizar(computar) {
+    setItems((atual) => {
+      const novosItens = computar(atual)
+      salvarStorage(chave, novosItens)
+      return novosItens
+    })
+  }
 
   function criar(dados) {
     const novo = { situacao: 'Ativo', ...dados, id: proximoId.current }
     proximoId.current += 1
-    setItems((atual) => [...atual, novo])
+    atualizar((atual) => [...atual, novo])
     return novo
   }
 
   function editar(id, dados) {
-    setItems((atual) => atual.map((item) => (item.id === id ? { ...item, ...dados } : item)))
+    atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, ...dados } : item)))
   }
 
   function inativar(id) {
-    setItems((atual) => atual.map((item) => (item.id === id ? { ...item, situacao: 'Inativo' } : item)))
+    atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, situacao: 'Inativo' } : item)))
   }
 
   function remover(id) {
-    setItems((atual) => atual.filter((item) => item.id !== id))
+    atualizar((atual) => atual.filter((item) => item.id !== id))
   }
 
   function substituir(novosItens) {
     proximoId.current = novosItens.reduce((max, item) => Math.max(max, item.id), 0) + 1
-    setItems(novosItens)
+    atualizar(() => novosItens)
   }
 
   return { items, criar, editar, inativar, remover, substituir }
 }
 
 export function DataProvider({ children }) {
-  const divisoes = useCollection(divisoesMock)
-  const familias = useCollection(familiasMock)
-  const produtos = useCollection(produtosMock)
-  const categoriasContato = useCollection(categoriasContatoMock)
-  const usuarios = useCollection(usuariosMock)
-  const empresas = useCollection(empresasMock)
-  const contatos = useCollection(contatosMock)
-  const ofertas = useCollection(ofertasMock)
-  const propostas = useCollection(propostasMock)
-  const documentos = useCollection(gerarDocumentosSeed())
+  const divisoes = useCollection('divisoes', divisoesMock)
+  const familias = useCollection('familias', familiasMock)
+  const produtos = useCollection('produtos', produtosMock)
+  const categoriasContato = useCollection('categoriasContato', categoriasContatoMock)
+  const usuarios = useCollection('usuarios', usuariosMock)
+  const empresas = useCollection('empresas', empresasMock)
+  const contatos = useCollection('contatos', contatosMock)
+  const ofertas = useCollection('ofertas', ofertasMock)
+  const propostas = useCollection('propostas', propostasMock)
+  const documentos = useCollection('documentos', [])
 
-  const [usuarioLogadoId, setUsuarioLogadoId] = useState(1)
+  const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
+    const salvo = carregarStorage('usuarioLogadoId', null)
+    return salvo ?? usuariosMock[0]?.id ?? 1
+  })
+
+  function setUsuarioLogadoId(id) {
+    setUsuarioLogadoIdState(id)
+    salvarStorage('usuarioLogadoId', id)
+  }
+
   const usuarioLogado = usuarios.items.find((u) => u.id === usuarioLogadoId) ?? usuarios.items[0]
 
   function getFamilia(familiaId) {

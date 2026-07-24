@@ -1,16 +1,1 @@
-export const produtos = [
-  { id: 1, nome: 'Chicken leg quarter', apelido: 'CLQ', familiaId: 1, situacao: 'Ativo' },
-  { id: 2, nome: 'Chicken leg quarter jumbo', apelido: 'CLQ Jumbo', familiaId: 1, situacao: 'Ativo' },
-  { id: 3, nome: 'Frozen whole chicken', apelido: 'Whole Chicken', familiaId: 2, situacao: 'Ativo' },
-  { id: 4, nome: 'Chicken paws', apelido: 'Paws', familiaId: 2, situacao: 'Ativo' },
-  { id: 5, nome: 'Beef forequarter', apelido: 'Forequarter', familiaId: 3, situacao: 'Ativo' },
-  { id: 6, nome: 'Beef trimmings 90CL', apelido: 'Trimmings 90', familiaId: 3, situacao: 'Inativo' },
-  { id: 7, nome: 'Pork picnic shoulder', apelido: 'Pork Picnic', familiaId: 4, situacao: 'Ativo' },
-  { id: 8, nome: 'Pork ribs', apelido: 'Ribs', familiaId: 4, situacao: 'Ativo' },
-  { id: 9, nome: 'Chicken breast boneless', apelido: 'Breast BLSL', familiaId: 5, situacao: 'Ativo' },
-  { id: 10, nome: 'Frozen shrimp 16/20', apelido: 'Shrimp 16/20', familiaId: 7, situacao: 'Ativo' },
-  { id: 11, nome: 'Frozen shrimp 26/30', apelido: 'Shrimp 26/30', familiaId: 7, situacao: 'Ativo' },
-  { id: 12, nome: 'Tilapia fillet', apelido: 'Tilapia Fillet', familiaId: 9, situacao: 'Ativo' },
-  { id: 13, nome: 'Salmon fillet skin-on', apelido: 'Salmon Fillet', familiaId: 10, situacao: 'Ativo' },
-  { id: 14, nome: 'Squid whole cleaned', apelido: 'Squid WC', familiaId: 11, situacao: 'Ativo' },
-]
+export const produtos = []

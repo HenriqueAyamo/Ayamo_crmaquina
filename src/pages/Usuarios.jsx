@@ -14,13 +14,20 @@ function valoresIniciais() {
 }
 
 export default function Usuarios() {
-  const { usuarios, divisoes, getDivisao } = useData()
+  const { usuarios, divisoes, getDivisao, usuarioLogado } = useData()
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(valoresIniciais())
 
   const diretores = usuarios.items.filter((u) => u.perfil === 'Diretor' && u.situacao === 'Ativo')
   const divisoesAtivas = divisoes.items.filter((d) => d.situacao === 'Ativo')
+  const ativos = usuarios.items.filter((u) => u.situacao === 'Ativo')
+
+  function podeInativarOuRemover(item) {
+    if (item.id === usuarioLogado.id) return false
+    if (item.situacao === 'Ativo' && ativos.length <= 1) return false
+    return true
+  }
 
   function abrirNovo() {
     setEditando(null)
@@ -100,7 +107,13 @@ export default function Usuarios() {
                   Editar
                 </button>
                 {item.situacao === 'Ativo' ? (
-                  <button type="button" onClick={() => usuarios.inativar(item.id)} className="text-ayamo-danger hover:underline">
+                  <button
+                    type="button"
+                    disabled={!podeInativarOuRemover(item)}
+                    title={!podeInativarOuRemover(item) ? 'Precisa haver ao menos 1 usuário ativo, diferente de quem está logado' : undefined}
+                    onClick={() => usuarios.inativar(item.id)}
+                    className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
+                  >
                     Inativar
                   </button>
                 ) : (
@@ -114,10 +127,12 @@ export default function Usuarios() {
                 )}
                 <button
                   type="button"
+                  disabled={!podeInativarOuRemover(item)}
+                  title={!podeInativarOuRemover(item) ? 'Precisa haver ao menos 1 usuário ativo, diferente de quem está logado' : undefined}
                   onClick={() => {
                     if (window.confirm(`Excluir o usuário "${item.nome}" definitivamente?`)) usuarios.remover(item.id)
                   }}
-                  className="text-ayamo-danger hover:underline"
+                  className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
                 >
                   Excluir
                 </button>
