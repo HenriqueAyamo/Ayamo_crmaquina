@@ -52,7 +52,11 @@ function useCollection(initialData) {
     setItems((atual) => atual.filter((item) => item.id !== id))
   }
 
-  return { items, criar, editar, inativar, remover }
+  function substituir(novosItens) {
+    setItems(novosItens)
+  }
+
+  return { items, criar, editar, inativar, remover, substituir }
 }
 
 export function DataProvider({ children }) {

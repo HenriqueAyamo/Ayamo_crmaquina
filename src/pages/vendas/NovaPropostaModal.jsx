@@ -6,9 +6,9 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { formatarPreco } from '../../utils/formato.js'
 import { MOEDAS } from '../../data/unidades.js'
 
-function proximoNumero(propostas) {
+function baseProximoNumero(propostas) {
   const numeros = propostas.map((p) => Number(p.numero.replace('PROP-', '')))
-  return `PROP-${Math.max(1000, ...numeros) + 1}`
+  return Math.max(1000, ...numeros)
 }
 
 function valoresIniciaisSelecao() {
@@ -19,16 +19,22 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
   const { ofertas, propostas, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
-  const [clienteId, setClienteId] = useState('')
+  const [clientesIds, setClientesIds] = useState([])
   const [selecao, setSelecao] = useState(valoresIniciaisSelecao())
 
   const ofertasDisponiveis = ofertas.items.filter((o) => o.status === 'Disponível')
 
   function fecharEResetar() {
     setPasso(1)
-    setClienteId('')
+    setClientesIds([])
     setSelecao(valoresIniciaisSelecao())
     onClose()
+  }
+
+  function alternarCliente(clienteId) {
+    setClientesIds((atual) =>
+      atual.includes(clienteId) ? atual.filter((id) => id !== clienteId) : [...atual, clienteId],
+    )
   }
 
   function alternarOferta(oferta) {
@@ -65,34 +71,40 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
       }
     })
 
-    const numero = proximoNumero(propostas.items)
+    const base = baseProximoNumero(propostas.items)
     const hoje = new Date().toISOString().slice(0, 10)
 
-    propostas.criar({
-      numero,
-      clienteId: Number(clienteId),
-      vendedorId: usuarioLogado.id,
-      status: 'Rascunho',
-      dataEnvio: hoje,
-      margemMinima: 10,
-      itens,
-      historicoNegociacao: [
-        {
-          rodada: 1,
-          autor: 'Vendedor',
-          tipo: 'Proposta inicial',
-          preco: itens[0].precoVenda,
-          quantidade: itens[0].quantidade,
-          data: hoje,
-          observacao: 'Proposta criada a partir das ofertas selecionadas.',
-        },
-      ],
+    const numerosCriados = clientesIds.map((clienteId, index) => {
+      const numero = `PROP-${base + index + 1}`
+      propostas.criar({
+        numero,
+        clienteId: Number(clienteId),
+        vendedorId: usuarioLogado.id,
+        status: 'Rascunho',
+        dataEnvio: hoje,
+        margemMinima: 10,
+        itens,
+        historicoNegociacao: [
+          {
+            rodada: 1,
+            autor: 'Vendedor',
+            tipo: 'Proposta inicial',
+            preco: itens[0].precoVenda,
+            quantidade: itens[0].quantidade,
+            data: hoje,
+            observacao: 'Proposta criada a partir das ofertas selecionadas.',
+          },
+        ],
+      })
+      return numero
     })
 
+    // Estoque é descontado uma única vez: as propostas para os vários clientes
+    // competem pelo mesmo lote físico, não reservam quantidades independentes.
     itens.forEach((item) => ajustarEstoqueOferta(item.ofertaCodigo, -item.quantidade))
 
     fecharEResetar()
-    onCriada(numero)
+    onCriada(numerosCriados)
   }
 
   const selecaoValida = Object.entries(selecao).every(([ofertaId, dados]) => {
@@ -101,14 +113,14 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
     return oferta && quantidade > 0 && quantidade <= oferta.quantidade
   })
 
-  const podeAvancar = clienteId !== ''
+  const podeAvancar = clientesIds.length > 0
   const podeCriar = Object.keys(selecao).length > 0 && selecaoValida
 
   return (
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title={passo === 1 ? 'Nova proposta — escolha o cliente' : 'Nova proposta — ofertas e quantidades'}
+      title={passo === 1 ? 'Nova proposta — escolha os clientes' : 'Nova proposta — ofertas e quantidades'}
       width="lg"
       footer={
         <>
@@ -142,15 +154,22 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
       }
     >
       {passo === 1 && (
-        <Field label="Cliente" required>
-          <select className={inputClass} value={clienteId} onChange={(e) => setClienteId(e.target.value)}>
-            <option value="">Selecione</option>
+        <Field label="Clientes" required hint="Selecione um ou mais — uma proposta independente é criada para cada um.">
+          <div className="flex flex-col gap-1 rounded border border-ayamo-border p-2">
             {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
+              <label
+                key={c.id}
+                className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-ayamo-text hover:bg-ayamo-bg"
+              >
+                <input
+                  type="checkbox"
+                  checked={clientesIds.includes(String(c.id))}
+                  onChange={() => alternarCliente(String(c.id))}
+                />
                 {c.nome} — {c.pais}
-              </option>
+              </label>
             ))}
-          </select>
+          </div>
         </Field>
       )}
 

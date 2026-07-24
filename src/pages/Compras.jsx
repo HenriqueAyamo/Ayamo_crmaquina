@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
@@ -10,6 +10,9 @@ import Field, { inputClass } from '../components/Field.jsx'
 import CampoNumerico from '../components/CampoNumerico.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { MOEDAS, UNIDADES_PESO } from '../data/unidades.js'
+import { ofertas as ofertasExemplo } from '../data/ofertas.js'
+
+const ImportarPlanilha = lazy(() => import('./compras/ImportarPlanilha.jsx'))
 
 const TONE_STATUS = {
   Disponível: 'success',
@@ -18,8 +21,14 @@ const TONE_STATUS = {
   Expirada: 'danger',
 }
 
+const MODOS = [
+  { id: 'exemplos', label: 'Exemplos' },
+  { id: 'vazio', label: 'Vazio' },
+  { id: 'importado', label: 'Importado' },
+]
+
 function proximoCodigo(ofertas) {
-  const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', '')))
+  const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', ''))).filter((n) => !Number.isNaN(n))
   const proximo = Math.max(0, ...numeros) + 1
   return `OF-${String(proximo).padStart(4, '0')}`
 }
@@ -46,9 +55,17 @@ export default function Compras() {
   const [statusFiltro, setStatusFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [form, setForm] = useState(valoresIniciais())
+  const [modo, setModo] = useState('exemplos')
 
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
   const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
+
+  function mudarModo(novoModo) {
+    setModo(novoModo)
+    if (novoModo === 'vazio') ofertas.substituir([])
+    if (novoModo === 'exemplos') ofertas.substituir(ofertasExemplo.map((o) => ({ ...o })))
+    if (novoModo === 'importado') ofertas.substituir([])
+  }
 
   const ofertasOrdenadas = useMemo(
     () => [...ofertas.items].sort((a, b) => a.codigoBase.localeCompare(b.codigoBase) || a.versao - b.versao),
@@ -96,6 +113,30 @@ export default function Compras() {
   return (
     <div>
       <PageHeader title="Compras" actionLabel="Nova oferta" onAction={abrirNova} />
+
+      <div className="mb-4 flex items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Modo:</span>
+        {MODOS.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => mudarModo(m.id)}
+            className={`rounded px-3 py-1 text-xs font-medium ${
+              modo === m.id ? 'bg-ayamo-primary text-white' : 'border border-ayamo-border text-ayamo-text-mut'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {modo === 'importado' && (
+        <div className="mb-4">
+          <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
+            <ImportarPlanilha onImportado={(itensImportados) => ofertas.substituir(itensImportados)} />
+          </Suspense>
+        </div>
+      )}
 
       <FilterBar>
         <Field label="Buscar">

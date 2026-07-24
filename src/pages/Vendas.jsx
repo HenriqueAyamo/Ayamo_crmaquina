@@ -128,7 +128,9 @@ export default function Vendas() {
         open={modalAberto}
         onClose={() => setModalAberto(false)}
         clientes={clientes}
-        onCriada={(numero) => navigate(`/vendas/${numero}`)}
+        onCriada={(numeros) => {
+          if (numeros.length === 1) navigate(`/vendas/${numeros[0]}`)
+        }}
       />
     </div>
   )
