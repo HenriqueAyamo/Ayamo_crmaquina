@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useRef, useState } from 'react'
 import { divisoes as divisoesMock } from './data/divisoes.js'
 import { familias as familiasMock } from './data/familias.js'
 import { produtos as produtosMock } from './data/produtos.js'
@@ -32,10 +32,11 @@ function gerarDocumentosSeed() {
 
 function useCollection(initialData) {
   const [items, setItems] = useState(initialData)
+  const proximoId = useRef(initialData.reduce((max, item) => Math.max(max, item.id), 0) + 1)
 
   function criar(dados) {
-    const novoId = items.reduce((max, item) => Math.max(max, item.id), 0) + 1
-    const novo = { situacao: 'Ativo', ...dados, id: novoId }
+    const novo = { situacao: 'Ativo', ...dados, id: proximoId.current }
+    proximoId.current += 1
     setItems((atual) => [...atual, novo])
     return novo
   }
@@ -53,6 +54,7 @@ function useCollection(initialData) {
   }
 
   function substituir(novosItens) {
+    proximoId.current = novosItens.reduce((max, item) => Math.max(max, item.id), 0) + 1
     setItems(novosItens)
   }
 
