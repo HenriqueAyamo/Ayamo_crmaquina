@@ -108,6 +108,23 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
     return novaOferta
   }
 
+  function notificarLogistica(ofertaAtual) {
+    const hoje = new Date().toISOString().slice(0, 10)
+    ofertas.editar(ofertaAtual.id, {
+      logisticaAcionada: true,
+      logisticaAcionadaEm: hoje,
+      historicoNegociacao: [
+        ...(ofertaAtual.historicoNegociacao ?? []),
+        {
+          autor: 'Comprador',
+          tipo: 'Logística acionada',
+          data: hoje,
+          observacao: `Incoterm ${ofertaAtual.incoterm} — frete por conta da Ayamo. Logística notificada para providenciar o embarque.`,
+        },
+      ],
+    })
+  }
+
   function avisarConcorrenciaEstoque(ofertaCodigo, propostaFechadaId) {
     const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
     if (!oferta) return
@@ -139,5 +156,12 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       })
   }
 
-  return { ajustarEstoqueOferta, registrarNotaOferta, alterarStatusOferta, registrarRevisaoOferta, avisarConcorrenciaEstoque }
+  return {
+    ajustarEstoqueOferta,
+    registrarNotaOferta,
+    alterarStatusOferta,
+    registrarRevisaoOferta,
+    notificarLogistica,
+    avisarConcorrenciaEstoque,
+  }
 }

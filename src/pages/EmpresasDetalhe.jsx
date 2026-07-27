@@ -149,6 +149,12 @@ export default function EmpresasDetalhe() {
               <dd className="font-medium text-ayamo-text">{empresa.sif || '—'}</dd>
             </div>
           )}
+          {empresa.tipo === 'Fornecedor' && (
+            <div>
+              <dt className="text-ayamo-text-mut">Marca</dt>
+              <dd className="font-medium text-ayamo-text">{empresa.marca || `${empresa.nome} (padrão)`}</dd>
+            </div>
+          )}
         </dl>
       </div>
 

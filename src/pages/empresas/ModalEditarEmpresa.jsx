@@ -14,6 +14,7 @@ function valoresIniciais(empresa) {
     endereco: empresa.endereco ?? '',
     cnpj: empresa.cnpj ?? '',
     sif: empresa.sif ?? '',
+    marca: empresa.marca ?? '',
     tipo: empresa.tipo,
     responsavelAyamoId: empresa.responsavelAyamoId,
     moedaPadrao: empresa.moedaPadrao,
@@ -133,6 +134,9 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
 
         {form.tipo === 'Fornecedor' && (
           <>
+            <Field label="Marca" hint="Usada nos documentos de PO/Proforma. Se em branco, usa o nome do fornecedor.">
+              <input className={inputClass} value={form.marca} onChange={(e) => setForm({ ...form, marca: e.target.value })} />
+            </Field>
             <SecaoCapacidadeProdutos
               value={form.produtosCapacidade}
               onChange={(produtosCapacidade) => setForm({ ...form, produtosCapacidade })}

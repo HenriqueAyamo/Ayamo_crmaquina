@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Truck } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -23,7 +23,8 @@ const TONE_STATUS = {
 export default function ComprasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { ofertas, empresas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado } = useData()
+  const { ofertas, empresas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado, notificarLogistica } =
+    useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalStatusAberto, setModalStatusAberto] = useState(false)
@@ -150,6 +151,29 @@ export default function ComprasDetalhe() {
           </div>
         </dl>
       </div>
+
+      {atual.incoterm === 'FOB' && (atual.tipoRegistro ?? 'Position') === 'Position' && (
+        <div className="mb-6 flex items-center justify-between rounded border border-ayamo-warning/25 bg-ayamo-warning/10 p-4">
+          <div className="flex items-center gap-3">
+            <Truck size={18} className="text-ayamo-warning" />
+            <p className="text-sm text-ayamo-text">
+              Incoterm <strong>FOB</strong> — o frete é por conta da Ayamo. A Logística precisa providenciar o embarque.
+              {atual.logisticaAcionada && (
+                <span className="ml-1 text-ayamo-text-mut">Notificada em {formatarData(atual.logisticaAcionadaEm)}.</span>
+              )}
+            </p>
+          </div>
+          {podeNegociar && !atual.logisticaAcionada && (
+            <button
+              type="button"
+              onClick={() => notificarLogistica(atual)}
+              className="flex-shrink-0 rounded border border-ayamo-warning px-3 py-1.5 text-xs font-medium text-ayamo-warning hover:bg-ayamo-warning/10"
+            >
+              Notificar Logística
+            </button>
+          )}
+        </div>
+      )}
 
       {atual.historicoNegociacao?.length > 0 && (
         <SecaoRecolhivel titulo="Histórico de negociação com o fornecedor" aberturaInicial={false}>

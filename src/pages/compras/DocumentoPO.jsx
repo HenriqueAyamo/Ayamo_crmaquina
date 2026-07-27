@@ -27,6 +27,7 @@ export default function DocumentoPO() {
 
   const produto = getProduto(atual.produtoId)
   const fornecedor = getEmpresa(atual.fornecedorId)
+  const marca = fornecedor?.marca || fornecedor?.nome
   const propostaVinculada = propostas.items.find((p) => p.itens.some((i) => i.ofertaCodigo === atual.codigo))
   const hoje = formatarData(new Date())
   const total = atual.quantidade * atual.precoCusto.valor
@@ -40,7 +41,7 @@ As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new bu
 
 **Purchase confirmation**
 **Quantity:** 1
-**Brand/Country of Origin:** ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
+**Brand/Country of Origin:** ${marca ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
 **Incoterm/Port of Destination:** ${atual.incoterm ?? ''} - ${propostaVinculada?.portoDestino ?? 'TBI'}
 **Shipment from/to:** ${atual.embarqueDe || 'TBI'} - ${atual.embarqueAte || 'TBI'}
 
@@ -102,7 +103,7 @@ Our Operational Team will be in touch for further instructions.
                 {produto?.embalagem ? ` - ${produto.embalagem}` : ''}
               </p>
               <p className="text-xs text-gray-600">
-                BRAND: {fornecedor?.nome} ({fornecedor?.pais} Origin)
+                BRAND: {marca} ({fornecedor?.pais} Origin)
                 {produto?.validadeMeses ? ` - EXPIRY DATE: ${produto.validadeMeses} Months` : ''}
               </p>
             </td>

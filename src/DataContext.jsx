@@ -128,8 +128,14 @@ export function DataProvider({ children }) {
     return usuarios.items.find((u) => u.id === usuarioId)
   }
 
-  const { ajustarEstoqueOferta, registrarNotaOferta, alterarStatusOferta, registrarRevisaoOferta, avisarConcorrenciaEstoque } =
-    criarAcoesOferta({ ofertas, propostas, usuarioLogado })
+  const {
+    ajustarEstoqueOferta,
+    registrarNotaOferta,
+    alterarStatusOferta,
+    registrarRevisaoOferta,
+    notificarLogistica,
+    avisarConcorrenciaEstoque,
+  } = criarAcoesOferta({ ofertas, propostas, usuarioLogado })
 
   function verificarLimiteCredito(clienteId, valorNegocioUSD) {
     const empresa = getEmpresa(clienteId)
@@ -184,6 +190,7 @@ export function DataProvider({ children }) {
     registrarNotaOferta,
     alterarStatusOferta,
     registrarRevisaoOferta,
+    notificarLogistica,
     avisarConcorrenciaEstoque,
     verificarLimiteCredito,
     registrarUsoCreditoCliente,

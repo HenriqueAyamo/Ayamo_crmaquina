@@ -33,6 +33,7 @@ export default function DocumentoProforma() {
   const cliente = getEmpresa(proposta.clienteId)
   const ofertaVinculada = ofertas.items.find((o) => o.codigo === item.ofertaCodigo)
   const fornecedor = ofertaVinculada ? getEmpresa(ofertaVinculada.fornecedorId) : null
+  const marca = fornecedor?.marca || fornecedor?.nome
   const hoje = formatarData(new Date())
   const total = item.quantidade * item.precoVenda.valor
   const consignatarioNome = proposta.consignatarioNome || cliente?.nome
@@ -47,7 +48,7 @@ As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new bu
 
 **Sales confirmation**
 **Quantity:** 1
-**Brand/Country of Origin:** ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
+**Brand/Country of Origin:** ${marca ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
 **Incoterm/Port of Destination:** ${proposta.incoterm ?? ''} - ${proposta.portoDestino ?? ''}
 **Shipment from/to:** ${proposta.embarqueDe || 'TBI'} - ${proposta.embarqueAte || 'TBI'}
 
@@ -120,7 +121,7 @@ Kindly send it back to us signed with your instructions and (if applicable) the 
                 {produto?.embalagem ? ` - ${produto.embalagem}` : ''}
               </p>
               <p className="text-xs text-gray-600">
-                BRAND: {fornecedor?.nome ?? '—'} ({fornecedor?.pais ?? '—'} Origin)
+                BRAND: {marca ?? '—'} ({fornecedor?.pais ?? '—'} Origin)
                 {produto?.validadeMeses ? ` - EXPIRY DATE: ${produto.validadeMeses} Months` : ''}
               </p>
             </td>
