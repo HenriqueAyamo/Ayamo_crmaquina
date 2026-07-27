@@ -1,7 +1,61 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { inputClass } from '../../components/Field.jsx'
 import { PAISES_QUALIFICACAO, STATUS_QUALIFICACAO } from '../../data/qualificacaoPaises.js'
+
+const CARTAO_TONE = {
+  Aprovado: 'border-ayamo-success/25 bg-ayamo-success/10',
+  'Em andamento': 'border-ayamo-warning/25 bg-ayamo-warning/10',
+  'Não iniciado': 'border-ayamo-border bg-ayamo-bg',
+}
+
+const SELECT_TONE = {
+  Aprovado: 'text-ayamo-success',
+  'Em andamento': 'text-ayamo-warning',
+  'Não iniciado': 'text-ayamo-text-mut',
+}
+
+const PONTO_TONE = {
+  Aprovado: 'bg-ayamo-success',
+  'Em andamento': 'bg-ayamo-warning',
+  'Não iniciado': 'bg-ayamo-text-mut',
+}
+
+function CartaoPais({ pais, status, onAtualizar, onRemover }) {
+  return (
+    <div className={`rounded-lg border p-2.5 transition-colors ${CARTAO_TONE[status]}`}>
+      <div className="mb-1.5 flex items-center justify-between gap-1">
+        <span className="truncate text-sm font-medium text-ayamo-text" title={pais}>
+          {pais}
+        </span>
+        {onRemover && (
+          <button
+            type="button"
+            onClick={() => onRemover(pais)}
+            className="flex-shrink-0 text-ayamo-text-mut hover:text-ayamo-danger"
+            title="Remover país"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className={`h-2 w-2 flex-shrink-0 rounded-full ${PONTO_TONE[status]}`} />
+        <select
+          className={`w-full rounded border-0 bg-transparent py-0.5 text-xs font-medium outline-none ${SELECT_TONE[status]}`}
+          value={status}
+          onChange={(e) => onAtualizar(pais, e.target.value)}
+        >
+          {STATUS_QUALIFICACAO.map((s) => (
+            <option key={s} value={s} className="text-ayamo-text">
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
 
 export default function SecaoQualificacaoPaises({ value, onChange }) {
   const mapa = value ?? {}
@@ -31,50 +85,14 @@ export default function SecaoQualificacaoPaises({ value, onChange }) {
       <span className="mb-2 block text-sm font-medium text-ayamo-text">Qualificação por país</span>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {PAISES_QUALIFICACAO.map((pais) => (
-          <div key={pais} className="flex items-center justify-between gap-2 rounded border border-ayamo-border p-2">
-            <span className="text-sm text-ayamo-text">{pais}</span>
-            <select
-              className={`${inputClass} w-32 text-xs`}
-              value={mapa[pais] ?? 'Não iniciado'}
-              onChange={(e) => atualizar(pais, e.target.value)}
-            >
-              {STATUS_QUALIFICACAO.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CartaoPais key={pais} pais={pais} status={mapa[pais] ?? 'Não iniciado'} onAtualizar={atualizar} />
         ))}
         {paisesExtras.map((pais) => (
-          <div key={pais} className="flex items-center justify-between gap-2 rounded border border-ayamo-border p-2">
-            <span className="text-sm text-ayamo-text">{pais}</span>
-            <div className="flex items-center gap-1">
-              <select
-                className={`${inputClass} w-32 text-xs`}
-                value={mapa[pais] ?? 'Não iniciado'}
-                onChange={(e) => atualizar(pais, e.target.value)}
-              >
-                {STATUS_QUALIFICACAO.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => removerPais(pais)}
-                className="text-ayamo-text-mut hover:text-ayamo-danger"
-                title="Remover país"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          </div>
+          <CartaoPais key={pais} pais={pais} status={mapa[pais] ?? 'Não iniciado'} onAtualizar={atualizar} onRemover={removerPais} />
         ))}
       </div>
 
-      <div className="mt-2 flex items-center gap-2">
+      <div className="mt-3 flex items-center gap-2">
         <input
           className={`${inputClass} max-w-xs`}
           placeholder="Adicionar outro país"
@@ -87,8 +105,9 @@ export default function SecaoQualificacaoPaises({ value, onChange }) {
         <button
           type="button"
           onClick={adicionarPais}
-          className="rounded border border-ayamo-border px-3 py-1.5 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
+          className="flex items-center gap-1.5 rounded border border-ayamo-border px-3 py-1.5 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
         >
+          <Plus size={14} />
           Adicionar
         </button>
       </div>
