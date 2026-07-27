@@ -11,6 +11,7 @@ import {
   FileText,
   LayoutDashboard,
   AlertTriangle,
+  Globe,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -32,6 +33,7 @@ const NAV_GROUPS = [
     label: 'Fornecedores & Produtos',
     items: [
       { to: '/empresas', label: 'Empresas', icon: Building2 },
+      { to: '/qualificacoes', label: 'Qualificações por país', icon: Globe },
       { to: '/contatos', label: 'Contatos', icon: Users },
     ],
   },
