@@ -69,7 +69,7 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
           <button
             type="button"
             onClick={() => {
-              if (window.confirm(`Excluir ${itemLabel} "${item.nome}" definitivamente?`)) collection.remover(item.id)
+              if (window.confirm(`Excluir ${itemLabel} "${item.nome ?? item.razaoSocial ?? ''}" definitivamente?`)) collection.remover(item.id)
             }}
             className="text-ayamo-danger hover:underline"
           >
@@ -139,6 +139,15 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
               {f.type === 'text' && (
                 <input
                   className={inputClass}
+                  value={form[f.key] ?? ''}
+                  required={f.required}
+                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                />
+              )}
+              {f.type === 'textarea' && (
+                <textarea
+                  className={inputClass}
+                  rows={f.rows ?? 3}
                   value={form[f.key] ?? ''}
                   required={f.required}
                   onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}

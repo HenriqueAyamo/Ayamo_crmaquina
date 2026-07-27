@@ -15,11 +15,13 @@ function valoresPO(atual) {
     embarqueAte: atual.embarqueAte ?? '',
     mfgSite: atual.mfgSite ?? '',
     validadeAte: atual.validadeAte ?? '',
+    ayamoEntidadeId: atual.ayamoEntidadeId ?? '',
   }
 }
 
 export default function ModalRevisao({ open, onClose, atual }) {
-  const { registrarRevisaoOferta } = useData()
+  const { registrarRevisaoOferta, dadosAyamo } = useData()
+  const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
   const [valor, setValor] = useState('')
   const [moeda, setMoeda] = useState(atual.precoCusto.moeda)
@@ -159,6 +161,22 @@ export default function ModalRevisao({ open, onClose, atual }) {
             />
           </Field>
         </div>
+
+        {entidadesAtivas.length > 0 && (
+          <Field label="Entidade Ayamo compradora">
+            <select
+              className={inputClass}
+              value={dadosPO.ayamoEntidadeId}
+              onChange={(e) => setDadosPO({ ...dadosPO, ayamoEntidadeId: e.target.value })}
+            >
+              {entidadesAtivas.map((ent) => (
+                <option key={ent.id} value={ent.id}>
+                  {ent.razaoSocial}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
       </form>
     </Modal>
   )

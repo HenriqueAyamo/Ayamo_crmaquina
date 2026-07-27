@@ -62,6 +62,7 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       embarqueAte: dados.embarqueAte,
       mfgSite: dados.mfgSite,
       validadeAte: dados.validadeAte,
+      ayamoEntidadeId: dados.ayamoEntidadeId ? Number(dados.ayamoEntidadeId) : null,
       historicoNegociacao: [
         ...(ofertaAtual.historicoNegociacao ?? []),
         {

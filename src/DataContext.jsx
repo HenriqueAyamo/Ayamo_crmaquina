@@ -9,7 +9,7 @@ import { contatos as contatosMock } from './data/contatos.js'
 import { ofertas as ofertasMock } from './data/ofertas.js'
 import { propostas as propostasMock } from './data/propostas.js'
 import { documentos as documentosMock } from './data/documentos.js'
-import { dadosAyamoSeed } from './data/dadosAyamo.js'
+import { dadosAyamo as dadosAyamoMock } from './data/dadosAyamo.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
 import { criarAcoesOferta } from './utils/ofertasNegocio.js'
@@ -85,6 +85,7 @@ export function DataProvider({ children }) {
   const ofertas = useCollection('ofertas', ofertasMock)
   const propostas = useCollection('propostas', propostasMock)
   const documentos = useCollection('documentos', documentosMock)
+  const dadosAyamo = useCollection('dadosAyamo', dadosAyamoMock)
 
   const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
     const salvo = carregarStorage('usuarioLogadoId', null)
@@ -97,13 +98,6 @@ export function DataProvider({ children }) {
   }
 
   const usuarioLogado = usuarios.items.find((u) => u.id === usuarioLogadoId) ?? usuarios.items[0]
-
-  const [dadosAyamo, setDadosAyamoState] = useState(() => carregarStorage('dadosAyamo', dadosAyamoSeed))
-
-  function atualizarDadosAyamo(novosDados) {
-    setDadosAyamoState(novosDados)
-    salvarStorage('dadosAyamo', novosDados)
-  }
 
   function getFamilia(familiaId) {
     return familias.items.find((f) => f.id === familiaId)
@@ -172,7 +166,6 @@ export function DataProvider({ children }) {
     usuarioLogado,
     setUsuarioLogadoId,
     dadosAyamo,
-    atualizarDadosAyamo,
     getFamilia,
     getProduto,
     getDivisao,

@@ -32,6 +32,7 @@ export default function DocumentoPO() {
   const total = atual.quantidade * atual.precoCusto.valor
   const contatosFornecedor = contatos.items.filter((c) => c.empresaId === atual.fornecedorId)
   const saudacao = saudacaoComercial(contatosFornecedor, categoriasContato.items)
+  const entidadeAyamo = dadosAyamo.items.find((e) => e.id === atual.ayamoEntidadeId) ?? dadosAyamo.items[0]
 
   const corpoEmail = `${saudacao},
 
@@ -77,8 +78,8 @@ Our Operational Team will be in touch for further instructions.
         </div>
         <div>
           <p className="font-semibold text-gray-800">Buyer:</p>
-          <p className="font-medium text-gray-800">{dadosAyamo.razaoSocial || 'AYAMO'}</p>
-          <p className="whitespace-pre-line text-gray-600">{dadosAyamo.endereco || '—'}</p>
+          <p className="font-medium text-gray-800">{entidadeAyamo?.razaoSocial || 'AYAMO'}</p>
+          <p className="whitespace-pre-line text-gray-600">{entidadeAyamo?.endereco || '—'}</p>
         </div>
       </div>
 

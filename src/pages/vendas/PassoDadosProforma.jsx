@@ -1,12 +1,28 @@
+import { useData } from '../../DataContext.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import { INCOTERMS } from '../../data/unidades.js'
 
 export default function PassoDadosProforma({ dados, onAtualizar }) {
+  const { dadosAyamo } = useData()
+  const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-ayamo-text-mut">
         Opcional — usado para gerar a Proforma Invoice depois. Se ficar em branco, dá pra completar mais tarde.
       </p>
+
+      {entidadesAtivas.length > 0 && (
+        <Field label="Entidade Ayamo vendedora" hint="Configurável em Cadastros gerais > Dados da Ayamo">
+          <select className={inputClass} value={dados.ayamoEntidadeId} onChange={(e) => onAtualizar('ayamoEntidadeId', e.target.value)}>
+            {entidadesAtivas.map((ent) => (
+              <option key={ent.id} value={ent.id}>
+                {ent.razaoSocial}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Número do contrato" hint="Ex.: S12179.1">

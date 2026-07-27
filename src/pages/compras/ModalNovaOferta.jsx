@@ -28,15 +28,19 @@ function valoresIniciais() {
     embarqueAte: '',
     mfgSite: '',
     validadeAte: '',
+    ayamoEntidadeId: '',
   }
 }
 
 export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada, inicial }) {
-  const { ofertas, usuarioLogado } = useData()
+  const { ofertas, dadosAyamo, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
+  const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
   useEffect(() => {
-    if (open) setForm({ ...valoresIniciais(), ...inicial })
+    if (open) {
+      setForm({ ...valoresIniciais(), ayamoEntidadeId: entidadesAtivas[0]?.id ?? '', ...inicial })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
 
@@ -70,6 +74,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       embarqueAte: form.embarqueAte,
       mfgSite: form.mfgSite,
       validadeAte: form.validadeAte,
+      ayamoEntidadeId: form.ayamoEntidadeId ? Number(form.ayamoEntidadeId) : null,
     })
     fecharEResetar()
     onCriada(nova)
@@ -125,6 +130,22 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             ))}
           </select>
         </Field>
+
+        {entidadesAtivas.length > 0 && (
+          <Field label="Entidade Ayamo compradora" hint="Usada no PO — configurável em Cadastros gerais > Dados da Ayamo">
+            <select
+              className={inputClass}
+              value={form.ayamoEntidadeId}
+              onChange={(e) => setForm({ ...form, ayamoEntidadeId: e.target.value })}
+            >
+              {entidadesAtivas.map((ent) => (
+                <option key={ent.id} value={ent.id}>
+                  {ent.razaoSocial}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Preço de custo" required>

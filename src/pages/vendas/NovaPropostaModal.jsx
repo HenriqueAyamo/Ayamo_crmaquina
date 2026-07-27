@@ -21,11 +21,12 @@ function valoresIniciaisProforma() {
     embarqueAte: '',
     consignatarioNome: '',
     consignatarioEndereco: '',
+    ayamoEntidadeId: '',
   }
 }
 
 export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa, clienteFixo }) {
-  const { ofertas, propostas, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
+  const { ofertas, propostas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
   const [clientesIds, setClientesIds] = useState([])
@@ -39,6 +40,10 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     if (open && clienteFixo) {
       setClientesIds([String(clienteFixo.id)])
       setPasso(2)
+    }
+    if (open) {
+      const ativa = dadosAyamo.items.find((e) => e.situacao === 'Ativo')
+      if (ativa) setDadosProforma((atual) => ({ ...atual, ayamoEntidadeId: atual.ayamoEntidadeId || ativa.id }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
@@ -131,6 +136,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         margemMinima: 10,
         itens: itensCliente,
         ...dadosProforma,
+        ayamoEntidadeId: dadosProforma.ayamoEntidadeId ? Number(dadosProforma.ayamoEntidadeId) : null,
         historicoNegociacao: [
           {
             rodada: 1,

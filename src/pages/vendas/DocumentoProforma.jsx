@@ -38,6 +38,7 @@ export default function DocumentoProforma() {
   const consignatarioNome = proposta.consignatarioNome || cliente?.nome
   const consignatarioEndereco = proposta.consignatarioEndereco || cliente?.endereco
   const contatosCliente = contatos.items.filter((c) => c.empresaId === proposta.clienteId)
+  const entidadeAyamo = dadosAyamo.items.find((e) => e.id === proposta.ayamoEntidadeId) ?? dadosAyamo.items[0]
   const saudacao = saudacaoComercial(contatosCliente, categoriasContato.items)
 
   const corpoEmail = `${saudacao},
@@ -76,8 +77,8 @@ Kindly send it back to us signed with your instructions and (if applicable) the 
       <div className="mb-4 grid grid-cols-2 gap-4 text-sm">
         <div>
           <p className="font-semibold text-gray-800">Seller:</p>
-          <p className="font-medium text-gray-800">{dadosAyamo.razaoSocial || 'AYAMO'}</p>
-          <p className="whitespace-pre-line text-gray-600">{dadosAyamo.endereco || '—'}</p>
+          <p className="font-medium text-gray-800">{entidadeAyamo?.razaoSocial || 'AYAMO'}</p>
+          <p className="whitespace-pre-line text-gray-600">{entidadeAyamo?.endereco || '—'}</p>
         </div>
         <div>
           <p className="font-semibold text-gray-800">Buyer:</p>
@@ -94,9 +95,9 @@ Kindly send it back to us signed with your instructions and (if applicable) the 
 
       <div className="mb-4 text-sm">
         <p className="font-semibold text-gray-800">Bank Details:</p>
-        <p className="text-gray-700">{dadosAyamo.bancoNome || '—'}</p>
+        <p className="text-gray-700">{entidadeAyamo?.bancoNome || '—'}</p>
         <p className="text-gray-700">
-          SWIFT: {dadosAyamo.bancoSwift || '—'} · IBAN: {dadosAyamo.bancoIban || '—'}
+          SWIFT: {entidadeAyamo?.bancoSwift || '—'} · IBAN: {entidadeAyamo?.bancoIban || '—'}
         </p>
       </div>
 
