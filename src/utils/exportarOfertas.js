@@ -3,6 +3,7 @@ export async function exportarOfertasExcel(ofertasLista, { getProduto, getEmpres
 
   const linhas = ofertasLista.map((o) => ({
     Código: o.codigo,
+    Tipo: o.tipoRegistro ?? 'Position',
     Produto: getProduto(o.produtoId)?.nome ?? '',
     Fornecedor: getEmpresa(o.fornecedorId)?.nome ?? '',
     Preço: o.precoCusto.valor,

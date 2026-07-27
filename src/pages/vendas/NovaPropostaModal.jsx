@@ -33,7 +33,9 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const [selecao, setSelecao] = useState({})
   const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
 
-  const ofertasDisponiveis = ofertaFixa ? [ofertaFixa] : ofertas.items.filter((o) => o.status === 'Disponível')
+  const ofertasDisponiveis = ofertaFixa
+    ? [ofertaFixa]
+    : ofertas.items.filter((o) => o.status === 'Disponível' && (o.tipoRegistro ?? 'Position') === 'Position')
   const clientesSelecionados = clientesIds.map((id) => clientes.find((c) => String(c.id) === id)).filter(Boolean)
 
   useEffect(() => {

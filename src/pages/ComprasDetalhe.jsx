@@ -65,6 +65,10 @@ export default function ComprasDetalhe() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <StatusBadge
+              label={atual.tipoRegistro ?? 'Position'}
+              tone={(atual.tipoRegistro ?? 'Position') === 'Position' ? 'info' : 'accent'}
+            />
             <StatusBadge label={atual.status} tone={TONE_STATUS[atual.status] ?? 'neutral'} />
             {podeVender && atual.status === 'Disponível' && atual.quantidade > 0 && (
               <>
@@ -86,13 +90,15 @@ export default function ComprasDetalhe() {
             )}
             {podeNegociar && (
               <>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/compras/${atual.codigoBase}/po`)}
-                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-                >
-                  Gerar PO
-                </button>
+                {(atual.tipoRegistro ?? 'Position') === 'Position' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/compras/${atual.codigoBase}/po`)}
+                    className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+                  >
+                    Gerar PO
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setModalNotaAberto(true)}
@@ -129,7 +135,7 @@ export default function ComprasDetalhe() {
           <div>
             <dt className="text-ayamo-text-mut">Quantidade</dt>
             <dd className="font-medium text-ayamo-text">
-              {atual.quantidade.toLocaleString('pt-BR')} {atual.unidade}
+              {atual.quantidade == null ? 'A definir' : `${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade}`}
             </dd>
           </div>
           <div>

@@ -23,17 +23,19 @@ export default function ModalRevisao({ open, onClose, atual }) {
   const { registrarRevisaoOferta, dadosAyamo } = useData()
   const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
+  const [tipoRegistro, setTipoRegistro] = useState(atual.tipoRegistro ?? 'Position')
   const [valor, setValor] = useState('')
   const [moeda, setMoeda] = useState(atual.precoCusto.moeda)
-  const [quantidade, setQuantidade] = useState(atual.quantidade)
+  const [quantidade, setQuantidade] = useState(atual.quantidade ?? '')
   const [status, setStatus] = useState('Disponível')
   const [observacao, setObservacao] = useState('')
   const [dadosPO, setDadosPO] = useState(valoresPO(atual))
 
   function fecharEResetar() {
+    setTipoRegistro(atual.tipoRegistro ?? 'Position')
     setValor('')
     setMoeda(atual.precoCusto.moeda)
-    setQuantidade(atual.quantidade)
+    setQuantidade(atual.quantidade ?? '')
     setStatus('Disponível')
     setObservacao('')
     setDadosPO(valoresPO(atual))
@@ -42,7 +44,15 @@ export default function ModalRevisao({ open, onClose, atual }) {
 
   function salvar(e) {
     e.preventDefault()
-    registrarRevisaoOferta(atual, { valor: Number(valor), moeda, quantidade: Number(quantidade), status, observacao, ...dadosPO })
+    registrarRevisaoOferta(atual, {
+      tipoRegistro,
+      valor: Number(valor),
+      moeda,
+      quantidade: quantidade === '' ? null : Number(quantidade),
+      status,
+      observacao,
+      ...dadosPO,
+    })
     fecharEResetar()
   }
 
@@ -67,6 +77,25 @@ export default function ModalRevisao({ open, onClose, atual }) {
       }
     >
       <form id="revisao-form" onSubmit={salvar} className="flex flex-col gap-4">
+        <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
+          <div className="flex gap-2">
+            {['Oferta', 'Position'].map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => setTipoRegistro(tipo)}
+                className={`flex-1 rounded border px-3 py-2 text-sm font-medium ${
+                  tipoRegistro === tipo
+                    ? 'border-ayamo-primary bg-ayamo-primary/10 text-ayamo-primary'
+                    : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+                }`}
+              >
+                {tipo}
+              </button>
+            ))}
+          </div>
+        </Field>
+
         <div className="grid grid-cols-3 gap-3">
           <Field label="Novo preço" required>
             <CampoNumerico required value={valor} onChange={setValor} />
@@ -80,8 +109,8 @@ export default function ModalRevisao({ open, onClose, atual }) {
               ))}
             </select>
           </Field>
-          <Field label="Quantidade" required>
-            <CampoNumerico required value={quantidade} onChange={setQuantidade} />
+          <Field label="Quantidade" required={tipoRegistro === 'Position'} hint={tipoRegistro === 'Oferta' ? 'Opcional' : undefined}>
+            <CampoNumerico required={tipoRegistro === 'Position'} value={quantidade} onChange={setQuantidade} />
           </Field>
         </div>
         <Field label="Status da revisão" required>

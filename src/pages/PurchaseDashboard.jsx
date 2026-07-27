@@ -12,7 +12,10 @@ export default function PurchaseDashboard() {
   const { ofertas, getProduto, getEmpresa } = useData()
 
   const posicoesAtivas = useMemo(
-    () => obterOfertasAtuais(ofertas.items).filter((o) => o.status !== 'Expirada'),
+    () =>
+      obterOfertasAtuais(ofertas.items).filter(
+        (o) => o.status !== 'Expirada' && (o.tipoRegistro ?? 'Position') === 'Position',
+      ),
     [ofertas.items],
   )
 
@@ -50,9 +53,11 @@ export default function PurchaseDashboard() {
 
   const posicoesPorStatus = useMemo(() => {
     const mapa = new Map()
-    obterOfertasAtuais(ofertas.items).forEach((o) => {
-      mapa.set(o.status, (mapa.get(o.status) ?? 0) + 1)
-    })
+    obterOfertasAtuais(ofertas.items)
+      .filter((o) => (o.tipoRegistro ?? 'Position') === 'Position')
+      .forEach((o) => {
+        mapa.set(o.status, (mapa.get(o.status) ?? 0) + 1)
+      })
     return [...mapa.entries()]
       .map(([rotulo, valor], indice) => ({ rotulo, valor, cor: chartColor(indice + 2) }))
       .sort((a, b) => b.valor - a.valor)

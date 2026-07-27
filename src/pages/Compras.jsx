@@ -32,6 +32,7 @@ export default function Compras() {
   const [divisaoFiltro, setDivisaoFiltro] = useState('')
   const [fornecedorFiltro, setFornecedorFiltro] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
+  const [tipoFiltro, setTipoFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [importarAberto, setImportarAberto] = useState(false)
   const [aba, setAba] = useState('ofertas')
@@ -49,9 +50,10 @@ export default function Compras() {
       const combinaDivisao = !divisaoFiltro || getDivisaoIdDeProduto(o.produtoId) === Number(divisaoFiltro)
       const combinaFornecedor = !fornecedorFiltro || o.fornecedorId === Number(fornecedorFiltro)
       const combinaStatus = !statusFiltro || o.status === statusFiltro
-      return combinaBusca && combinaDivisao && combinaFornecedor && combinaStatus
+      const combinaTipo = !tipoFiltro || (o.tipoRegistro ?? 'Position') === tipoFiltro
+      return combinaBusca && combinaDivisao && combinaFornecedor && combinaStatus && combinaTipo
     })
-  }, [ofertasAtuais, busca, divisaoFiltro, fornecedorFiltro, statusFiltro, getProduto, getDivisaoIdDeProduto])
+  }, [ofertasAtuais, busca, divisaoFiltro, fornecedorFiltro, statusFiltro, tipoFiltro, getProduto, getDivisaoIdDeProduto])
 
   return (
     <div>
@@ -112,6 +114,13 @@ export default function Compras() {
             <Field label="Buscar">
               <input className={inputClass} placeholder="Produto" value={busca} onChange={(e) => setBusca(e.target.value)} />
             </Field>
+            <Field label="Tipo">
+              <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
+                <option value="">Todos</option>
+                <option value="Oferta">Oferta</option>
+                <option value="Position">Position</option>
+              </select>
+            </Field>
             <Field label="Divisão">
               <select className={inputClass} value={divisaoFiltro} onChange={(e) => setDivisaoFiltro(e.target.value)}>
                 <option value="">Todas</option>
@@ -153,6 +162,14 @@ export default function Compras() {
             columns={[
               { key: 'codigo', header: 'Código' },
               {
+                key: 'tipoRegistro',
+                header: 'Tipo',
+                toggleable: false,
+                render: (item) => (
+                  <StatusBadge label={item.tipoRegistro ?? 'Position'} tone={(item.tipoRegistro ?? 'Position') === 'Position' ? 'info' : 'accent'} />
+                ),
+              },
+              {
                 key: 'produto',
                 header: 'Produto',
                 render: (item) => getProduto(item.produtoId)?.nome ?? '—',
@@ -179,7 +196,12 @@ export default function Compras() {
               {
                 key: 'quantidade',
                 header: 'Vendido / restante',
-                render: (item) => <BarraEstoque total={item.quantidadeOriginal ?? item.quantidade} restante={item.quantidade} unidade={item.unidade} />,
+                render: (item) =>
+                  item.quantidade == null ? (
+                    <span className="text-ayamo-text-mut">A definir</span>
+                  ) : (
+                    <BarraEstoque total={item.quantidadeOriginal ?? item.quantidade} restante={item.quantidade} unidade={item.unidade} />
+                  ),
                 sortValue: (item) => item.quantidade,
               },
               {

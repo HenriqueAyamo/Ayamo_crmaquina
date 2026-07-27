@@ -57,6 +57,7 @@ export default function ImportarPlanilha({ onImportado }) {
         codigo,
         codigoBase: codigo,
         versao: 0,
+        tipoRegistro: 'Position',
         produtoId: produto.id,
         fornecedorId: fornecedor.id,
         precoCusto: { valor, moeda, unidade },

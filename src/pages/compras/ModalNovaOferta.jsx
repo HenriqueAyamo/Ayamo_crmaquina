@@ -13,6 +13,7 @@ function proximoCodigo(ofertas) {
 
 function valoresIniciais() {
   return {
+    tipoRegistro: 'Position',
     produtoId: '',
     fornecedorId: '',
     valor: '',
@@ -56,11 +57,12 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       codigo,
       codigoBase: codigo,
       versao: 0,
+      tipoRegistro: form.tipoRegistro,
       produtoId: Number(form.produtoId),
       fornecedorId: Number(form.fornecedorId),
       precoCusto: { valor: Number(form.valor), moeda: form.moeda, unidade: form.unidade },
-      quantidade: Number(form.quantidade),
-      quantidadeOriginal: Number(form.quantidade),
+      quantidade: form.quantidade === '' ? null : Number(form.quantidade),
+      quantidadeOriginal: form.quantidade === '' ? null : Number(form.quantidade),
       unidade: form.unidade,
       status: 'Disponível',
       data: new Date().toISOString().slice(0, 10),
@@ -108,6 +110,25 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         >
           Importar de imagem (IA) — em breve
         </button>
+
+        <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
+          <div className="flex gap-2">
+            {['Oferta', 'Position'].map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                onClick={() => setForm({ ...form, tipoRegistro: tipo })}
+                className={`flex-1 rounded border px-3 py-2 text-sm font-medium ${
+                  form.tipoRegistro === tipo
+                    ? 'border-ayamo-primary bg-ayamo-primary/10 text-ayamo-primary'
+                    : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+                }`}
+              >
+                {tipo}
+              </button>
+            ))}
+          </div>
+        </Field>
 
         <Field label="Produto" required>
           <select className={inputClass} required value={form.produtoId} onChange={(e) => setForm({ ...form, produtoId: e.target.value })}>
@@ -171,8 +192,16 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         </div>
 
-        <Field label="Quantidade" required>
-          <CampoNumerico required value={form.quantidade} onChange={(quantidade) => setForm({ ...form, quantidade })} />
+        <Field
+          label="Quantidade"
+          required={form.tipoRegistro === 'Position'}
+          hint={form.tipoRegistro === 'Oferta' ? 'Opcional — o fornecedor pode não ter definido ainda.' : undefined}
+        >
+          <CampoNumerico
+            required={form.tipoRegistro === 'Position'}
+            value={form.quantidade}
+            onChange={(quantidade) => setForm({ ...form, quantidade })}
+          />
         </Field>
 
         <Field label="Observação">
