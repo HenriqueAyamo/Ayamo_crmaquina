@@ -14,6 +14,7 @@ import { MOEDAS } from '../data/unidades.js'
 import { contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { CATEGORIAS_PRODUTO, CATEGORIA_TONE, classificarProduto, isNacional } from '../utils/categoriaProdutos.js'
 import { exportarEmpresasExcel } from '../utils/exportarEmpresas.js'
+import { encontrarMelhorCorrespondencia } from '../utils/produtoTexto.js'
 
 const ImportarPlanilhaEmpresas = lazy(() => import('./empresas/ImportarPlanilhaEmpresas.jsx'))
 
@@ -47,7 +48,7 @@ function valoresIniciais() {
 }
 
 export default function Empresas() {
-  const { empresas, usuarios, getUsuario } = useData()
+  const { empresas, usuarios, contatos, getUsuario } = useData()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -58,6 +59,8 @@ export default function Empresas() {
   const [modalAberto, setModalAberto] = useState(false)
   const [importarAberto, setImportarAberto] = useState(false)
   const [form, setForm] = useState(valoresIniciais())
+  const [sugestao, setSugestao] = useState(null)
+  const [copiarContatosDe, setCopiarContatosDe] = useState(null)
 
   const responsaveis = usuarios.items.filter((u) => u.situacao === 'Ativo')
 
@@ -79,7 +82,27 @@ export default function Empresas() {
 
   function abrirNova() {
     setForm(valoresIniciais())
+    setSugestao(null)
+    setCopiarContatosDe(null)
     setModalAberto(true)
+  }
+
+  function alterarNome(nome) {
+    setForm((atual) => ({ ...atual, nome }))
+    setCopiarContatosDe(null)
+    if (nome.trim().length < 3) {
+      setSugestao(null)
+      return
+    }
+    const encontrado = encontrarMelhorCorrespondencia(nome, empresas.items, (e) => e.nome, 0.5)
+    setSugestao(encontrado?.item ?? null)
+  }
+
+  function usarSugestao() {
+    if (!sugestao) return
+    setForm((atual) => ({ ...atual, pais: sugestao.pais, moedaPadrao: sugestao.moedaPadrao }))
+    setCopiarContatosDe(sugestao.id)
+    setSugestao(null)
   }
 
   function salvar(e) {
@@ -90,6 +113,11 @@ export default function Empresas() {
       limiteCredito: Number(form.limiteCredito),
       creditoUtilizado: Number(form.creditoUtilizado),
     })
+    if (copiarContatosDe) {
+      contatos.items
+        .filter((c) => c.empresaId === copiarContatosDe)
+        .forEach((c) => contatos.criar({ nome: c.nome, cargo: c.cargo, telefone: c.telefone, email: c.email, categoriasIds: c.categoriasIds, empresaId: nova.id }))
+    }
     setModalAberto(false)
     navigate(`/empresas/${nova.id}`)
   }
@@ -277,13 +305,28 @@ export default function Empresas() {
       >
         <form id="empresa-form" onSubmit={salvar} className="flex flex-col gap-4">
           <Field label="Nome" required>
-            <input
-              className={inputClass}
-              required
-              value={form.nome}
-              onChange={(e) => setForm({ ...form, nome: e.target.value })}
-            />
+            <input className={inputClass} required value={form.nome} onChange={(e) => alterarNome(e.target.value)} />
           </Field>
+          {sugestao && (
+            <div className="flex items-center justify-between gap-2 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-3 py-2 text-xs text-ayamo-text">
+              <span>
+                Nome parecido com <strong>{sugestao.nome}</strong> já cadastrado — copiar país, moeda e contatos dessa empresa?
+              </span>
+              <div className="flex flex-shrink-0 gap-2">
+                <button type="button" onClick={usarSugestao} className="rounded border border-ayamo-primary px-2 py-1 font-medium text-ayamo-primary hover:bg-ayamo-primary/10">
+                  Usar dados
+                </button>
+                <button type="button" onClick={() => setSugestao(null)} className="text-ayamo-text-mut hover:text-ayamo-text">
+                  Ignorar
+                </button>
+              </div>
+            </div>
+          )}
+          {copiarContatosDe && (
+            <p className="text-xs text-ayamo-success">
+              Contatos de {empresas.items.find((e) => e.id === copiarContatosDe)?.nome} serão copiados ao salvar.
+            </p>
+          )}
           <Field label="País" required>
             <input
               className={inputClass}
