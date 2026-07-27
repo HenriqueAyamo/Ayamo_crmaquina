@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import EmptyState from '../../components/EmptyState.jsx'
 import PaginaDocumento from '../../components/PaginaDocumento.jsx'
 import { formatarData, formatarValor } from '../../utils/formato.js'
+import { saudacaoComercial } from '../../utils/saudacao.js'
 
 const TERMOS = [
   'INCOTERMS 2010 to apply unless otherwise specified;',
@@ -17,7 +18,7 @@ const TERMOS = [
 
 export default function DocumentoPO() {
   const { id } = useParams()
-  const { ofertas, propostas, getProduto, getEmpresa, dadosAyamo } = useData()
+  const { ofertas, propostas, contatos, categoriasContato, getProduto, getEmpresa, dadosAyamo } = useData()
 
   const versoes = ofertas.items.filter((o) => o.codigoBase === id).sort((a, b) => a.versao - b.versao)
   const atual = versoes[versoes.length - 1]
@@ -29,8 +30,10 @@ export default function DocumentoPO() {
   const propostaVinculada = propostas.items.find((p) => p.itens.some((i) => i.ofertaCodigo === atual.codigo))
   const hoje = formatarData(new Date())
   const total = atual.quantidade * atual.precoCusto.valor
+  const contatosFornecedor = contatos.items.filter((c) => c.empresaId === atual.fornecedorId)
+  const saudacao = saudacaoComercial(contatosFornecedor, categoriasContato.items)
 
-  const corpoEmail = `Dear Team,
+  const corpoEmail = `${saudacao},
 
 As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new business.
 

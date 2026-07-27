@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import EmptyState from '../../components/EmptyState.jsx'
 import PaginaDocumento from '../../components/PaginaDocumento.jsx'
 import { formatarData, formatarValor } from '../../utils/formato.js'
+import { saudacaoComercial } from '../../utils/saudacao.js'
 
 const TERMOS = [
   'Ayamo does not accept payments in any CASH payments at the banks counter whatsoever. Only wire transfer/eletronic funds transfer via swift are allowed.',
@@ -22,7 +23,7 @@ const TERMOS = [
 
 export default function DocumentoProforma() {
   const { id } = useParams()
-  const { propostas, ofertas, getProduto, getEmpresa, dadosAyamo } = useData()
+  const { propostas, ofertas, contatos, categoriasContato, getProduto, getEmpresa, dadosAyamo } = useData()
 
   const proposta = propostas.items.find((p) => p.numero === id)
   if (!proposta) return <EmptyState title="Proposta não encontrada" />
@@ -36,8 +37,10 @@ export default function DocumentoProforma() {
   const total = item.quantidade * item.precoVenda.valor
   const consignatarioNome = proposta.consignatarioNome || cliente?.nome
   const consignatarioEndereco = proposta.consignatarioEndereco || cliente?.endereco
+  const contatosCliente = contatos.items.filter((c) => c.empresaId === proposta.clienteId)
+  const saudacao = saudacaoComercial(contatosCliente, categoriasContato.items)
 
-  const corpoEmail = `Dear Team,
+  const corpoEmail = `${saudacao},
 
 As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new business.
 
