@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Download } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
@@ -12,6 +13,9 @@ import { formatarValor } from '../utils/formato.js'
 import { MOEDAS } from '../data/unidades.js'
 import { contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { CATEGORIAS_PRODUTO, CATEGORIA_TONE, classificarProduto, isNacional } from '../utils/categoriaProdutos.js'
+import { exportarEmpresasExcel } from '../utils/exportarEmpresas.js'
+
+const ImportarPlanilhaEmpresas = lazy(() => import('./empresas/ImportarPlanilhaEmpresas.jsx'))
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
 
@@ -52,6 +56,7 @@ export default function Empresas() {
   const [categoriaFiltro, setCategoriaFiltro] = useState('')
   const [origemFiltro, setOrigemFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
+  const [importarAberto, setImportarAberto] = useState(false)
   const [form, setForm] = useState(valoresIniciais())
 
   const responsaveis = usuarios.items.filter((u) => u.situacao === 'Ativo')
@@ -92,6 +97,32 @@ export default function Empresas() {
   return (
     <div>
       <PageHeader title="Empresas" actionLabel="Nova empresa" onAction={abrirNova} />
+
+      <div className="mb-4 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setImportarAberto((atual) => !atual)}
+          className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
+        >
+          {importarAberto ? 'Fechar importação' : 'Importar planilha'}
+        </button>
+        <button
+          type="button"
+          onClick={() => exportarEmpresasExcel(empresasFiltradas)}
+          className="flex items-center gap-1.5 rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
+        >
+          <Download size={14} />
+          Exportar Excel
+        </button>
+      </div>
+
+      {importarAberto && (
+        <div className="mb-4">
+          <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
+            <ImportarPlanilhaEmpresas onImportado={() => setImportarAberto(false)} />
+          </Suspense>
+        </div>
+      )}
 
       <FilterBar>
         <Field label="Buscar">
