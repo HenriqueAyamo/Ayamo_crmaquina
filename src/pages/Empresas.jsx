@@ -11,8 +11,22 @@ import CampoNumerico from '../components/CampoNumerico.jsx'
 import { formatarValor } from '../utils/formato.js'
 import { MOEDAS } from '../data/unidades.js'
 import { contarAprovacoes } from '../data/qualificacaoPaises.js'
+import { CATEGORIAS_PRODUTO, CATEGORIA_TONE, classificarProduto, isNacional } from '../utils/categoriaProdutos.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
+
+const CHIP_TONE_CLASSES = {
+  accent: 'border-ayamo-accent/40 bg-ayamo-accent/20 text-ayamo-text',
+  danger: 'border-ayamo-danger/25 bg-ayamo-danger/10 text-ayamo-danger',
+  warning: 'border-ayamo-warning/25 bg-ayamo-warning/10 text-ayamo-warning',
+  info: 'border-ayamo-primary/25 bg-ayamo-primary/10 text-ayamo-primary',
+  success: 'border-ayamo-success/25 bg-ayamo-success/10 text-ayamo-success',
+  neutral: 'border-ayamo-text-mut/20 bg-ayamo-text-mut/10 text-ayamo-text-mut',
+}
+
+function categoriasDaEmpresa(empresa) {
+  return new Set((empresa.produtosCapacidade ?? []).map((p) => classificarProduto(p.nome)))
+}
 
 function valoresIniciais() {
   return {
@@ -35,19 +49,28 @@ export default function Empresas() {
   const [busca, setBusca] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [situacaoFiltro, setSituacaoFiltro] = useState('')
+  const [categoriaFiltro, setCategoriaFiltro] = useState('')
+  const [origemFiltro, setOrigemFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [form, setForm] = useState(valoresIniciais())
 
   const responsaveis = usuarios.items.filter((u) => u.situacao === 'Ativo')
+
+  const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor')
+  const nacionaisCount = fornecedores.filter((e) => isNacional(e.pais)).length
+  const internacionaisCount = fornecedores.length - nacionaisCount
 
   const empresasFiltradas = useMemo(() => {
     return empresas.items.filter((e) => {
       const combinaBusca = e.nome.toLowerCase().includes(busca.toLowerCase())
       const combinaTipo = !tipoFiltro || e.tipo === tipoFiltro
       const combinaSituacao = !situacaoFiltro || e.situacao === situacaoFiltro
-      return combinaBusca && combinaTipo && combinaSituacao
+      const combinaCategoria = !categoriaFiltro || (e.tipo === 'Fornecedor' && categoriasDaEmpresa(e).has(categoriaFiltro))
+      const combinaOrigem =
+        !origemFiltro || (e.tipo === 'Fornecedor' && (origemFiltro === 'nacional') === isNacional(e.pais))
+      return combinaBusca && combinaTipo && combinaSituacao && combinaCategoria && combinaOrigem
     })
-  }, [empresas.items, busca, tipoFiltro, situacaoFiltro])
+  }, [empresas.items, busca, tipoFiltro, situacaoFiltro, categoriaFiltro, origemFiltro])
 
   function abrirNova() {
     setForm(valoresIniciais())
@@ -96,10 +119,79 @@ export default function Empresas() {
         </Field>
       </FilterBar>
 
+      {tipoFiltro !== 'Cliente' && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setOrigemFiltro('')}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+              origemFiltro === '' ? 'border-ayamo-primary bg-ayamo-primary/10 text-ayamo-primary' : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrigemFiltro((atual) => (atual === 'nacional' ? '' : 'nacional'))}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+              origemFiltro === 'nacional' ? 'border-ayamo-primary bg-ayamo-primary/10 text-ayamo-primary' : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+            }`}
+          >
+            🇧🇷 Nacional ({nacionaisCount})
+          </button>
+          <button
+            type="button"
+            onClick={() => setOrigemFiltro((atual) => (atual === 'internacional' ? '' : 'internacional'))}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${
+              origemFiltro === 'internacional' ? 'border-ayamo-primary bg-ayamo-primary/10 text-ayamo-primary' : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+            }`}
+          >
+            🌍 Internacional ({internacionaisCount})
+          </button>
+          <span className="mx-1 h-4 w-px bg-ayamo-border" />
+          {CATEGORIAS_PRODUTO.map((categoria) => (
+            <button
+              key={categoria}
+              type="button"
+              onClick={() => setCategoriaFiltro((atual) => (atual === categoria ? '' : categoria))}
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                categoriaFiltro === categoria ? CHIP_TONE_CLASSES[CATEGORIA_TONE[categoria]] : 'border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg'
+              }`}
+            >
+              {categoria}
+            </button>
+          ))}
+        </div>
+      )}
+
       <DataTable
         rowKey="id"
         onRowClick={(item) => navigate(`/empresas/${item.id}`)}
         data={empresasFiltradas}
+        linhaExpandida={(item) => {
+          if (item.tipo !== 'Fornecedor' || !(item.produtosCapacidade ?? []).length) {
+            return <p className="text-sm text-ayamo-text-mut">Sem produtos cadastrados.</p>
+          }
+          const maximo = Math.max(1, ...item.produtosCapacidade.map((p) => Number(p.volumeMensal || 0)))
+          return (
+            <div className="flex flex-col gap-2">
+              {item.produtosCapacidade.map((p, indice) => (
+                <div key={indice} className="flex items-center gap-3">
+                  <span className="w-56 flex-shrink-0 truncate text-xs text-ayamo-text">{p.nome}</span>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-ayamo-chart-grid">
+                    <div
+                      className="h-full rounded-full bg-ayamo-primary"
+                      style={{ width: `${(Number(p.volumeMensal || 0) / maximo) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-24 flex-shrink-0 text-right text-xs text-ayamo-text-mut">
+                    {Number(p.volumeMensal || 0).toLocaleString('pt-BR')} {p.unidade}/mês
+                  </span>
+                </div>
+              ))}
+            </div>
+          )
+        }}
         columns={[
           { key: 'nome', header: 'Nome' },
           { key: 'pais', header: 'País' },

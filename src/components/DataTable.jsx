@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown, Maximize2, Minimize2, Columns3 } from 'lucide-react'
+import { Fragment, useMemo, useState } from 'react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Maximize2, Minimize2, Columns3 } from 'lucide-react'
 import EmptyState from './EmptyState.jsx'
 
 function valorPadrao(row, col) {
@@ -24,13 +24,32 @@ function carregarOcultas(chave) {
   }
 }
 
-export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabel, storageKey, stickyFirstColumn = false }) {
+export default function DataTable({
+  columns,
+  data,
+  rowKey,
+  onRowClick,
+  emptyLabel,
+  storageKey,
+  stickyFirstColumn = false,
+  linhaExpandida,
+}) {
   const [ordenacao, setOrdenacao] = useState({ chave: null, direcao: 'asc' })
   const [telaCheia, setTelaCheia] = useState(false)
   const [colunasOcultas, setColunasOcultas] = useState(() => carregarOcultas(storageKey))
   const [menuColunasAberto, setMenuColunasAberto] = useState(false)
+  const [linhasExpandidas, setLinhasExpandidas] = useState(() => new Set())
 
   const getKey = (row) => (typeof rowKey === 'function' ? rowKey(row) : row[rowKey])
+
+  function alternarExpansao(chave) {
+    setLinhasExpandidas((atual) => {
+      const nova = new Set(atual)
+      if (nova.has(chave)) nova.delete(chave)
+      else nova.add(chave)
+      return nova
+    })
+  }
 
   const colunasVisiveis = useMemo(
     () => columns.filter((col) => col.toggleable === false || !colunasOcultas.includes(col.key)),
@@ -124,6 +143,7 @@ export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabe
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-ayamo-bg">
               <tr>
+                {linhaExpandida && <th className="w-8 border-b border-ayamo-border" />}
                 {colunasVisiveis.map((col, indice) => {
                   const ordenavel = col.sortable !== false && col.key !== '_acoes'
                   const ativa = ordenacao.chave === col.key
@@ -155,29 +175,52 @@ export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabe
               </tr>
             </thead>
             <tbody>
-              {dadosOrdenados.map((row) => (
-                <tr
-                  key={getKey(row)}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`border-b border-ayamo-border last:border-b-0 ${
-                    onRowClick ? 'cursor-pointer hover:bg-ayamo-bg' : ''
-                  }`}
-                >
-                  {colunasVisiveis.map((col, indice) => {
-                    const fixa = stickyFirstColumn && indice === 0
-                    return (
-                      <td
-                        key={col.key}
-                        className={`whitespace-nowrap px-4 py-2.5 text-[13px] text-ayamo-text ${
-                          fixa ? 'sticky left-0 z-[1] bg-ayamo-surface' : ''
-                        }`}
-                      >
-                        {col.render ? col.render(row) : row[col.key]}
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))}
+              {dadosOrdenados.map((row) => {
+                const chave = getKey(row)
+                const expandida = linhaExpandida && linhasExpandidas.has(chave)
+                return (
+                  <Fragment key={chave}>
+                    <tr
+                      onClick={onRowClick ? () => onRowClick(row) : undefined}
+                      className={`border-b border-ayamo-border ${expandida ? '' : 'last:border-b-0'} ${
+                        onRowClick ? 'cursor-pointer hover:bg-ayamo-bg' : ''
+                      }`}
+                    >
+                      {linhaExpandida && (
+                        <td className="px-2 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => alternarExpansao(chave)}
+                            className="text-ayamo-text-mut hover:text-ayamo-text"
+                          >
+                            <ChevronRight size={14} className={`transition-transform ${expandida ? 'rotate-90' : ''}`} />
+                          </button>
+                        </td>
+                      )}
+                      {colunasVisiveis.map((col, indice) => {
+                        const fixa = stickyFirstColumn && indice === 0
+                        return (
+                          <td
+                            key={col.key}
+                            className={`whitespace-nowrap px-4 py-2.5 text-[13px] text-ayamo-text ${
+                              fixa ? 'sticky left-0 z-[1] bg-ayamo-surface' : ''
+                            }`}
+                          >
+                            {col.render ? col.render(row) : row[col.key]}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                    {expandida && (
+                      <tr className="border-b border-ayamo-border last:border-b-0">
+                        <td colSpan={colunasVisiveis.length + 1} className="bg-ayamo-bg px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                          {linhaExpandida(row)}
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
             </tbody>
           </table>
         </div>
