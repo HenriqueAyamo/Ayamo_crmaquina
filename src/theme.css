@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 :root {
-  --ayamo-primary:   #144396;
+  --ayamo-primary:      #144396;
+  --ayamo-primary-dark: #0A2A66;
+  --ayamo-teal:         #149AA6;
   --ayamo-accent:    #e2cc4d;
   --ayamo-bg:        #F7F8FA;
   --ayamo-surface:   #FFFFFF;

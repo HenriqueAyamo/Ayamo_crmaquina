@@ -6,6 +6,8 @@ export default {
       colors: {
         ayamo: {
           primary: 'var(--ayamo-primary)',
+          'primary-dark': 'var(--ayamo-primary-dark)',
+          teal: 'var(--ayamo-teal)',
           accent: 'var(--ayamo-accent)',
           bg: 'var(--ayamo-bg)',
           surface: 'var(--ayamo-surface)',
