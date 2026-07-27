@@ -5,6 +5,9 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import LinhaOfertaCliente from './LinhaOfertaCliente.jsx'
 import PassoDadosProforma from './PassoDadosProforma.jsx'
+import { useAutoSaveRascunho } from '../../hooks/useAutoSaveRascunho.js'
+
+const CHAVE_RASCUNHO = 'ayamo_crm_v1_rascunho_novaProposta'
 
 function baseProximoNumero(propostas) {
   const numeros = propostas.map((p) => Number(p.numero.replace('PROP-', '')))
@@ -35,6 +38,10 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
   const [margemMinima, setMargemMinima] = useState('10')
   const [margemMinimaTipo, setMargemMinimaTipo] = useState('percentual')
+  const [mostrarRestaurar, setMostrarRestaurar] = useState(false)
+
+  const autoSaveAtivo = !ofertaFixa && !clienteFixo
+  const { rascunho, recarregar: recarregarRascunho, salvar: salvarRascunho, limpar: limparRascunho } = useAutoSaveRascunho(CHAVE_RASCUNHO)
 
   const ofertasDisponiveis = ofertaFixa
     ? [ofertaFixa]
@@ -50,8 +57,37 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       const ativa = dadosAyamo.items.find((e) => e.situacao === 'Ativo')
       if (ativa) setDadosProforma((atual) => ({ ...atual, ayamoEntidadeId: atual.ayamoEntidadeId || ativa.id }))
     }
+    if (open && autoSaveAtivo) {
+      const atual = recarregarRascunho()
+      if (atual?.dados?.clientesIds?.length > 0) setMostrarRestaurar(true)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
+
+  useEffect(() => {
+    if (!autoSaveAtivo || !open || mostrarRestaurar) return
+    if (clientesIds.length === 0 && passo === 1) return
+    salvarRascunho({ passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- salvarRascunho é estável o suficiente; evita loop por identidade de função
+  }, [autoSaveAtivo, open, mostrarRestaurar, passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo])
+
+  function restaurarRascunho() {
+    const dados = rascunho?.dados
+    if (dados) {
+      setPasso(dados.passo ?? 1)
+      setClientesIds(dados.clientesIds ?? [])
+      setSelecao(dados.selecao ?? {})
+      setDadosProforma(dados.dadosProforma ?? valoresIniciaisProforma())
+      setMargemMinima(dados.margemMinima ?? '10')
+      setMargemMinimaTipo(dados.margemMinimaTipo ?? 'percentual')
+    }
+    setMostrarRestaurar(false)
+  }
+
+  function descartarRascunho() {
+    limparRascunho()
+    setMostrarRestaurar(false)
+  }
 
   useEffect(() => {
     if (!ofertaFixa) return
@@ -167,6 +203,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       ajustarEstoqueOferta(oferta.codigo, -totalAlocado)
     })
 
+    if (autoSaveAtivo) limparRascunho()
     fecharEResetar()
     onCriada(numerosCriados)
   }
@@ -252,6 +289,20 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         </>
       }
     >
+      {mostrarRestaurar && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-3 py-2 text-sm text-ayamo-text">
+          <span>Encontramos um rascunho não finalizado desta proposta. Quer continuar de onde parou?</span>
+          <div className="flex flex-shrink-0 gap-2">
+            <button type="button" onClick={restaurarRascunho} className="rounded border border-ayamo-primary px-3 py-1 text-xs font-medium text-ayamo-primary hover:bg-ayamo-primary/10">
+              Restaurar
+            </button>
+            <button type="button" onClick={descartarRascunho} className="text-xs text-ayamo-text-mut hover:text-ayamo-text">
+              Descartar
+            </button>
+          </div>
+        </div>
+      )}
+
       {passo === 1 && (
         <Field label="Clientes" required hint="Selecione um ou mais — uma proposta independente é criada para cada um.">
           <div className="flex flex-col gap-1 rounded border border-ayamo-border p-2">
