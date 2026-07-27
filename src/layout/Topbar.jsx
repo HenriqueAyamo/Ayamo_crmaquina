@@ -1,4 +1,5 @@
 import { useData } from '../DataContext.jsx'
+import ThemeToggle from '../components/ThemeToggle.jsx'
 
 export default function Topbar() {
   const { usuarios, usuarioLogado, setUsuarioLogadoId } = useData()
@@ -6,6 +7,7 @@ export default function Topbar() {
 
   return (
     <header className="flex h-14 flex-shrink-0 items-center justify-end gap-3 border-b border-ayamo-border bg-ayamo-surface px-6">
+      <ThemeToggle />
       <div className="text-right leading-tight">
         <div className="text-sm font-medium text-ayamo-text">{usuarioLogado.nome}</div>
         <div className="text-xs text-ayamo-text-mut">{usuarioLogado.perfil}</div>

@@ -3,6 +3,9 @@ export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         ayamo: {
           primary: 'var(--ayamo-primary)',
@@ -17,6 +20,15 @@ export default {
           success: 'var(--ayamo-success)',
           warning: 'var(--ayamo-warning)',
           danger: 'var(--ayamo-danger)',
+          'chart-1': 'var(--ayamo-chart-1)',
+          'chart-2': 'var(--ayamo-chart-2)',
+          'chart-3': 'var(--ayamo-chart-3)',
+          'chart-4': 'var(--ayamo-chart-4)',
+          'chart-5': 'var(--ayamo-chart-5)',
+          'chart-6': 'var(--ayamo-chart-6)',
+          'chart-7': 'var(--ayamo-chart-7)',
+          'chart-8': 'var(--ayamo-chart-8)',
+          'chart-grid': 'var(--ayamo-chart-grid)',
         },
       },
     },

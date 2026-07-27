@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -15,9 +17,53 @@
   --ayamo-success:   #16794C;
   --ayamo-warning:   #B45309;
   --ayamo-danger:    #B42318;
+
+  --ayamo-chart-1: #144396;
+  --ayamo-chart-2: #149AA6;
+  --ayamo-chart-3: #6B8F71;
+  --ayamo-chart-4: #8A93A6;
+  --ayamo-chart-5: #B08D2E;
+  --ayamo-chart-6: #5B7C99;
+  --ayamo-chart-7: #7A7F8C;
+  --ayamo-chart-8: #A05A4C;
+  --ayamo-chart-grid: #E2E5EA;
+}
+
+:root[data-theme='dark'] {
+  --ayamo-bg:        #12151C;
+  --ayamo-surface:   #1B1F29;
+  --ayamo-border:    #2C313D;
+  --ayamo-text:      #E7E9EE;
+  --ayamo-text-mut:  #9AA1AE;
+  --ayamo-chart-grid: #2C313D;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --ayamo-bg:        #12151C;
+    --ayamo-surface:   #1B1F29;
+    --ayamo-border:    #2C313D;
+    --ayamo-text:      #E7E9EE;
+    --ayamo-text-mut:  #9AA1AE;
+    --ayamo-chart-grid: #2C313D;
+  }
 }
 
 body {
   background-color: var(--ayamo-bg);
   color: var(--ayamo-text);
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Recipe de "card" reaproveitada por qualquer elemento com essas 3 classes juntas */
+.rounded.border.border-ayamo-border.bg-ayamo-surface {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  transition: box-shadow 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+a,
+button {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }

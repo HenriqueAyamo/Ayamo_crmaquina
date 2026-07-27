@@ -17,6 +17,9 @@ dist-ssr
 *.xlsx
 /modelos_documentos/
 
+# Projeto de referencia (Lovable) com .env/credenciais reais e proprio repo git -- nunca commitar
+/project-code/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
