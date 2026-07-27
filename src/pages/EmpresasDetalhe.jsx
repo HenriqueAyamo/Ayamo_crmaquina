@@ -10,9 +10,12 @@ import ModalContato from './empresas/ModalContato.jsx'
 import HistoricoNegocios from './empresas/HistoricoNegocios.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
+import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import { formatarValor } from '../utils/formato.js'
+import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
+const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral' }
 
 export default function EmpresasDetalhe() {
   const { id } = useParams()
@@ -136,14 +139,59 @@ export default function EmpresasDetalhe() {
             <dt className="text-ayamo-text-mut">Endereço</dt>
             <dd className="font-medium text-ayamo-text">{empresa.endereco || '—'}</dd>
           </div>
+          <div>
+            <dt className="text-ayamo-text-mut">CNPJ</dt>
+            <dd className="font-medium text-ayamo-text">{empresa.cnpj || '—'}</dd>
+          </div>
           {empresa.tipo === 'Fornecedor' && (
             <div>
-              <dt className="text-ayamo-text-mut">SIF</dt>
+              <dt className="text-ayamo-text-mut">SIF / SIPEAGRO</dt>
               <dd className="font-medium text-ayamo-text">{empresa.sif || '—'}</dd>
             </div>
           )}
         </dl>
       </div>
+
+      {empresa.tipo === 'Fornecedor' && (
+        <SecaoRecolhivel
+          titulo={`Produtos & capacidade (${(empresa.produtosCapacidade ?? []).length})`}
+          aberturaInicial={false}
+        >
+          {(empresa.produtosCapacidade ?? []).length === 0 ? (
+            <p className="text-sm text-ayamo-text-mut">Nenhum produto/capacidade informado — edite a empresa para adicionar.</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {empresa.produtosCapacidade.map((p, index) => (
+                <li key={index} className="flex items-center justify-between rounded border border-ayamo-border bg-ayamo-surface p-3 text-sm">
+                  <span className="text-ayamo-text">{p.nome}</span>
+                  <span className="text-ayamo-text-mut">
+                    {Number(p.volumeMensal || 0).toLocaleString('pt-BR')} {p.unidade}/mês
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SecaoRecolhivel>
+      )}
+
+      {empresa.tipo === 'Fornecedor' && (
+        <SecaoRecolhivel
+          titulo={`Qualificação por país (${contarAprovacoes(empresa.qualificacoesPaises).emAndamentoOuAprovado}/${contarAprovacoes(empresa.qualificacoesPaises).total})`}
+          aberturaInicial={false}
+        >
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {PAISES_QUALIFICACAO.map((pais) => {
+              const status = empresa.qualificacoesPaises?.[pais] ?? 'Não iniciado'
+              return (
+                <div key={pais} className="flex items-center justify-between gap-2 rounded border border-ayamo-border p-2 text-sm">
+                  <span className="text-ayamo-text">{pais}</span>
+                  <StatusBadge label={status} tone={TONE_QUALIFICACAO[status]} />
+                </div>
+              )
+            })}
+          </div>
+        </SecaoRecolhivel>
+      )}
 
       <HistoricoNegocios empresa={empresa} />
 

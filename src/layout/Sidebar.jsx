@@ -8,12 +8,14 @@ import {
   Settings,
   UserCog,
   FileText,
+  ClipboardList,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Início', icon: Home, end: true },
   { to: '/compras', label: 'Compras', icon: ShoppingCart },
   { to: '/vendas', label: 'Vendas', icon: TrendingUp },
+  { to: '/demandas', label: 'Demandas', icon: ClipboardList },
   { to: '/empresas', label: 'Empresas', icon: Building2 },
   { to: '/contatos', label: 'Contatos', icon: Users },
   { to: '/cadastros', label: 'Cadastros', icon: Settings },

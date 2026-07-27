@@ -9,6 +9,11 @@ export const empresas = [
     limiteCredito: 0,
     creditoUtilizado: 0,
     situacao: 'Ativo',
+    produtosCapacidade: [
+      { nome: 'Frozen Chicken Leg Quarters', volumeMensal: 1500, unidade: 'ton' },
+      { nome: 'Chicken MDM', volumeMensal: 800, unidade: 'ton' },
+    ],
+    qualificacoesPaises: { China: 'Aprovado', 'Estados Unidos': 'Aprovado', Chile: 'Em andamento', Filipinas: 'Aprovado' },
   },
   {
     id: 2,

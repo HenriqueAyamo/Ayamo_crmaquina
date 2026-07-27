@@ -10,6 +10,7 @@ import Field, { inputClass } from '../components/Field.jsx'
 import CampoNumerico from '../components/CampoNumerico.jsx'
 import { formatarValor } from '../utils/formato.js'
 import { MOEDAS } from '../data/unidades.js'
+import { contarAprovacoes } from '../data/qualificacaoPaises.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
 
@@ -109,6 +110,15 @@ export default function Empresas() {
             sortValue: (item) => getUsuario(item.responsavelAyamoId)?.nome ?? '',
           },
           { key: 'moedaPadrao', header: 'Moeda padrão' },
+          {
+            key: 'qualificacoes',
+            header: 'Qualificações',
+            render: (item) => {
+              if (item.tipo !== 'Fornecedor') return '—'
+              const { emAndamentoOuAprovado, total } = contarAprovacoes(item.qualificacoesPaises)
+              return `${emAndamentoOuAprovado}/${total}`
+            },
+          },
           { key: 'limiteCredito', header: 'Limite de crédito', render: (item) => formatarValor(item.limiteCredito, item.moedaPadrao) },
           { key: 'creditoUtilizado', header: 'Crédito utilizado', render: (item) => formatarValor(item.creditoUtilizado, item.moedaPadrao) },
           {

@@ -4,12 +4,15 @@ import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { MOEDAS } from '../../data/unidades.js'
+import SecaoCapacidadeProdutos from './SecaoCapacidadeProdutos.jsx'
+import SecaoQualificacaoPaises from './SecaoQualificacaoPaises.jsx'
 
 function valoresIniciais(empresa) {
   return {
     nome: empresa.nome,
     pais: empresa.pais,
     endereco: empresa.endereco ?? '',
+    cnpj: empresa.cnpj ?? '',
     sif: empresa.sif ?? '',
     tipo: empresa.tipo,
     responsavelAyamoId: empresa.responsavelAyamoId,
@@ -17,6 +20,8 @@ function valoresIniciais(empresa) {
     limiteCredito: empresa.limiteCredito,
     creditoUtilizado: empresa.creditoUtilizado,
     situacao: empresa.situacao,
+    produtosCapacidade: empresa.produtosCapacidade ?? [],
+    qualificacoesPaises: empresa.qualificacoesPaises ?? {},
   }
 }
 
@@ -71,9 +76,14 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
         <Field label="Endereço completo" hint="Usado nos documentos de PO/Proforma">
           <textarea className={inputClass} rows={2} value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
         </Field>
-        <Field label="SIF / número de estabelecimento">
-          <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
-        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="CNPJ">
+            <input className={inputClass} value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
+          </Field>
+          <Field label="SIF / SIPEAGRO">
+            <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
+          </Field>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tipo" required>
             <select className={inputClass} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
@@ -120,6 +130,19 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
             <CampoNumerico required value={form.creditoUtilizado} onChange={(creditoUtilizado) => setForm({ ...form, creditoUtilizado })} />
           </Field>
         </div>
+
+        {form.tipo === 'Fornecedor' && (
+          <>
+            <SecaoCapacidadeProdutos
+              value={form.produtosCapacidade}
+              onChange={(produtosCapacidade) => setForm({ ...form, produtosCapacidade })}
+            />
+            <SecaoQualificacaoPaises
+              value={form.qualificacoesPaises}
+              onChange={(qualificacoesPaises) => setForm({ ...form, qualificacoesPaises })}
+            />
+          </>
+        )}
       </form>
     </Modal>
   )
