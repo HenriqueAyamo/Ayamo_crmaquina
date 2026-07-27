@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, Maximize2, Minimize2, Columns3 } from 'lucide-react'
 import EmptyState from './EmptyState.jsx'
 
 function valorPadrao(row, col) {
@@ -14,10 +14,44 @@ function comparar(a, b) {
   return String(a).localeCompare(String(b), 'pt-BR', { numeric: true })
 }
 
-export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabel }) {
+function carregarOcultas(chave) {
+  if (!chave) return []
+  try {
+    const bruto = localStorage.getItem(`ayamo_crm_v1_colunas_${chave}`)
+    return bruto ? JSON.parse(bruto) : []
+  } catch {
+    return []
+  }
+}
+
+export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabel, storageKey, stickyFirstColumn = false }) {
   const [ordenacao, setOrdenacao] = useState({ chave: null, direcao: 'asc' })
+  const [telaCheia, setTelaCheia] = useState(false)
+  const [colunasOcultas, setColunasOcultas] = useState(() => carregarOcultas(storageKey))
+  const [menuColunasAberto, setMenuColunasAberto] = useState(false)
 
   const getKey = (row) => (typeof rowKey === 'function' ? rowKey(row) : row[rowKey])
+
+  const colunasVisiveis = useMemo(
+    () => columns.filter((col) => col.toggleable === false || !colunasOcultas.includes(col.key)),
+    [columns, colunasOcultas],
+  )
+
+  const colunasComToggle = columns.filter((col) => col.toggleable !== false)
+
+  function alternarColuna(chaveColuna) {
+    setColunasOcultas((atual) => {
+      const nova = atual.includes(chaveColuna) ? atual.filter((c) => c !== chaveColuna) : [...atual, chaveColuna]
+      if (storageKey) {
+        try {
+          localStorage.setItem(`ayamo_crm_v1_colunas_${storageKey}`, JSON.stringify(nova))
+        } catch {
+          // localStorage indisponível — segue só em memória
+        }
+      }
+      return nova
+    })
+  }
 
   const dadosOrdenados = useMemo(() => {
     if (!ordenacao.chave || !data) return data
@@ -35,62 +69,119 @@ export default function DataTable({ columns, data, rowKey, onRowClick, emptyLabe
     })
   }
 
-  if (!data || data.length === 0) {
-    return <EmptyState title={emptyLabel ?? 'Nenhum registro encontrado'} />
-  }
+  const semDados = !data || data.length === 0
 
   return (
-    <div className="overflow-x-auto rounded border border-ayamo-border bg-ayamo-surface">
-      <table className="w-full border-collapse text-sm">
-        <thead className="sticky top-0 bg-ayamo-bg">
-          <tr>
-            {columns.map((col) => {
-              const ordenavel = col.sortable !== false && col.key !== '_acoes'
-              const ativa = ordenacao.chave === col.key
-              return (
-                <th
-                  key={col.key}
-                  onClick={ordenavel ? () => alternarOrdenacao(col) : undefined}
-                  className={`border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ayamo-text-mut ${
-                    ordenavel ? 'cursor-pointer select-none hover:text-ayamo-text' : ''
+    <div className={telaCheia ? 'fixed inset-0 z-50 flex flex-col overflow-hidden bg-ayamo-bg p-4' : ''}>
+      {!semDados && (
+        <div className="mb-2 flex items-center justify-end gap-2">
+          {colunasComToggle.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuColunasAberto((atual) => !atual)}
+                className="flex items-center gap-1.5 rounded border border-ayamo-border bg-ayamo-surface px-2.5 py-1.5 text-xs text-ayamo-text-mut hover:bg-ayamo-bg hover:text-ayamo-text"
+                title="Mostrar/ocultar colunas"
+              >
+                <Columns3 size={14} />
+                Colunas
+              </button>
+              {menuColunasAberto && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuColunasAberto(false)} />
+                  <div className="absolute right-0 z-20 mt-1 w-56 rounded border border-ayamo-border bg-ayamo-surface p-2 shadow-md">
+                    {colunasComToggle.map((col) => (
+                      <label key={col.key} className="flex items-center gap-2 rounded px-2 py-1.5 text-xs text-ayamo-text hover:bg-ayamo-bg">
+                        <input
+                          type="checkbox"
+                          checked={!colunasOcultas.includes(col.key)}
+                          onChange={() => alternarColuna(col.key)}
+                        />
+                        {col.header}
+                      </label>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setTelaCheia((atual) => !atual)}
+            className="flex items-center gap-1.5 rounded border border-ayamo-border bg-ayamo-surface px-2.5 py-1.5 text-xs text-ayamo-text-mut hover:bg-ayamo-bg hover:text-ayamo-text"
+            title={telaCheia ? 'Sair da tela cheia' : 'Ver em tela cheia'}
+          >
+            {telaCheia ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+            {telaCheia ? 'Sair da tela cheia' : 'Tela cheia'}
+          </button>
+        </div>
+      )}
+
+      {semDados ? (
+        <EmptyState title={emptyLabel ?? 'Nenhum registro encontrado'} />
+      ) : (
+        <div className={`overflow-auto rounded border border-ayamo-border bg-ayamo-surface ${telaCheia ? 'flex-1' : ''}`}>
+          <table className="w-full border-collapse text-sm">
+            <thead className="sticky top-0 z-10 bg-ayamo-bg">
+              <tr>
+                {colunasVisiveis.map((col, indice) => {
+                  const ordenavel = col.sortable !== false && col.key !== '_acoes'
+                  const ativa = ordenacao.chave === col.key
+                  const fixa = stickyFirstColumn && indice === 0
+                  return (
+                    <th
+                      key={col.key}
+                      onClick={ordenavel ? () => alternarOrdenacao(col) : undefined}
+                      className={`border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ayamo-text-mut ${
+                        ordenavel ? 'cursor-pointer select-none hover:text-ayamo-text' : ''
+                      } ${fixa ? 'sticky left-0 z-20 bg-ayamo-bg' : ''}`}
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {col.header}
+                        {ordenavel &&
+                          (ativa ? (
+                            ordenacao.direcao === 'asc' ? (
+                              <ChevronUp size={12} />
+                            ) : (
+                              <ChevronDown size={12} />
+                            )
+                          ) : (
+                            <ChevronsUpDown size={12} className="opacity-40" />
+                          ))}
+                      </span>
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {dadosOrdenados.map((row) => (
+                <tr
+                  key={getKey(row)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  className={`border-b border-ayamo-border last:border-b-0 ${
+                    onRowClick ? 'cursor-pointer hover:bg-ayamo-bg' : ''
                   }`}
                 >
-                  <span className="inline-flex items-center gap-1">
-                    {col.header}
-                    {ordenavel &&
-                      (ativa ? (
-                        ordenacao.direcao === 'asc' ? (
-                          <ChevronUp size={12} />
-                        ) : (
-                          <ChevronDown size={12} />
-                        )
-                      ) : (
-                        <ChevronsUpDown size={12} className="opacity-40" />
-                      ))}
-                  </span>
-                </th>
-              )
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {dadosOrdenados.map((row) => (
-            <tr
-              key={getKey(row)}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={`border-b border-ayamo-border last:border-b-0 ${
-                onRowClick ? 'cursor-pointer hover:bg-ayamo-bg' : ''
-              }`}
-            >
-              {columns.map((col) => (
-                <td key={col.key} className="whitespace-nowrap px-4 py-2.5 text-[13px] text-ayamo-text">
-                  {col.render ? col.render(row) : row[col.key]}
-                </td>
+                  {colunasVisiveis.map((col, indice) => {
+                    const fixa = stickyFirstColumn && indice === 0
+                    return (
+                      <td
+                        key={col.key}
+                        className={`whitespace-nowrap px-4 py-2.5 text-[13px] text-ayamo-text ${
+                          fixa ? 'sticky left-0 z-[1] bg-ayamo-surface' : ''
+                        }`}
+                      >
+                        {col.render ? col.render(row) : row[col.key]}
+                      </td>
+                    )
+                  })}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

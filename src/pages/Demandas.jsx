@@ -64,6 +64,8 @@ export default function Demandas() {
 
       <DataTable
         rowKey="id"
+        storageKey="demandas"
+        stickyFirstColumn
         data={demandasFiltradas}
         onRowClick={(item) => abrirEdicao(item)}
         emptyLabel="Nenhuma demanda registrada"

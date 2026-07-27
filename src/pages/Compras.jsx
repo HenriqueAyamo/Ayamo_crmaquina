@@ -152,6 +152,8 @@ export default function Compras() {
 
           <DataTable
             rowKey="id"
+            storageKey="compras"
+            stickyFirstColumn
             data={ofertasFiltradas}
             onRowClick={(item) => navigate(`/compras/${item.codigoBase}`)}
             columns={[

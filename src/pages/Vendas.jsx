@@ -84,6 +84,8 @@ export default function Vendas() {
 
       <DataTable
         rowKey="id"
+        storageKey="vendas"
+        stickyFirstColumn
         data={propostasFiltradas}
         onRowClick={(item) => navigate(`/vendas/${item.numero}`)}
         columns={[
