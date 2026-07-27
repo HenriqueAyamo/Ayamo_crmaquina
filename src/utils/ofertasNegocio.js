@@ -48,6 +48,7 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       fornecedorId: ofertaAtual.fornecedorId,
       precoCusto: { valor: dados.valor, moeda: dados.moeda, unidade: ofertaAtual.unidade },
       quantidade: dados.quantidade,
+      quantidadeOriginal: dados.quantidade,
       unidade: ofertaAtual.unidade,
       status: dados.status,
       data: new Date().toISOString().slice(0, 10),
@@ -59,6 +60,8 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       prazoPagamento: dados.prazoPagamento,
       embarqueDe: dados.embarqueDe,
       embarqueAte: dados.embarqueAte,
+      mfgSite: dados.mfgSite,
+      validadeAte: dados.validadeAte,
       historicoNegociacao: [
         ...(ofertaAtual.historicoNegociacao ?? []),
         {

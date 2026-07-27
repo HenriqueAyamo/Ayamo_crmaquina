@@ -29,3 +29,21 @@ export function formatarPercentual(valor, casasDecimais = 1) {
     maximumFractionDigits: casasDecimais,
   })}%`
 }
+
+export function parseDataBR(texto) {
+  if (!texto) return null
+  const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(texto.trim())
+  if (!match) return null
+  const [, dia, mes, ano] = match
+  const data = new Date(Number(ano), Number(mes) - 1, Number(dia))
+  return Number.isNaN(data.getTime()) ? null : data
+}
+
+export function diasRestantes(dataValidadeBR) {
+  const data = parseDataBR(dataValidadeBR)
+  if (!data) return null
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  data.setHours(0, 0, 0, 0)
+  return Math.round((data - hoje) / (1000 * 60 * 60 * 24))
+}

@@ -26,6 +26,8 @@ function valoresIniciais() {
     prazoPagamento: '',
     embarqueDe: '',
     embarqueAte: '',
+    mfgSite: '',
+    validadeAte: '',
   }
 }
 
@@ -54,6 +56,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       fornecedorId: Number(form.fornecedorId),
       precoCusto: { valor: Number(form.valor), moeda: form.moeda, unidade: form.unidade },
       quantidade: Number(form.quantidade),
+      quantidadeOriginal: Number(form.quantidade),
       unidade: form.unidade,
       status: 'Disponível',
       data: new Date().toISOString().slice(0, 10),
@@ -65,6 +68,8 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       prazoPagamento: form.prazoPagamento,
       embarqueDe: form.embarqueDe,
       embarqueAte: form.embarqueAte,
+      mfgSite: form.mfgSite,
+      validadeAte: form.validadeAte,
     })
     fecharEResetar()
     onCriada(nova)
@@ -175,8 +180,22 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         </div>
 
-        <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
-          <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
+            <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
+          </Field>
+          <Field label="Site / planta de fabricação">
+            <input className={inputClass} value={form.mfgSite} onChange={(e) => setForm({ ...form, mfgSite: e.target.value })} />
+          </Field>
+        </div>
+
+        <Field label="Oferta válida até" hint="Usado para o selo de validade na lista de Compras">
+          <input
+            className={inputClass}
+            placeholder="dd/mm/aaaa"
+            value={form.validadeAte}
+            onChange={(e) => setForm({ ...form, validadeAte: e.target.value })}
+          />
         </Field>
 
         <Field label="Prazo de pagamento" hint="Ex.: 100% TT">

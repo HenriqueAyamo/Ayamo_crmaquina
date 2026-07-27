@@ -12,8 +12,8 @@ export const propostas = [
     portoDestino: 'Manila North',
     destinoFinal: 'Philippines',
     prazoPagamento: '100% TT against copy of original documents',
-    embarqueDe: '2026-08-05',
-    embarqueAte: '2026-08-31',
+    embarqueDe: '05/08/2026',
+    embarqueAte: '31/08/2026',
     consignatarioNome: '',
     consignatarioEndereco: '',
     itens: [
@@ -60,8 +60,8 @@ export const propostas = [
     portoDestino: 'Taipei',
     destinoFinal: 'Taiwan',
     prazoPagamento: '100% TT',
-    embarqueDe: '2026-08-20',
-    embarqueAte: '2026-09-20',
+    embarqueDe: '20/08/2026',
+    embarqueAte: '20/09/2026',
     consignatarioNome: '',
     consignatarioEndereco: '',
     itens: [

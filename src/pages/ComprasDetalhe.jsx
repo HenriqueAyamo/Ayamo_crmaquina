@@ -8,6 +8,7 @@ import ModalRevisao from './compras/ModalRevisao.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
+import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
@@ -26,6 +27,7 @@ export default function ComprasDetalhe() {
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalStatusAberto, setModalStatusAberto] = useState(false)
   const [modalVendaAberto, setModalVendaAberto] = useState(false)
+  const [modalEnviarAberto, setModalEnviarAberto] = useState(false)
   const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
   const podeVender = ['Vendedor', 'Administrador'].includes(usuarioLogado.perfil)
   const clientes = empresas.items.filter((e) => e.tipo === 'Cliente' && e.situacao === 'Ativo')
@@ -65,13 +67,22 @@ export default function ComprasDetalhe() {
           <div className="flex items-center gap-3">
             <StatusBadge label={atual.status} tone={TONE_STATUS[atual.status] ?? 'neutral'} />
             {podeVender && atual.status === 'Disponível' && atual.quantidade > 0 && (
-              <button
-                type="button"
-                onClick={() => setModalVendaAberto(true)}
-                className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
-              >
-                Gerar venda
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => setModalEnviarAberto(true)}
+                  className="rounded border border-ayamo-primary px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+                >
+                  Enviar oferta
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalVendaAberto(true)}
+                  className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+                >
+                  Gerar venda
+                </button>
+              </>
             )}
             {podeNegociar && (
               <>
@@ -187,6 +198,14 @@ export default function ComprasDetalhe() {
           if (numeros.length === 1) navigate(`/vendas/${numeros[0]}`)
           else navigate('/vendas')
         }}
+      />
+      <ModalEnviarOferta
+        open={modalEnviarAberto}
+        onClose={() => setModalEnviarAberto(false)}
+        oferta={atual}
+        produto={produto}
+        fornecedor={fornecedor}
+        clientes={clientes}
       />
     </div>
   )

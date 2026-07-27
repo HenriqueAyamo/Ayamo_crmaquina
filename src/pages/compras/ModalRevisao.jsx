@@ -13,6 +13,8 @@ function valoresPO(atual) {
     prazoPagamento: atual.prazoPagamento ?? '',
     embarqueDe: atual.embarqueDe ?? '',
     embarqueAte: atual.embarqueAte ?? '',
+    mfgSite: atual.mfgSite ?? '',
+    validadeAte: atual.validadeAte ?? '',
   }
 }
 
@@ -140,6 +142,20 @@ export default function ModalRevisao({ open, onClose, atual }) {
               placeholder="dd/mm/aaaa"
               value={dadosPO.embarqueAte}
               onChange={(e) => setDadosPO({ ...dadosPO, embarqueAte: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Site / planta de fabricação">
+            <input className={inputClass} value={dadosPO.mfgSite} onChange={(e) => setDadosPO({ ...dadosPO, mfgSite: e.target.value })} />
+          </Field>
+          <Field label="Oferta válida até" hint="dd/mm/aaaa">
+            <input
+              className={inputClass}
+              placeholder="dd/mm/aaaa"
+              value={dadosPO.validadeAte}
+              onChange={(e) => setDadosPO({ ...dadosPO, validadeAte: e.target.value })}
             />
           </Field>
         </div>

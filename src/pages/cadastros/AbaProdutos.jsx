@@ -29,12 +29,15 @@ export default function AbaProdutos() {
         { key: 'validadeMeses', label: 'Validade (meses)', type: 'number' },
         { key: 'especificacaoRotulo', label: 'Especificação de rótulo', type: 'text' },
         { key: 'hsCode', label: 'HS Code', type: 'text' },
+        { key: 'proteinaPercentual', label: 'Proteína (%)', type: 'number' },
+        { key: 'parametros', label: 'Outros parâmetros', type: 'text' },
       ]}
       columns={[
         { key: 'nome', header: 'Nome' },
         { key: 'apelido', header: 'Apelido' },
         { key: 'familia', header: 'Família', render: (item) => nomeFamilia(item.familiaId) },
         { key: 'divisao', header: 'Divisão', render: (item) => nomeDivisaoDeFamilia(item.familiaId) },
+        { key: 'proteinaPercentual', header: 'Proteína %', render: (item) => (item.proteinaPercentual ? `${item.proteinaPercentual}%` : '—') },
         colunaSituacao(),
       ]}
     />

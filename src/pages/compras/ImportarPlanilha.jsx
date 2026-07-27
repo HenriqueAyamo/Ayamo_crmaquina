@@ -61,6 +61,7 @@ export default function ImportarPlanilha({ onImportado }) {
         fornecedorId: fornecedor.id,
         precoCusto: { valor, moeda, unidade },
         quantidade,
+        quantidadeOriginal: quantidade,
         unidade,
         status: 'Disponível',
         data: hoje,
