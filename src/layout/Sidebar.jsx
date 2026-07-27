@@ -14,6 +14,7 @@ import {
   Globe,
   Ship,
   Trophy,
+  UserCircle,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -56,6 +57,7 @@ const NAV_GROUPS = [
       { to: '/cadastros', label: 'Cadastros', icon: Settings },
       { to: '/usuarios', label: 'Usuários', icon: UserCog },
       { to: '/documentos', label: 'Documentos', icon: FileText },
+      { to: '/configuracoes', label: 'Minha Conta', icon: UserCircle },
     ],
   },
 ]

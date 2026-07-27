@@ -21,6 +21,7 @@ import Contatos from './pages/Contatos.jsx'
 import CadastrosGerais from './pages/CadastrosGerais.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 import Documentos from './pages/Documentos.jsx'
+import Settings from './pages/Settings.jsx'
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/cadastros" element={<CadastrosGerais />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/documentos" element={<Documentos />} />
+            <Route path="/configuracoes" element={<Settings />} />
           </Route>
           <Route path="/compras/:id/po" element={<DocumentoPO />} />
           <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
