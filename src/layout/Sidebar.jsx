@@ -10,6 +10,7 @@ import {
   UserCog,
   FileText,
   LayoutDashboard,
+  AlertTriangle,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -33,6 +34,10 @@ const NAV_GROUPS = [
       { to: '/empresas', label: 'Empresas', icon: Building2 },
       { to: '/contatos', label: 'Contatos', icon: Users },
     ],
+  },
+  {
+    label: 'Claims',
+    items: [{ to: '/claims', label: 'Claims', icon: AlertTriangle }],
   },
   {
     label: 'Sistema',

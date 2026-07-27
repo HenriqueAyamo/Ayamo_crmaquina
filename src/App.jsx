@@ -10,6 +10,7 @@ import VendasDetalhe from './pages/VendasDetalhe.jsx'
 import DocumentoProforma from './pages/vendas/DocumentoProforma.jsx'
 import Demandas from './pages/Demandas.jsx'
 import PurchaseDashboard from './pages/PurchaseDashboard.jsx'
+import Claims from './pages/Claims.jsx'
 import Empresas from './pages/Empresas.jsx'
 import EmpresasDetalhe from './pages/EmpresasDetalhe.jsx'
 import Contatos from './pages/Contatos.jsx'
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/vendas/:id" element={<VendasDetalhe />} />
           <Route path="/demandas" element={<Demandas />} />
           <Route path="/compras/painel" element={<PurchaseDashboard />} />
+          <Route path="/claims" element={<Claims />} />
           <Route path="/empresas" element={<Empresas />} />
           <Route path="/empresas/:id" element={<EmpresasDetalhe />} />
           <Route path="/contatos" element={<Contatos />} />

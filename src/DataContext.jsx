@@ -10,6 +10,7 @@ import { ofertas as ofertasMock } from './data/ofertas.js'
 import { propostas as propostasMock } from './data/propostas.js'
 import { documentos as documentosMock } from './data/documentos.js'
 import { demandas as demandasMock } from './data/demandas.js'
+import { claims as claimsMock } from './data/claims.js'
 import { dadosAyamo as dadosAyamoMock } from './data/dadosAyamo.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
@@ -88,6 +89,7 @@ export function DataProvider({ children }) {
   const documentos = useCollection('documentos', documentosMock)
   const dadosAyamo = useCollection('dadosAyamo', dadosAyamoMock)
   const demandas = useCollection('demandas', demandasMock)
+  const claims = useCollection('claims', claimsMock)
 
   const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
     const salvo = carregarStorage('usuarioLogadoId', null)
@@ -169,6 +171,7 @@ export function DataProvider({ children }) {
     setUsuarioLogadoId,
     dadosAyamo,
     demandas,
+    claims,
     getFamilia,
     getProduto,
     getDivisao,
