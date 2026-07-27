@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import { formatarPreco, formatarValor, formatarData, formatarPercentual } from '../../utils/formato.js'
+import { avaliarMargem } from '../../data/cambio.js'
 
 export default function ModalFechamento({ open, onClose, proposta, itemAtual, produtoNome, resumoMargem }) {
   const { documentos, ofertas, getEmpresa } = useData()
@@ -73,7 +74,14 @@ export default function ModalFechamento({ open, onClose, proposta, itemAtual, pr
             </div>
             <div>
               <dt className="text-ayamo-text-mut">Margem</dt>
-              <dd className="font-medium text-ayamo-text">{formatarPercentual(resumoMargem.margemPercentual)}</dd>
+              <dd className="font-medium text-ayamo-text">
+                {(() => {
+                  const avaliacao = avaliarMargem(resumoMargem, proposta)
+                  return avaliacao.tipo === 'valor'
+                    ? formatarPreco(avaliacao.atual, 'USD', 'ton')
+                    : formatarPercentual(avaliacao.atual)
+                })()}
+              </dd>
             </div>
           </dl>
 

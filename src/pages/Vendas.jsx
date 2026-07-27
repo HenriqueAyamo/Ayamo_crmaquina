@@ -8,7 +8,8 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
-import { formatarValor, formatarData, formatarPercentual } from '../utils/formato.js'
+import { formatarValor, formatarData, formatarPercentual, formatarPreco } from '../utils/formato.js'
+import { avaliarMargem } from '../data/cambio.js'
 
 const TONE_STATUS = {
   Rascunho: 'neutral',
@@ -21,14 +22,14 @@ const TONE_STATUS = {
   Expirada: 'neutral',
 }
 
+const CLASSE_TONE = { danger: 'text-ayamo-danger', warning: 'text-ayamo-warning', success: 'text-ayamo-success' }
+
 function nomesProdutos(item, getProduto) {
   return item.itens.map((i) => getProduto(i.produtoId)?.nome ?? '—').join(', ')
 }
 
-function toneMargem(margemPercentual, margemMinima) {
-  if (margemPercentual < margemMinima) return 'text-ayamo-danger'
-  if (margemPercentual < margemMinima + 3) return 'text-ayamo-warning'
-  return 'text-ayamo-success'
+function formatarMargemAtual(avaliacao) {
+  return avaliacao.tipo === 'valor' ? formatarPreco(avaliacao.atual, 'USD', 'ton') : formatarPercentual(avaliacao.atual)
 }
 
 export default function Vendas() {
@@ -118,14 +119,10 @@ export default function Vendas() {
           },
           {
             key: 'margem',
-            header: 'Margem %',
+            header: 'Margem',
             render: (item) => {
-              const { margemPercentual } = calcularResumoProposta(item)
-              return (
-                <span className={`font-medium ${toneMargem(margemPercentual, item.margemMinima)}`}>
-                  {formatarPercentual(margemPercentual)}
-                </span>
-              )
+              const avaliacao = avaliarMargem(calcularResumoProposta(item), item)
+              return <span className={`font-medium ${CLASSE_TONE[avaliacao.tone]}`}>{formatarMargemAtual(avaliacao)}</span>
             },
             sortValue: (item) => calcularResumoProposta(item).margemPercentual,
           },

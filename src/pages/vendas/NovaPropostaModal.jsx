@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
-import Field from '../../components/Field.jsx'
+import Field, { inputClass } from '../../components/Field.jsx'
+import CampoNumerico from '../../components/CampoNumerico.jsx'
 import LinhaOfertaCliente from './LinhaOfertaCliente.jsx'
 import PassoDadosProforma from './PassoDadosProforma.jsx'
 
@@ -32,6 +33,8 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const [clientesIds, setClientesIds] = useState([])
   const [selecao, setSelecao] = useState({})
   const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
+  const [margemMinima, setMargemMinima] = useState('10')
+  const [margemMinimaTipo, setMargemMinimaTipo] = useState('percentual')
 
   const ofertasDisponiveis = ofertaFixa
     ? [ofertaFixa]
@@ -71,6 +74,8 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     setClientesIds([])
     setSelecao({})
     setDadosProforma(valoresIniciaisProforma())
+    setMargemMinima('10')
+    setMargemMinimaTipo('percentual')
     onClose()
   }
 
@@ -135,7 +140,8 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         vendedorId: usuarioLogado.id,
         status: 'Rascunho',
         dataEnvio: hoje,
-        margemMinima: 10,
+        margemMinima: Number(margemMinima) || 0,
+        margemMinimaTipo,
         itens: itensCliente,
         ...dadosProforma,
         ayamoEntidadeId: dadosProforma.ayamoEntidadeId ? Number(dadosProforma.ayamoEntidadeId) : null,
@@ -283,10 +289,24 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       )}
 
       {passo === 3 && (
-        <PassoDadosProforma
-          dados={dadosProforma}
-          onAtualizar={(campo, valor) => setDadosProforma((atual) => ({ ...atual, [campo]: valor }))}
-        />
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Margem mínima aceitável" hint="Piso usado para colorir a margem em Vendas — não é mais fixo em 3%.">
+              <CampoNumerico value={margemMinima} onChange={setMargemMinima} />
+            </Field>
+            <Field label="Tipo de margem">
+              <select className={inputClass} value={margemMinimaTipo} onChange={(e) => setMargemMinimaTipo(e.target.value)}>
+                <option value="percentual">% sobre o custo</option>
+                <option value="valor">US$ por tonelada</option>
+              </select>
+            </Field>
+          </div>
+
+          <PassoDadosProforma
+            dados={dadosProforma}
+            onAtualizar={(campo, valor) => setDadosProforma((atual) => ({ ...atual, [campo]: valor }))}
+          />
+        </div>
       )}
     </Modal>
   )

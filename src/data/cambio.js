@@ -59,6 +59,7 @@ export function calcularMargem(itemCompra, itemVenda) {
 export function calcularResumoProposta(proposta) {
   let custoUSD = 0
   let vendaUSD = 0
+  let quantidadeTotal = 0
 
   proposta.itens.forEach((item) => {
     const m = calcularMargem(
@@ -67,12 +68,29 @@ export function calcularResumoProposta(proposta) {
     )
     custoUSD += m.custoUSD * item.quantidade
     vendaUSD += m.vendaUSD * item.quantidade
+    quantidadeTotal += item.quantidade
   })
 
   const margemUSD = vendaUSD - custoUSD
   const margemPercentual = custoUSD !== 0 ? (margemUSD / custoUSD) * 100 : 0
+  const margemUSDporTon = quantidadeTotal > 0 ? margemUSD / quantidadeTotal : 0
 
-  return { custoUSD, vendaUSD, margemUSD, margemPercentual }
+  return { custoUSD, vendaUSD, margemUSD, margemPercentual, margemUSDporTon, quantidadeTotal }
+}
+
+// Uma proposta define sua margem mínima como percentual (ex.: 10%) ou como valor fixo
+// por tonelada (ex.: US$ 40/ton) — não existe mais um piso fixo de 3% para todo mundo.
+export function avaliarMargem(resumo, proposta) {
+  const tipo = proposta.margemMinimaTipo ?? 'percentual'
+  const minimo = proposta.margemMinima ?? 0
+  const atual = tipo === 'valor' ? resumo.margemUSDporTon : resumo.margemPercentual
+  const bufferAviso = tipo === 'valor' ? Math.max(1, Math.abs(minimo) * 0.1) : 3
+
+  let tone = 'success'
+  if (atual < minimo) tone = 'danger'
+  else if (atual < minimo + bufferAviso) tone = 'warning'
+
+  return { tone, atual, minimo, tipo }
 }
 
 const NOMES_TAXA = {

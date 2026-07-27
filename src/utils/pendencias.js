@@ -37,12 +37,14 @@ export function calcularPendencias(usuario, ctx) {
       const produtoNome = getProduto(item.produtoId)?.nome ?? ''
       const custoAtual = `${item.precoCusto.valor.toLocaleString('pt-BR')} ${item.precoCusto.moeda}/${item.precoCusto.unidade}`
       const precoCliente = `${item.precoVenda.valor.toLocaleString('pt-BR')} ${item.precoVenda.moeda}/${item.precoVenda.unidade}`
+      const margemMinimaTexto =
+        (p.margemMinimaTipo ?? 'percentual') === 'valor' ? `US$ ${p.margemMinima}/ton` : `${p.margemMinima}%`
 
       pendencias.push({
         tipo: 'oferta',
         id: ofertaVinculada?.codigoBase ?? item.ofertaCodigo,
         titulo: ofertaVinculada?.codigoBase ?? item.ofertaCodigo,
-        descricao: `${produtoNome} · qtd. ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade} · custo atual ${custoAtual} · cliente topa ${precoCliente} · margem mínima ${p.margemMinima}% (proposta ${p.numero}, vendedor ${getUsuario(p.vendedorId)?.nome ?? ''})`,
+        descricao: `${produtoNome} · qtd. ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade} · custo atual ${custoAtual} · cliente topa ${precoCliente} · margem mínima ${margemMinimaTexto} (proposta ${p.numero}, vendedor ${getUsuario(p.vendedorId)?.nome ?? ''})`,
         data: ultima.data,
       })
     })
