@@ -7,7 +7,7 @@ import { PAISES_QUALIFICACAO } from '../../data/qualificacaoPaises.js'
 import { formatarValor } from '../../utils/formato.js'
 
 const ABAS = ['Visão geral', 'Produtos', 'Contatos', 'Países']
-const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral' }
+const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral', Vencido: 'danger' }
 
 function BotaoCopiar({ valor }) {
   const [copiado, setCopiado] = useState(false)

@@ -15,7 +15,7 @@ import { formatarValor } from '../utils/formato.js'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
-const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral' }
+const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral', Vencido: 'danger' }
 
 export default function EmpresasDetalhe() {
   const { id } = useParams()

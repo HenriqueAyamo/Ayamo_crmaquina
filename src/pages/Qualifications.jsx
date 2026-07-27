@@ -8,7 +8,7 @@ import BarraRanking from '../components/BarraRanking.jsx'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { chartColor } from '../utils/chartColors.js'
 
-const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral' }
+const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral', Vencido: 'danger' }
 
 export default function Qualifications() {
   const { empresas } = useData()

@@ -10,7 +10,7 @@ export const PAISES_QUALIFICACAO = [
   'Indonésia',
 ]
 
-export const STATUS_QUALIFICACAO = ['Não iniciado', 'Em andamento', 'Aprovado']
+export const STATUS_QUALIFICACAO = ['Não iniciado', 'Em andamento', 'Aprovado', 'Vencido']
 
 export function contarAprovacoes(qualificacoesPaises) {
   const mapa = qualificacoesPaises ?? {}

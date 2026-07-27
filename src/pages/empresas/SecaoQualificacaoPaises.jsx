@@ -7,18 +7,21 @@ const CARTAO_TONE = {
   Aprovado: 'border-ayamo-success/25 bg-ayamo-success/10',
   'Em andamento': 'border-ayamo-warning/25 bg-ayamo-warning/10',
   'Não iniciado': 'border-ayamo-border bg-ayamo-bg',
+  Vencido: 'border-ayamo-danger/25 bg-ayamo-danger/10',
 }
 
 const SELECT_TONE = {
   Aprovado: 'text-ayamo-success',
   'Em andamento': 'text-ayamo-warning',
   'Não iniciado': 'text-ayamo-text-mut',
+  Vencido: 'text-ayamo-danger',
 }
 
 const PONTO_TONE = {
   Aprovado: 'bg-ayamo-success',
   'Em andamento': 'bg-ayamo-warning',
   'Não iniciado': 'bg-ayamo-text-mut',
+  Vencido: 'bg-ayamo-danger',
 }
 
 function CartaoPais({ pais, status, onAtualizar, onRemover }) {
