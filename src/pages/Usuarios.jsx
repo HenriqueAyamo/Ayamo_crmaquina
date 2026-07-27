@@ -6,6 +6,8 @@ import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Modal from '../components/Modal.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
+import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
+import { MOTIVOS } from '../utils/permissoes.js'
 
 const PERFIS = ['Comprador', 'Vendedor', 'Diretor', 'Financeiro', 'Controladoria', 'Administrador']
 
@@ -23,10 +25,29 @@ export default function Usuarios() {
   const divisoesAtivas = divisoes.items.filter((d) => d.situacao === 'Ativo')
   const ativos = usuarios.items.filter((u) => u.situacao === 'Ativo')
 
+  const adminsAtivos = usuarios.items.filter((u) => u.perfil === 'Administrador' && u.situacao === 'Ativo')
+
   function podeInativarOuRemover(item) {
     if (item.id === usuarioLogado.id) return false
     if (item.situacao === 'Ativo' && ativos.length <= 1) return false
+    if (item.perfil === 'Administrador' && item.situacao === 'Ativo' && adminsAtivos.length <= 1) return false
     return true
+  }
+
+  function motivoBloqueio(item) {
+    if (item.id === usuarioLogado.id) return MOTIVOS.proprioUsuario
+    if (item.perfil === 'Administrador' && item.situacao === 'Ativo' && adminsAtivos.length <= 1) return MOTIVOS.ultimoAdministrador
+    if (item.situacao === 'Ativo' && ativos.length <= 1) return 'Precisa haver ao menos 1 usuário ativo no sistema.'
+    return undefined
+  }
+
+  function mudarPerfilInline(item, novoPerfil) {
+    if (item.perfil === 'Administrador' && novoPerfil !== 'Administrador' && adminsAtivos.length <= 1) {
+      window.alert(MOTIVOS.ultimoAdministrador)
+      return
+    }
+    if (!window.confirm(`Mudar o perfil de "${item.nome}" de ${item.perfil} para ${novoPerfil}?`)) return
+    usuarios.editar(item.id, { perfil: novoPerfil })
   }
 
   function abrirNovo() {
@@ -69,6 +90,10 @@ export default function Usuarios() {
 
   function salvar(e) {
     e.preventDefault()
+    if (editando && editando.perfil === 'Administrador' && form.perfil !== 'Administrador' && adminsAtivos.length <= 1) {
+      window.alert(MOTIVOS.ultimoAdministrador)
+      return
+    }
     if (editando) usuarios.editar(editando.id, form)
     else usuarios.criar(form)
     setModalAberto(false)
@@ -91,7 +116,24 @@ export default function Usuarios() {
         columns={[
           { key: 'nome', header: 'Nome' },
           { key: 'email', header: 'E-mail' },
-          { key: 'perfil', header: 'Perfil' },
+          {
+            key: 'perfil',
+            header: 'Perfil',
+            render: (item) => (
+              <select
+                className="rounded border border-ayamo-border bg-ayamo-surface px-2 py-1 text-xs text-ayamo-text outline-none focus:border-ayamo-primary"
+                value={item.perfil}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => mudarPerfilInline(item, e.target.value)}
+              >
+                {PERFIS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            ),
+          },
           { key: 'responsabilidades', header: 'Responsabilidades', render: (item) => resumoResponsabilidades(item.responsabilidades) },
           {
             key: 'situacao',
@@ -107,15 +149,16 @@ export default function Usuarios() {
                   Editar
                 </button>
                 {item.situacao === 'Ativo' ? (
-                  <button
-                    type="button"
-                    disabled={!podeInativarOuRemover(item)}
-                    title={!podeInativarOuRemover(item) ? 'Precisa haver ao menos 1 usuário ativo, diferente de quem está logado' : undefined}
-                    onClick={() => usuarios.inativar(item.id)}
-                    className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
-                  >
-                    Inativar
-                  </button>
+                  <DisabledActionTooltip desabilitado={!podeInativarOuRemover(item)} motivo={motivoBloqueio(item)}>
+                    <button
+                      type="button"
+                      disabled={!podeInativarOuRemover(item)}
+                      onClick={() => usuarios.inativar(item.id)}
+                      className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
+                    >
+                      Inativar
+                    </button>
+                  </DisabledActionTooltip>
                 ) : (
                   <button
                     type="button"
@@ -125,17 +168,18 @@ export default function Usuarios() {
                     Reativar
                   </button>
                 )}
-                <button
-                  type="button"
-                  disabled={!podeInativarOuRemover(item)}
-                  title={!podeInativarOuRemover(item) ? 'Precisa haver ao menos 1 usuário ativo, diferente de quem está logado' : undefined}
-                  onClick={() => {
-                    if (window.confirm(`Excluir o usuário "${item.nome}" definitivamente?`)) usuarios.remover(item.id)
-                  }}
-                  className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
-                >
-                  Excluir
-                </button>
+                <DisabledActionTooltip desabilitado={!podeInativarOuRemover(item)} motivo={motivoBloqueio(item)}>
+                  <button
+                    type="button"
+                    disabled={!podeInativarOuRemover(item)}
+                    onClick={() => {
+                      if (window.confirm(`Excluir o usuário "${item.nome}" definitivamente?`)) usuarios.remover(item.id)
+                    }}
+                    className="text-ayamo-danger hover:underline disabled:cursor-not-allowed disabled:text-ayamo-text-mut disabled:no-underline"
+                  >
+                    Excluir
+                  </button>
+                </DisabledActionTooltip>
               </div>
             ),
           },
