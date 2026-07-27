@@ -8,6 +8,7 @@ import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import BarraEstoque from '../components/BarraEstoque.jsx'
 import SeloValidade from '../components/SeloValidade.jsx'
+import PopoverContato from '../components/PopoverContato.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import HistoricoPreco from './compras/HistoricoPreco.jsx'
@@ -183,7 +184,9 @@ export default function Compras() {
               {
                 key: 'fornecedor',
                 header: 'Fornecedor',
-                render: (item) => getEmpresa(item.fornecedorId)?.nome ?? '—',
+                render: (item) => (
+                  <PopoverContato empresaId={item.fornecedorId}>{getEmpresa(item.fornecedorId)?.nome ?? '—'}</PopoverContato>
+                ),
                 sortValue: (item) => getEmpresa(item.fornecedorId)?.nome ?? '',
               },
               { key: 'mfgSite', header: 'Site de fabricação', render: (item) => item.mfgSite || '—' },

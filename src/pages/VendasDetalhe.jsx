@@ -10,6 +10,7 @@ import TabelaItensProposta from './vendas/TabelaItensProposta.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
+import PopoverContato from '../components/PopoverContato.jsx'
 import { formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -150,7 +151,8 @@ export default function VendasDetalhe() {
           <div>
             <h1 className="text-xl font-semibold text-ayamo-text">{proposta.numero}</h1>
             <p className="text-sm text-ayamo-text-mut">
-              {getEmpresa(proposta.clienteId)?.nome} · Vendedor: {getUsuario(proposta.vendedorId)?.nome} · Enviada em{' '}
+              <PopoverContato empresaId={proposta.clienteId}>{getEmpresa(proposta.clienteId)?.nome}</PopoverContato> · Vendedor:{' '}
+              {getUsuario(proposta.vendedorId)?.nome} · Enviada em{' '}
               {formatarData(proposta.dataEnvio)}
             </p>
           </div>

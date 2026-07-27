@@ -7,6 +7,7 @@ import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
+import PopoverContato from '../components/PopoverContato.jsx'
 import { formatarValor, formatarData, formatarPercentual } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -93,7 +94,7 @@ export default function Vendas() {
           {
             key: 'cliente',
             header: 'Cliente',
-            render: (item) => getEmpresa(item.clienteId)?.nome ?? '—',
+            render: (item) => <PopoverContato empresaId={item.clienteId}>{getEmpresa(item.clienteId)?.nome ?? '—'}</PopoverContato>,
             sortValue: (item) => getEmpresa(item.clienteId)?.nome ?? '',
           },
           {

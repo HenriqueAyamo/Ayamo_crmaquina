@@ -10,6 +10,7 @@ import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
+import PopoverContato from '../components/PopoverContato.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -61,7 +62,8 @@ export default function ComprasDetalhe() {
           <div>
             <h1 className="text-xl font-semibold text-ayamo-text">{atual.codigo}</h1>
             <p className="text-sm text-ayamo-text-mut">
-              {produto?.nome} · {divisao?.nome} · {fornecedor?.nome}
+              {produto?.nome} · {divisao?.nome} ·{' '}
+              <PopoverContato empresaId={atual.fornecedorId}>{fornecedor?.nome}</PopoverContato>
             </p>
           </div>
           <div className="flex items-center gap-3">
