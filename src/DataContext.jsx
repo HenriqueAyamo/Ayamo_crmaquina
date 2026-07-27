@@ -202,6 +202,37 @@ export function DataProvider({ children }) {
     return novaOferta
   }
 
+  function avisarConcorrenciaEstoque(ofertaCodigo, propostaFechadaId) {
+    const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
+    if (!oferta) return
+    const hoje = new Date().toISOString().slice(0, 10)
+
+    propostas.items
+      .filter(
+        (p) =>
+          p.id !== propostaFechadaId &&
+          !['Aceita', 'Recusada', 'Expirada'].includes(p.status) &&
+          p.itens.some((item) => item.ofertaCodigo === ofertaCodigo && item.quantidade > oferta.quantidade),
+      )
+      .forEach((p) => {
+        const item = p.itens.find((i) => i.ofertaCodigo === ofertaCodigo)
+        propostas.editar(p.id, {
+          historicoNegociacao: [
+            ...p.historicoNegociacao,
+            {
+              rodada: p.historicoNegociacao.length + 1,
+              autor: 'Sistema',
+              tipo: 'Alerta de estoque',
+              preco: item.precoVenda,
+              quantidade: item.quantidade,
+              data: hoje,
+              observacao: `Uma proposta concorrente sobre a oferta ${ofertaCodigo} foi fechada e consumiu o estoque. Restam apenas ${oferta.quantidade.toLocaleString('pt-BR')} ${oferta.unidade} — esta proposta pede ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade}. Confirme com o comprador antes de fechar.`,
+            },
+          ],
+        })
+      })
+  }
+
   function verificarLimiteCredito(clienteId, valorNegocioUSD) {
     const empresa = getEmpresa(clienteId)
     if (!empresa) return { bloqueado: true, motivo: 'Cliente não encontrado.' }
@@ -251,6 +282,7 @@ export function DataProvider({ children }) {
     ajustarEstoqueOferta,
     registrarNotaOferta,
     registrarRevisaoOferta,
+    avisarConcorrenciaEstoque,
     verificarLimiteCredito,
     registrarUsoCreditoCliente,
   }

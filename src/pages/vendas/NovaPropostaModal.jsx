@@ -137,9 +137,14 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
       const quantidades = clientesIds.map((clienteId) => Number(dados.porCliente[clienteId]?.quantidade))
       const todasPreenchidas = quantidades.every((q) => q > 0)
-      const total = quantidades.reduce((a, b) => a + b, 0)
-      return oferta && todasPreenchidas && total <= oferta.quantidade
+      return oferta && todasPreenchidas
     })
+
+  const excedeAlgumEstoque = Object.entries(selecao).some(([ofertaId, dados]) => {
+    const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
+    const total = clientesIds.reduce((soma, clienteId) => soma + Number(dados.porCliente[clienteId]?.quantidade || 0), 0)
+    return oferta && total > oferta.quantidade
+  })
 
   const podeAvancar = clientesIds.length > 0
   const podeCriar = selecaoValida
@@ -202,6 +207,12 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
       {passo === 2 && (
         <div className="flex flex-col gap-3">
+          {excedeAlgumEstoque && (
+            <p className="rounded border border-ayamo-warning bg-ayamo-warning/10 px-3 py-2 text-sm text-ayamo-warning">
+              A quantidade alocada passa do estoque disponível em alguma oferta. Você pode seguir em frente — o comprador
+              vai precisar repor o estoque, e o sistema avisa o vendedor da outra proposta se essa oferta esgotar.
+            </p>
+          )}
           {ofertasDisponiveis.map((oferta) => (
             <LinhaOfertaCliente
               key={oferta.id}

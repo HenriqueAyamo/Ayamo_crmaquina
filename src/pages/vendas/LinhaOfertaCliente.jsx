@@ -1,6 +1,6 @@
 import { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
-import { formatarPreco } from '../../utils/formato.js'
+import { formatarPreco, formatarValor } from '../../utils/formato.js'
 import { MOEDAS } from '../../data/unidades.js'
 
 export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada }) {
@@ -26,16 +26,18 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
 
       {marcada && (
         <div className="mt-3 flex flex-col gap-2">
-          <div className="grid grid-cols-[1fr_repeat(3,140px)] gap-2 text-xs font-semibold uppercase text-ayamo-text-mut">
+          <div className="grid grid-cols-[1fr_repeat(4,140px)] gap-2 text-xs font-semibold uppercase text-ayamo-text-mut">
             <span>Cliente</span>
             <span>Quantidade</span>
             <span>Preço de venda</span>
             <span>Moeda</span>
+            <span>Total da venda</span>
           </div>
           {clientesSelecionados.map((cliente) => {
             const porCliente = dados?.porCliente[cliente.id] ?? { quantidade: '', precoVenda: '', moedaVenda: oferta.precoCusto.moeda }
+            const totalVenda = Number(porCliente.quantidade || 0) * Number(porCliente.precoVenda || 0)
             return (
-              <div key={cliente.id} className="grid grid-cols-[1fr_repeat(3,140px)] items-center gap-2">
+              <div key={cliente.id} className="grid grid-cols-[1fr_repeat(4,140px)] items-center gap-2">
                 <span className="text-sm text-ayamo-text">{cliente.nome}</span>
                 <CampoNumerico
                   value={porCliente.quantidade}
@@ -56,12 +58,15 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
                     </option>
                   ))}
                 </select>
+                <span className="text-sm font-medium text-ayamo-text">
+                  {totalVenda > 0 ? formatarValor(totalVenda, porCliente.moedaVenda) : '—'}
+                </span>
               </div>
             )
           })}
-          <p className={`text-xs ${excedeDisponivel ? 'font-medium text-ayamo-danger' : 'text-ayamo-text-mut'}`}>
+          <p className={`text-xs ${excedeDisponivel ? 'font-medium text-ayamo-warning' : 'text-ayamo-text-mut'}`}>
             Total alocado: {totalAlocado.toLocaleString('pt-BR')} / {oferta.quantidade.toLocaleString('pt-BR')} {oferta.unidade}
-            {excedeDisponivel && ' — acima do disponível'}
+            {excedeDisponivel && ' — acima do estoque disponível, confirme com o comprador antes de fechar'}
           </p>
         </div>
       )}

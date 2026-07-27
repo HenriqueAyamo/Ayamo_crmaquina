@@ -36,6 +36,7 @@ export default function VendasDetalhe() {
     ajustarEstoqueOferta,
     verificarLimiteCredito,
     registrarUsoCreditoCliente,
+    avisarConcorrenciaEstoque,
   } = useData()
 
   const [perfil, setPerfil] = useState('Vendedor')
@@ -106,6 +107,7 @@ export default function VendasDetalhe() {
     setErroCredito(null)
     registrarRodada('Aceite e fechamento', { observacao: 'Proposta aceita e fechada.' })
     registrarUsoCreditoCliente(proposta.clienteId, resumoMargem.vendaUSD)
+    avisarConcorrenciaEstoque(itemPrincipal.ofertaCodigo, proposta.id)
     setModalFechamentoAberto(true)
   }
 
