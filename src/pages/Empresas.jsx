@@ -15,6 +15,7 @@ import { contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { CATEGORIAS_PRODUTO, CATEGORIA_TONE, classificarProduto, isNacional } from '../utils/categoriaProdutos.js'
 import { exportarEmpresasExcel } from '../utils/exportarEmpresas.js'
 import { encontrarMelhorCorrespondencia } from '../utils/produtoTexto.js'
+import SupplierDashboard from './empresas/SupplierDashboard.jsx'
 
 const ImportarPlanilhaEmpresas = lazy(() => import('./empresas/ImportarPlanilhaEmpresas.jsx'))
 
@@ -125,6 +126,8 @@ export default function Empresas() {
   return (
     <div>
       <PageHeader title="Empresas" actionLabel="Nova empresa" onAction={abrirNova} />
+
+      {tipoFiltro === 'Fornecedor' && <SupplierDashboard fornecedores={fornecedores} contatos={contatos.items} />}
 
       <div className="mb-4 flex justify-end gap-2">
         <button
