@@ -5,6 +5,7 @@ import { useData } from '../DataContext.jsx'
 import DataTable from '../components/DataTable.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
+import PopupNovidadesDemandas from '../components/PopupNovidadesDemandas.jsx'
 
 const ICONE_TIPO = {
   Compras: { icon: ShoppingCart, cor: 'text-ayamo-primary' },
@@ -98,6 +99,7 @@ export default function Inicio() {
 
   return (
     <div>
+      <PopupNovidadesDemandas />
       <h1 className="mb-5 text-xl font-semibold text-ayamo-text">Início</h1>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
