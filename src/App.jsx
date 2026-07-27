@@ -22,6 +22,7 @@ import CadastrosGerais from './pages/CadastrosGerais.jsx'
 import Usuarios from './pages/Usuarios.jsx'
 import Documentos from './pages/Documentos.jsx'
 import Settings from './pages/Settings.jsx'
+import Training from './pages/Training.jsx'
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/documentos" element={<Documentos />} />
             <Route path="/configuracoes" element={<Settings />} />
+            <Route path="/training" element={<Training />} />
           </Route>
           <Route path="/compras/:id/po" element={<DocumentoPO />} />
           <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
