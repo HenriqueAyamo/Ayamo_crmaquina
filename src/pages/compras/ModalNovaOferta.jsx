@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
@@ -23,9 +23,14 @@ function valoresIniciais() {
   }
 }
 
-export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada }) {
+export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada, inicial }) {
   const { ofertas, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
+
+  useEffect(() => {
+    if (open) setForm({ ...valoresIniciais(), ...inicial })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
+  }, [open])
 
   function fecharEResetar() {
     setForm(valoresIniciais())

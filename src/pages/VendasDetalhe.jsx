@@ -8,6 +8,7 @@ import EmptyState from '../components/EmptyState.jsx'
 import HistoricoNegociacao from './vendas/HistoricoNegociacao.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
+import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import { formatarPreco, formatarData, formatarPercentual } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -26,6 +27,8 @@ export default function VendasDetalhe() {
   const {
     propostas,
     ofertas,
+    produtos,
+    empresas,
     getEmpresa,
     getUsuario,
     getProduto,
@@ -38,6 +41,7 @@ export default function VendasDetalhe() {
   const [perfil, setPerfil] = useState('Vendedor')
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
+  const [modalCompraAberto, setModalCompraAberto] = useState(false)
   const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
@@ -49,6 +53,9 @@ export default function VendasDetalhe() {
   const itemPrincipal = proposta.itens[0]
   const resumoMargem = calcularResumoProposta(proposta)
   const ofertaVinculada = ofertas.items.find((o) => o.codigo === itemPrincipal.ofertaCodigo)
+  const faltaEstoque = Math.max(0, itemPrincipal.quantidade - (ofertaVinculada?.quantidade ?? 0))
+  const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
+  const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
@@ -226,6 +233,25 @@ export default function VendasDetalhe() {
         </div>
       )}
 
+      {perfil === 'Comprador' && ofertaVinculada && faltaEstoque > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded border border-ayamo-danger bg-ayamo-danger/10 p-3">
+          <p className="text-sm text-ayamo-danger">
+            Estoque de {ofertaVinculada.codigo} insuficiente para esta proposta — faltam{' '}
+            <span className="font-medium">
+              {faltaEstoque.toLocaleString('pt-BR')} {itemPrincipal.unidade}
+            </span>
+            .
+          </p>
+          <button
+            type="button"
+            onClick={() => setModalCompraAberto(true)}
+            className="rounded bg-ayamo-danger px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+          >
+            Solicitar compra
+          </button>
+        </div>
+      )}
+
       <HistoricoNegociacao
         proposta={proposta}
         itemAtual={itemPrincipal}
@@ -246,6 +272,23 @@ export default function VendasDetalhe() {
 
       {ofertaVinculada && (
         <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={ofertaVinculada} />
+      )}
+
+      {ofertaVinculada && (
+        <ModalNovaOferta
+          open={modalCompraAberto}
+          onClose={() => setModalCompraAberto(false)}
+          produtosAtivos={produtosAtivos}
+          fornecedores={fornecedores}
+          inicial={{
+            produtoId: String(itemPrincipal.produtoId),
+            fornecedorId: String(ofertaVinculada.fornecedorId),
+            quantidade: faltaEstoque,
+            unidade: ofertaVinculada.unidade,
+            observacao: `Solicitado a partir da proposta ${proposta.numero} — cliente pediu ${itemPrincipal.quantidade.toLocaleString('pt-BR')} ${itemPrincipal.unidade}, estoque disponível em ${ofertaVinculada.codigo}: ${ofertaVinculada.quantidade.toLocaleString('pt-BR')} ${ofertaVinculada.unidade}.`,
+          }}
+          onCriada={(nova) => navigate(`/compras/${nova.codigoBase}`)}
+        />
       )}
     </div>
   )
