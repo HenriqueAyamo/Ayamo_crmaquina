@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field from '../../components/Field.jsx'
@@ -9,15 +9,31 @@ function baseProximoNumero(propostas) {
   return Math.max(1000, ...numeros)
 }
 
-export default function NovaPropostaModal({ open, onClose, clientes, onCriada }) {
+export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa }) {
   const { ofertas, propostas, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
   const [clientesIds, setClientesIds] = useState([])
   const [selecao, setSelecao] = useState({})
 
-  const ofertasDisponiveis = ofertas.items.filter((o) => o.status === 'Disponível')
+  const ofertasDisponiveis = ofertaFixa ? [ofertaFixa] : ofertas.items.filter((o) => o.status === 'Disponível')
   const clientesSelecionados = clientesIds.map((id) => clientes.find((c) => String(c.id) === id)).filter(Boolean)
+
+  useEffect(() => {
+    if (!ofertaFixa) return
+    setSelecao((atual) => {
+      const existente = atual[ofertaFixa.id]?.porCliente ?? {}
+      const porCliente = {}
+      clientesIds.forEach((clienteId) => {
+        porCliente[clienteId] = existente[clienteId] ?? {
+          quantidade: '',
+          precoVenda: Math.round(ofertaFixa.precoCusto.valor * 1.15 * 100) / 100,
+          moedaVenda: ofertaFixa.precoCusto.moeda,
+        }
+      })
+      return { ...atual, [ofertaFixa.id]: { porCliente } }
+    })
+  }, [ofertaFixa, clientesIds])
 
   function fecharEResetar() {
     setPasso(1)
@@ -132,7 +148,13 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title={passo === 1 ? 'Nova proposta — escolha os clientes' : 'Nova proposta — quantidade e preço por cliente'}
+      title={
+        passo === 1
+          ? ofertaFixa
+            ? `Gerar venda a partir de ${ofertaFixa.codigo} — escolha os clientes`
+            : 'Nova proposta — escolha os clientes'
+          : 'Nova proposta — quantidade e preço por cliente'
+      }
       width="lg"
       footer={
         <>
@@ -188,6 +210,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada })
               clientesSelecionados={clientesSelecionados}
               dados={selecao[oferta.id]}
               onToggle={alternarOferta}
+              travada={Boolean(ofertaFixa)}
               onAtualizar={(clienteId, campo, valor) => atualizarSelecaoCliente(oferta.id, clienteId, campo, valor)}
             />
           ))}

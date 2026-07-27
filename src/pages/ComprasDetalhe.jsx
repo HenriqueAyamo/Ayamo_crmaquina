@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalRevisao from './compras/ModalRevisao.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
+import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -18,10 +19,13 @@ const TONE_STATUS = {
 export default function ComprasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { ofertas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado } = useData()
+  const { ofertas, empresas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado } = useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
+  const [modalVendaAberto, setModalVendaAberto] = useState(false)
   const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
+  const podeVender = ['Vendedor', 'Administrador'].includes(usuarioLogado.perfil)
+  const clientes = empresas.items.filter((e) => e.tipo === 'Cliente' && e.situacao === 'Ativo')
 
   const versoes = ofertas.items
     .filter((o) => o.codigoBase === id)
@@ -57,6 +61,15 @@ export default function ComprasDetalhe() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge label={atual.status} tone={TONE_STATUS[atual.status] ?? 'neutral'} />
+            {podeVender && atual.status === 'Disponível' && atual.quantidade > 0 && (
+              <button
+                type="button"
+                onClick={() => setModalVendaAberto(true)}
+                className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+              >
+                Gerar venda
+              </button>
+            )}
             {podeNegociar && (
               <>
                 <button
@@ -148,6 +161,16 @@ export default function ComprasDetalhe() {
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
       <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />
+      <NovaPropostaModal
+        open={modalVendaAberto}
+        onClose={() => setModalVendaAberto(false)}
+        clientes={clientes}
+        ofertaFixa={atual}
+        onCriada={(numeros) => {
+          if (numeros.length === 1) navigate(`/vendas/${numeros[0]}`)
+          else navigate('/vendas')
+        }}
+      />
     </div>
   )
 }

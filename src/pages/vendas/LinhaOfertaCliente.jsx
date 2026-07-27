@@ -3,9 +3,9 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { formatarPreco } from '../../utils/formato.js'
 import { MOEDAS } from '../../data/unidades.js'
 
-export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar }) {
-  const marcada = Boolean(dados)
-  const totalAlocado = marcada
+export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada }) {
+  const marcada = travada || Boolean(dados)
+  const totalAlocado = dados
     ? clientesSelecionados.reduce((soma, c) => soma + Number(dados.porCliente[c.id]?.quantidade || 0), 0)
     : 0
   const excedeDisponivel = totalAlocado > oferta.quantidade
@@ -13,7 +13,11 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
   return (
     <div className="rounded border border-ayamo-border p-3">
       <label className="flex items-center gap-2 text-sm font-medium text-ayamo-text">
-        <input type="checkbox" checked={marcada} onChange={() => onToggle(oferta)} />
+        {travada ? (
+          <span className="h-4 w-4 flex-shrink-0 rounded-sm bg-ayamo-primary" aria-hidden="true" />
+        ) : (
+          <input type="checkbox" checked={marcada} onChange={() => onToggle(oferta)} />
+        )}
         {produtoNome} ({oferta.codigo}) — {formatarPreco(oferta.precoCusto.valor, oferta.precoCusto.moeda, oferta.precoCusto.unidade)}
         <span className="text-ayamo-text-mut">
           · disponível: {oferta.quantidade.toLocaleString('pt-BR')} {oferta.unidade}
@@ -29,7 +33,7 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
             <span>Moeda</span>
           </div>
           {clientesSelecionados.map((cliente) => {
-            const porCliente = dados.porCliente[cliente.id] ?? { quantidade: '', precoVenda: '', moedaVenda: oferta.precoCusto.moeda }
+            const porCliente = dados?.porCliente[cliente.id] ?? { quantidade: '', precoVenda: '', moedaVenda: oferta.precoCusto.moeda }
             return (
               <div key={cliente.id} className="grid grid-cols-[1fr_repeat(3,140px)] items-center gap-2">
                 <span className="text-sm text-ayamo-text">{cliente.nome}</span>
