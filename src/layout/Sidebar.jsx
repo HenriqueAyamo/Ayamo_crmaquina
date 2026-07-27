@@ -26,11 +26,16 @@ const NAV_GROUPS = [
     label: 'Trading',
     items: [
       { to: '/compras', label: 'Compras', icon: ShoppingCart },
-      { to: '/compras/painel', label: 'Painel de Compras', icon: LayoutDashboard },
       { to: '/vendas', label: 'Vendas', icon: TrendingUp },
-      { to: '/vendas-ranking', label: 'Sales Ranking', icon: Trophy },
       { to: '/demandas', label: 'Demandas', icon: ClipboardList },
       { to: '/freight', label: 'Freight', icon: Ship },
+    ],
+  },
+  {
+    label: 'Inteligência',
+    items: [
+      { to: '/compras/painel', label: 'Painel de Compras', icon: LayoutDashboard },
+      { to: '/vendas-ranking', label: 'Sales Ranking', icon: Trophy },
     ],
   },
   {
