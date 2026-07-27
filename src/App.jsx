@@ -12,6 +12,7 @@ import Demandas from './pages/Demandas.jsx'
 import PurchaseDashboard from './pages/PurchaseDashboard.jsx'
 import Claims from './pages/Claims.jsx'
 import Qualifications from './pages/Qualifications.jsx'
+import Freight from './pages/Freight.jsx'
 import Empresas from './pages/Empresas.jsx'
 import EmpresasDetalhe from './pages/EmpresasDetalhe.jsx'
 import Contatos from './pages/Contatos.jsx'
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/compras/painel" element={<PurchaseDashboard />} />
           <Route path="/claims" element={<Claims />} />
           <Route path="/qualificacoes" element={<Qualifications />} />
+          <Route path="/freight" element={<Freight />} />
           <Route path="/empresas" element={<Empresas />} />
           <Route path="/empresas/:id" element={<EmpresasDetalhe />} />
           <Route path="/contatos" element={<Contatos />} />

@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   AlertTriangle,
   Globe,
+  Ship,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -27,6 +28,7 @@ const NAV_GROUPS = [
       { to: '/compras/painel', label: 'Painel de Compras', icon: LayoutDashboard },
       { to: '/vendas', label: 'Vendas', icon: TrendingUp },
       { to: '/demandas', label: 'Demandas', icon: ClipboardList },
+      { to: '/freight', label: 'Freight', icon: Ship },
     ],
   },
   {
