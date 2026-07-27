@@ -13,6 +13,7 @@ import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import HistoricoPreco from './compras/HistoricoPreco.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { exportarOfertasExcel } from '../utils/exportarOfertas.js'
+import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 
 const ImportarPlanilha = lazy(() => import('./compras/ImportarPlanilha.jsx'))
 
@@ -38,14 +39,7 @@ export default function Compras() {
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
   const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
 
-  const ofertasAtuais = useMemo(() => {
-    const ultimaPorBase = new Map()
-    ofertas.items.forEach((o) => {
-      const atual = ultimaPorBase.get(o.codigoBase)
-      if (!atual || o.versao > atual.versao) ultimaPorBase.set(o.codigoBase, o)
-    })
-    return [...ultimaPorBase.values()].sort((a, b) => a.codigoBase.localeCompare(b.codigoBase))
-  }, [ofertas.items])
+  const ofertasAtuais = useMemo(() => obterOfertasAtuais(ofertas.items), [ofertas.items])
 
   const ofertasFiltradas = useMemo(() => {
     const termo = busca.toLowerCase()

@@ -9,6 +9,7 @@ import {
   Settings,
   UserCog,
   FileText,
+  LayoutDashboard,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -21,6 +22,7 @@ const NAV_GROUPS = [
     label: 'Trading',
     items: [
       { to: '/compras', label: 'Compras', icon: ShoppingCart },
+      { to: '/compras/painel', label: 'Painel de Compras', icon: LayoutDashboard },
       { to: '/vendas', label: 'Vendas', icon: TrendingUp },
       { to: '/demandas', label: 'Demandas', icon: ClipboardList },
     ],
