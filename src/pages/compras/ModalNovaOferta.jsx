@@ -185,10 +185,20 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Embarque de">
-            <input type="date" className={inputClass} value={form.embarqueDe} onChange={(e) => setForm({ ...form, embarqueDe: e.target.value })} />
+            <input
+              className={inputClass}
+              placeholder="dd/mm/aaaa"
+              value={form.embarqueDe}
+              onChange={(e) => setForm({ ...form, embarqueDe: e.target.value })}
+            />
           </Field>
           <Field label="Embarque até">
-            <input type="date" className={inputClass} value={form.embarqueAte} onChange={(e) => setForm({ ...form, embarqueAte: e.target.value })} />
+            <input
+              className={inputClass}
+              placeholder="dd/mm/aaaa"
+              value={form.embarqueAte}
+              onChange={(e) => setForm({ ...form, embarqueAte: e.target.value })}
+            />
           </Field>
         </div>
       </form>

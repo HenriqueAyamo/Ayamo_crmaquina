@@ -24,7 +24,7 @@ function valoresIniciaisProforma() {
   }
 }
 
-export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa }) {
+export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa, clienteFixo }) {
   const { ofertas, propostas, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
@@ -34,6 +34,14 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
   const ofertasDisponiveis = ofertaFixa ? [ofertaFixa] : ofertas.items.filter((o) => o.status === 'Disponível')
   const clientesSelecionados = clientesIds.map((id) => clientes.find((c) => String(c.id) === id)).filter(Boolean)
+
+  useEffect(() => {
+    if (open && clienteFixo) {
+      setClientesIds([String(clienteFixo.id)])
+      setPasso(2)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
+  }, [open])
 
   useEffect(() => {
     if (!ofertaFixa) return
@@ -97,11 +105,11 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     const base = baseProximoNumero(propostas.items)
     const hoje = new Date().toISOString().slice(0, 10)
 
-    const numerosCriados = clientesIds.map((clienteId, index) => {
+    const numerosCriados = clientesSelecionados.map((cliente, index) => {
       const itensCliente = Object.entries(selecao)
         .map(([ofertaId, dados]) => {
           const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
-          const porCliente = dados.porCliente[clienteId]
+          const porCliente = dados.porCliente[cliente.id]
           return {
             produtoId: oferta.produtoId,
             ofertaCodigo: oferta.codigo,
@@ -116,7 +124,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       const numero = `PROP-${base + index + 1}`
       propostas.criar({
         numero,
-        clienteId: Number(clienteId),
+        clienteId: cliente.id,
         vendedorId: usuarioLogado.id,
         status: 'Rascunho',
         dataEnvio: hoje,
@@ -141,7 +149,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     // Estoque descontado pela soma real alocada a cada cliente (quantidades independentes por empresa).
     Object.entries(selecao).forEach(([ofertaId, dados]) => {
       const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
-      const totalAlocado = clientesIds.reduce((soma, clienteId) => soma + Number(dados.porCliente[clienteId]?.quantidade || 0), 0)
+      const totalAlocado = clientesSelecionados.reduce((soma, cliente) => soma + Number(dados.porCliente[cliente.id]?.quantidade || 0), 0)
       ajustarEstoqueOferta(oferta.codigo, -totalAlocado)
     })
 
@@ -150,17 +158,18 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   }
 
   const selecaoValida =
+    clientesSelecionados.length > 0 &&
     Object.keys(selecao).length > 0 &&
     Object.entries(selecao).every(([ofertaId, dados]) => {
       const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
-      const quantidades = clientesIds.map((clienteId) => Number(dados.porCliente[clienteId]?.quantidade))
+      const quantidades = clientesSelecionados.map((cliente) => Number(dados.porCliente[cliente.id]?.quantidade))
       const todasPreenchidas = quantidades.every((q) => q > 0)
       return oferta && todasPreenchidas
     })
 
   const excedeAlgumEstoque = Object.entries(selecao).some(([ofertaId, dados]) => {
     const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
-    const total = clientesIds.reduce((soma, clienteId) => soma + Number(dados.porCliente[clienteId]?.quantidade || 0), 0)
+    const total = clientesSelecionados.reduce((soma, cliente) => soma + Number(dados.porCliente[cliente.id]?.quantidade || 0), 0)
     return oferta && total > oferta.quantidade
   })
 
@@ -169,7 +178,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
   const TITULOS = {
     1: ofertaFixa ? `Gerar venda a partir de ${ofertaFixa.codigo} — escolha os clientes` : 'Nova proposta — escolha os clientes',
-    2: 'Nova proposta — quantidade e preço por cliente',
+    2: clienteFixo ? `Gerar venda para ${clienteFixo.nome} — ofertas e quantidade` : 'Nova proposta — quantidade e preço por cliente',
     3: 'Nova proposta — dados para a Proforma',
   }
 

@@ -1,12 +1,21 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import { formatarPreco, formatarValor, formatarData, formatarPercentual } from '../../utils/formato.js'
 
 export default function ModalFechamento({ open, onClose, proposta, itemAtual, produtoNome, resumoMargem }) {
-  const { documentos, getEmpresa } = useData()
+  const { documentos, ofertas, getEmpresa } = useData()
+  const navigate = useNavigate()
   const [visualizando, setVisualizando] = useState(null)
   const [documentoAtual, setDocumentoAtual] = useState(null)
+
+  const ofertaVinculada = ofertas.items.find((o) => o.codigo === itemAtual.ofertaCodigo)
+
+  function verDocumentoCompleto() {
+    if (visualizando === 'Proforma Invoice') navigate(`/vendas/${proposta.numero}/proforma`)
+    if (visualizando === 'PO' && ofertaVinculada) navigate(`/compras/${ofertaVinculada.codigoBase}/po`)
+  }
 
   const cliente = getEmpresa(proposta.clienteId)
 
@@ -103,8 +112,10 @@ export default function ModalFechamento({ open, onClose, proposta, itemAtual, pr
                 <dd className="font-medium text-ayamo-text">{documentoAtual.propostaNumero}</dd>
               </div>
               <div>
-                <dt className="text-ayamo-text-mut">Destinatário</dt>
-                <dd className="font-medium text-ayamo-text">{documentoAtual.clienteNome}</dd>
+                <dt className="text-ayamo-text-mut">{visualizando === 'PO' ? 'Fornecedor' : 'Destinatário'}</dt>
+                <dd className="font-medium text-ayamo-text">
+                  {visualizando === 'PO' ? getEmpresa(ofertaVinculada?.fornecedorId)?.nome ?? '—' : documentoAtual.clienteNome}
+                </dd>
               </div>
               <div>
                 <dt className="text-ayamo-text-mut">Data</dt>
@@ -120,13 +131,24 @@ export default function ModalFechamento({ open, onClose, proposta, itemAtual, pr
               </div>
             </dl>
           </div>
-          <button
-            type="button"
-            onClick={() => setVisualizando(null)}
-            className="self-start rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Voltar
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setVisualizando(null)}
+              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
+            >
+              Voltar
+            </button>
+            {(visualizando === 'Proforma Invoice' || ofertaVinculada) && (
+              <button
+                type="button"
+                onClick={verDocumentoCompleto}
+                className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              >
+                Ver documento completo
+              </button>
+            )}
+          </div>
         </div>
       )}
     </Modal>

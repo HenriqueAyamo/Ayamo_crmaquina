@@ -4,30 +4,28 @@ import { ArrowLeft } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
-import Modal from '../components/Modal.jsx'
-import Field, { inputClass } from '../components/Field.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalEditarEmpresa from './empresas/ModalEditarEmpresa.jsx'
+import ModalContato from './empresas/ModalContato.jsx'
 import HistoricoNegocios from './empresas/HistoricoNegocios.jsx'
+import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
+import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import { formatarValor } from '../utils/formato.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
 
-function valoresIniciaisContato() {
-  return { nome: '', cargo: '', telefone: '', email: '', categoriasIds: [] }
-}
-
 export default function EmpresasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { empresas, contatos, categoriasContato, getUsuario } = useData()
+  const { empresas, contatos, categoriasContato, produtos, getUsuario } = useData()
 
   const empresa = empresas.items.find((e) => e.id === Number(id))
 
   const [modalEditarAberto, setModalEditarAberto] = useState(false)
   const [modalContatoAberto, setModalContatoAberto] = useState(false)
   const [contatoEditando, setContatoEditando] = useState(null)
-  const [formContato, setFormContato] = useState(valoresIniciaisContato())
+  const [modalCompraAberto, setModalCompraAberto] = useState(false)
+  const [modalVendaAberto, setModalVendaAberto] = useState(false)
 
   if (!empresa) {
     return <EmptyState title="Empresa não encontrada" />
@@ -38,39 +36,12 @@ export default function EmpresasDetalhe() {
 
   function abrirNovoContato() {
     setContatoEditando(null)
-    setFormContato(valoresIniciaisContato())
     setModalContatoAberto(true)
   }
 
   function abrirEdicaoContato(contato) {
     setContatoEditando(contato)
-    setFormContato({
-      nome: contato.nome,
-      cargo: contato.cargo,
-      telefone: contato.telefone,
-      email: contato.email,
-      categoriasIds: contato.categoriasIds,
-    })
     setModalContatoAberto(true)
-  }
-
-  function alternarCategoria(categoriaId) {
-    setFormContato((atual) => ({
-      ...atual,
-      categoriasIds: atual.categoriasIds.includes(categoriaId)
-        ? atual.categoriasIds.filter((id) => id !== categoriaId)
-        : [...atual.categoriasIds, categoriaId],
-    }))
-  }
-
-  function salvarContato(e) {
-    e.preventDefault()
-    if (contatoEditando) {
-      contatos.editar(contatoEditando.id, formContato)
-    } else {
-      contatos.criar({ ...formContato, empresaId: empresa.id })
-    }
-    setModalContatoAberto(false)
   }
 
   function nomesCategorias(categoriasIds) {
@@ -99,6 +70,24 @@ export default function EmpresasDetalhe() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge label={empresa.situacao} tone={TONE_SITUACAO[empresa.situacao] ?? 'neutral'} />
+            {empresa.tipo === 'Fornecedor' && empresa.situacao === 'Ativo' && (
+              <button
+                type="button"
+                onClick={() => setModalCompraAberto(true)}
+                className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+              >
+                Gerar compra
+              </button>
+            )}
+            {empresa.tipo === 'Cliente' && empresa.situacao === 'Ativo' && (
+              <button
+                type="button"
+                onClick={() => setModalVendaAberto(true)}
+                className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+              >
+                Gerar venda
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setModalEditarAberto(true)}
@@ -205,81 +194,39 @@ export default function EmpresasDetalhe() {
         ]}
       />
 
-      <Modal
+      <ModalContato
         open={modalContatoAberto}
         onClose={() => setModalContatoAberto(false)}
-        title={contatoEditando ? 'Editar contato' : 'Adicionar contato'}
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setModalContatoAberto(false)}
-              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="contato-form"
-              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-            >
-              Salvar
-            </button>
-          </>
-        }
-      >
-        <form id="contato-form" onSubmit={salvarContato} className="flex flex-col gap-4">
-          <Field label="Nome" required>
-            <input
-              className={inputClass}
-              required
-              value={formContato.nome}
-              onChange={(e) => setFormContato({ ...formContato, nome: e.target.value })}
-            />
-          </Field>
-          <Field label="Cargo" required>
-            <input
-              className={inputClass}
-              required
-              value={formContato.cargo}
-              onChange={(e) => setFormContato({ ...formContato, cargo: e.target.value })}
-            />
-          </Field>
-          <Field label="Telefone" required>
-            <input
-              className={inputClass}
-              required
-              value={formContato.telefone}
-              onChange={(e) => setFormContato({ ...formContato, telefone: e.target.value })}
-            />
-          </Field>
-          <Field label="E-mail" required>
-            <input
-              type="email"
-              className={inputClass}
-              required
-              value={formContato.email}
-              onChange={(e) => setFormContato({ ...formContato, email: e.target.value })}
-            />
-          </Field>
-          <Field label="Categorias">
-            <div className="flex flex-wrap gap-3">
-              {categoriasAtivas.map((c) => (
-                <label key={c.id} className="flex items-center gap-1.5 text-sm text-ayamo-text">
-                  <input
-                    type="checkbox"
-                    checked={formContato.categoriasIds.includes(c.id)}
-                    onChange={() => alternarCategoria(c.id)}
-                  />
-                  {c.nome}
-                </label>
-              ))}
-            </div>
-          </Field>
-        </form>
-      </Modal>
+        empresaId={empresa.id}
+        contatoEditando={contatoEditando}
+        categoriasAtivas={categoriasAtivas}
+      />
 
       <ModalEditarEmpresa open={modalEditarAberto} onClose={() => setModalEditarAberto(false)} empresa={empresa} />
+
+      {empresa.tipo === 'Fornecedor' && (
+        <ModalNovaOferta
+          open={modalCompraAberto}
+          onClose={() => setModalCompraAberto(false)}
+          produtosAtivos={produtos.items.filter((p) => p.situacao === 'Ativo')}
+          fornecedores={[empresa]}
+          inicial={{ fornecedorId: String(empresa.id) }}
+          onCriada={(nova) => navigate(`/compras/${nova.codigoBase}`)}
+        />
+      )}
+
+      {empresa.tipo === 'Cliente' && (
+        <NovaPropostaModal
+          open={modalVendaAberto}
+          onClose={() => setModalVendaAberto(false)}
+          clientes={[empresa]}
+          clienteFixo={empresa}
+          onCriada={(numeros) => {
+            if (numeros.length === 1) navigate(`/vendas/${numeros[0]}`)
+            else navigate('/vendas')
+          }}
+        />
+      )}
     </div>
   )
 }

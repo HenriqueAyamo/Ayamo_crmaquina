@@ -8,6 +8,7 @@ import ModalRevisao from './compras/ModalRevisao.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
+import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -132,9 +133,8 @@ export default function ComprasDetalhe() {
       </div>
 
       {atual.historicoNegociacao?.length > 0 && (
-        <>
-          <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de negociação com o fornecedor</h2>
-          <ol className="mb-6 flex flex-col gap-3">
+        <SecaoRecolhivel titulo="Histórico de negociação com o fornecedor" aberturaInicial={false}>
+          <ol className="flex flex-col gap-3">
             {atual.historicoNegociacao.map((n, index) => (
               <li key={index} className="rounded border border-ayamo-border bg-ayamo-surface p-3">
                 <div className="mb-1 flex items-center justify-between">
@@ -147,33 +147,33 @@ export default function ComprasDetalhe() {
               </li>
             ))}
           </ol>
-        </>
+        </SecaoRecolhivel>
       )}
 
-      <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de revisões</h2>
-
-      <ol className="flex flex-col gap-0">
-        {versoes.map((v, index) => (
-          <li key={v.id} className="relative flex gap-4 pb-6 pl-2">
-            {index < versoes.length - 1 && (
-              <span className="absolute left-[7px] top-3 h-full w-px bg-ayamo-border" aria-hidden="true" />
-            )}
-            <span className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full border-2 border-ayamo-primary bg-ayamo-surface" />
-            <div className="flex-1 rounded border border-ayamo-border bg-ayamo-surface p-3">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-sm font-semibold text-ayamo-text">
-                  {v.versao === 0 ? 'Versão original' : `Revisão R${v.versao}`}
-                </span>
-                <span className="text-xs text-ayamo-text-mut">{formatarData(v.data)}</span>
+      <SecaoRecolhivel titulo="Histórico de revisões" aberturaInicial={false}>
+        <ol className="flex flex-col gap-0">
+          {versoes.map((v, index) => (
+            <li key={v.id} className="relative flex gap-4 pb-6 pl-2">
+              {index < versoes.length - 1 && (
+                <span className="absolute left-[7px] top-3 h-full w-px bg-ayamo-border" aria-hidden="true" />
+              )}
+              <span className="mt-1.5 h-3 w-3 flex-shrink-0 rounded-full border-2 border-ayamo-primary bg-ayamo-surface" />
+              <div className="flex-1 rounded border border-ayamo-border bg-ayamo-surface p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-ayamo-text">
+                    {v.versao === 0 ? 'Versão original' : `Revisão R${v.versao}`}
+                  </span>
+                  <span className="text-xs text-ayamo-text-mut">{formatarData(v.data)}</span>
+                </div>
+                <p className="text-sm text-ayamo-text">
+                  {formatarPreco(v.precoCusto.valor, v.precoCusto.moeda, v.precoCusto.unidade)} — {getUsuario(v.usuarioId)?.nome}
+                </p>
+                {v.observacao && <p className="mt-1 text-sm text-ayamo-text-mut">{v.observacao}</p>}
               </div>
-              <p className="text-sm text-ayamo-text">
-                {formatarPreco(v.precoCusto.valor, v.precoCusto.moeda, v.precoCusto.unidade)} — {getUsuario(v.usuarioId)?.nome}
-              </p>
-              {v.observacao && <p className="mt-1 text-sm text-ayamo-text-mut">{v.observacao}</p>}
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      </SecaoRecolhivel>
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
       <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />

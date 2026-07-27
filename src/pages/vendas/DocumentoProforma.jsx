@@ -45,7 +45,7 @@ Sales confirmation
 Quantity: 1
 Brand/Country of Origin: ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
 Incoterm/Port of Destination: ${proposta.incoterm ?? ''} - ${proposta.portoDestino ?? ''}
-Shipment from/to: ${proposta.embarqueDe ? formatarData(proposta.embarqueDe) : 'TBI'} - ${proposta.embarqueAte ? formatarData(proposta.embarqueAte) : 'TBI'}
+Shipment from/to: ${proposta.embarqueDe || 'TBI'} - ${proposta.embarqueAte || 'TBI'}
 
 ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade.toUpperCase()} - ${produto?.nome ?? ''}${produto?.embalagem ? ' - ' + produto.embalagem : ''} - ${item.precoVenda.moeda} ${item.precoVenda.valor}
 
@@ -160,8 +160,7 @@ Thanks for the business`
           <tr>
             <td className="border border-gray-300 bg-gray-50 p-2 font-semibold">Shipment:</td>
             <td className="border border-gray-300 p-2">
-              From: {proposta.embarqueDe ? formatarData(proposta.embarqueDe) : '—'} To{' '}
-              {proposta.embarqueAte ? formatarData(proposta.embarqueAte) : '—'}
+              From: {proposta.embarqueDe || '—'} To {proposta.embarqueAte || '—'}
             </td>
           </tr>
           <tr>

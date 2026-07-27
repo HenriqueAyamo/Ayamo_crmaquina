@@ -32,14 +32,18 @@ export default function Compras() {
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
   const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
 
-  const ofertasOrdenadas = useMemo(
-    () => [...ofertas.items].sort((a, b) => a.codigoBase.localeCompare(b.codigoBase) || a.versao - b.versao),
-    [ofertas.items],
-  )
+  const ofertasAtuais = useMemo(() => {
+    const ultimaPorBase = new Map()
+    ofertas.items.forEach((o) => {
+      const atual = ultimaPorBase.get(o.codigoBase)
+      if (!atual || o.versao > atual.versao) ultimaPorBase.set(o.codigoBase, o)
+    })
+    return [...ultimaPorBase.values()].sort((a, b) => a.codigoBase.localeCompare(b.codigoBase))
+  }, [ofertas.items])
 
   const ofertasFiltradas = useMemo(() => {
     const termo = busca.toLowerCase()
-    return ofertasOrdenadas.filter((o) => {
+    return ofertasAtuais.filter((o) => {
       const produto = getProduto(o.produtoId)
       const combinaBusca = !termo || produto?.nome.toLowerCase().includes(termo)
       const combinaDivisao = !divisaoFiltro || getDivisaoIdDeProduto(o.produtoId) === Number(divisaoFiltro)
@@ -47,7 +51,7 @@ export default function Compras() {
       const combinaStatus = !statusFiltro || o.status === statusFiltro
       return combinaBusca && combinaDivisao && combinaFornecedor && combinaStatus
     })
-  }, [ofertasOrdenadas, busca, divisaoFiltro, fornecedorFiltro, statusFiltro, getProduto, getDivisaoIdDeProduto])
+  }, [ofertasAtuais, busca, divisaoFiltro, fornecedorFiltro, statusFiltro, getProduto, getDivisaoIdDeProduto])
 
   return (
     <div>

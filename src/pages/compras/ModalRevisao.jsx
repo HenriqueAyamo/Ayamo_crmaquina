@@ -128,16 +128,16 @@ export default function ModalRevisao({ open, onClose, atual }) {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Embarque de">
             <input
-              type="date"
               className={inputClass}
+              placeholder="dd/mm/aaaa"
               value={dadosPO.embarqueDe}
               onChange={(e) => setDadosPO({ ...dadosPO, embarqueDe: e.target.value })}
             />
           </Field>
           <Field label="Embarque até">
             <input
-              type="date"
               className={inputClass}
+              placeholder="dd/mm/aaaa"
               value={dadosPO.embarqueAte}
               onChange={(e) => setDadosPO({ ...dadosPO, embarqueAte: e.target.value })}
             />

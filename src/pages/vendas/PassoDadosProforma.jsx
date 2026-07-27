@@ -38,10 +38,20 @@ export default function PassoDadosProforma({ dados, onAtualizar }) {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Embarque de">
-          <input type="date" className={inputClass} value={dados.embarqueDe} onChange={(e) => onAtualizar('embarqueDe', e.target.value)} />
+          <input
+            className={inputClass}
+            placeholder="dd/mm/aaaa"
+            value={dados.embarqueDe}
+            onChange={(e) => onAtualizar('embarqueDe', e.target.value)}
+          />
         </Field>
         <Field label="Embarque até">
-          <input type="date" className={inputClass} value={dados.embarqueAte} onChange={(e) => onAtualizar('embarqueAte', e.target.value)} />
+          <input
+            className={inputClass}
+            placeholder="dd/mm/aaaa"
+            value={dados.embarqueAte}
+            onChange={(e) => onAtualizar('embarqueAte', e.target.value)}
+          />
         </Field>
       </div>
 
