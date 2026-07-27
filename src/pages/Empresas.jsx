@@ -1,6 +1,6 @@
 import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download } from 'lucide-react'
+import { Download, Eye } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
@@ -16,6 +16,7 @@ import { CATEGORIAS_PRODUTO, CATEGORIA_TONE, classificarProduto, isNacional } fr
 import { exportarEmpresasExcel } from '../utils/exportarEmpresas.js'
 import { encontrarMelhorCorrespondencia } from '../utils/produtoTexto.js'
 import SupplierDashboard from './empresas/SupplierDashboard.jsx'
+import ModalDetalheEmpresa from './empresas/ModalDetalheEmpresa.jsx'
 
 const ImportarPlanilhaEmpresas = lazy(() => import('./empresas/ImportarPlanilhaEmpresas.jsx'))
 
@@ -62,6 +63,7 @@ export default function Empresas() {
   const [form, setForm] = useState(valoresIniciais())
   const [sugestao, setSugestao] = useState(null)
   const [copiarContatosDe, setCopiarContatosDe] = useState(null)
+  const [detalheAberto, setDetalheAberto] = useState(null)
 
   const responsaveis = usuarios.items.filter((u) => u.situacao === 'Ativo')
 
@@ -280,8 +282,28 @@ export default function Empresas() {
             header: 'Situação',
             render: (item) => <StatusBadge label={item.situacao} tone={TONE_SITUACAO[item.situacao] ?? 'neutral'} />,
           },
+          {
+            key: '_acoes',
+            header: '',
+            toggleable: false,
+            render: (item) => (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setDetalheAberto(item)
+                }}
+                className="text-ayamo-text-mut hover:text-ayamo-primary"
+                title="Ver detalhes"
+              >
+                <Eye size={15} />
+              </button>
+            ),
+          },
         ]}
       />
+
+      <ModalDetalheEmpresa open={Boolean(detalheAberto)} onClose={() => setDetalheAberto(null)} empresa={detalheAberto} />
 
       <Modal
         open={modalAberto}
