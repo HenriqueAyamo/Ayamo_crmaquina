@@ -1,10 +1,19 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, ShoppingCart, TrendingUp, FileText, AlertTriangle, ClipboardList, Ship } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import DataTable from '../components/DataTable.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
+
+const ICONE_TIPO = {
+  Compras: { icon: ShoppingCart, cor: 'text-ayamo-primary' },
+  Vendas: { icon: TrendingUp, cor: 'text-ayamo-success' },
+  Documentos: { icon: FileText, cor: 'text-ayamo-text-mut' },
+  Claims: { icon: AlertTriangle, cor: 'text-ayamo-danger' },
+  Demandas: { icon: ClipboardList, cor: 'text-ayamo-accent' },
+  Freight: { icon: Ship, cor: 'text-ayamo-teal' },
+}
 
 function CartaoNumerico({ label, valor }) {
   return (
@@ -18,11 +27,14 @@ function CartaoNumerico({ label, valor }) {
 function linkDaMovimentacao(item) {
   if (item.tipo === 'Compras') return `/compras/${item.refId}`
   if (item.tipo === 'Vendas') return `/vendas/${item.refId}`
+  if (item.tipo === 'Claims') return '/claims'
+  if (item.tipo === 'Demandas') return '/demandas'
+  if (item.tipo === 'Freight') return '/freight'
   return '/documentos'
 }
 
 export default function Inicio() {
-  const { ofertas, propostas, documentos, getProduto, usuarioLogado, getPendencias } = useData()
+  const { ofertas, propostas, documentos, claims, demandas, fretes, getProduto, getEmpresa, usuarioLogado, getPendencias } = useData()
   const navigate = useNavigate()
 
   const ofertasAtivas = ofertas.items.filter((o) => o.status === 'Disponível' || o.status === 'Em revisão').length
@@ -58,8 +70,31 @@ export default function Inicio() {
       descricao: `${d.numero} emitido para ${d.clienteNome}`,
     }))
 
-    return [...deOfertas, ...deVendas, ...deDocumentos].sort((a, b) => (a.data < b.data ? 1 : -1)).slice(0, 10)
-  }, [ofertas.items, propostas.items, documentos.items, getProduto])
+    const deClaims = claims.items.map((c) => ({
+      data: c.data,
+      tipo: 'Claims',
+      refId: null,
+      descricao: `Claim registrado — ${getProduto(c.produtoId)?.nome ?? ''} × ${getEmpresa(c.fornecedorId)?.nome ?? ''} (${c.status})`,
+    }))
+
+    const deDemandas = demandas.items.map((d) => ({
+      data: d.data,
+      tipo: 'Demandas',
+      refId: null,
+      descricao: `Demanda de ${getEmpresa(d.clienteId)?.nome ?? ''} — ${getProduto(d.produtoId)?.nome ?? ''} (${d.status})`,
+    }))
+
+    const deFretes = fretes.items.map((f) => ({
+      data: f.data,
+      tipo: 'Freight',
+      refId: null,
+      descricao: `Frete registrado — ${f.origem} → ${f.destino} (${f.transportadora})`,
+    }))
+
+    return [...deOfertas, ...deVendas, ...deDocumentos, ...deClaims, ...deDemandas, ...deFretes]
+      .sort((a, b) => (a.data < b.data ? 1 : -1))
+      .slice(0, 10)
+  }, [ofertas.items, propostas.items, documentos.items, claims.items, demandas.items, fretes.items, getProduto, getEmpresa])
 
   return (
     <div>
@@ -108,7 +143,20 @@ export default function Inicio() {
         onRowClick={(item) => navigate(linkDaMovimentacao(item))}
         columns={[
           { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
-          { key: 'tipo', header: 'Tipo' },
+          {
+            key: 'tipo',
+            header: 'Tipo',
+            render: (item) => {
+              const info = ICONE_TIPO[item.tipo]
+              const Icon = info?.icon
+              return (
+                <span className={`inline-flex items-center gap-1.5 ${info?.cor ?? ''}`}>
+                  {Icon && <Icon size={13} />}
+                  {item.tipo}
+                </span>
+              )
+            },
+          },
           { key: 'descricao', header: 'Descrição' },
         ]}
       />
