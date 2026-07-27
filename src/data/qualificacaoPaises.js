@@ -14,7 +14,8 @@ export const STATUS_QUALIFICACAO = ['Não iniciado', 'Em andamento', 'Aprovado']
 
 export function contarAprovacoes(qualificacoesPaises) {
   const mapa = qualificacoesPaises ?? {}
-  const total = PAISES_QUALIFICACAO.length
-  const emAndamentoOuAprovado = PAISES_QUALIFICACAO.filter((p) => mapa[p] && mapa[p] !== 'Não iniciado').length
+  const paises = Array.from(new Set([...PAISES_QUALIFICACAO, ...Object.keys(mapa)]))
+  const total = paises.length
+  const emAndamentoOuAprovado = paises.filter((p) => mapa[p] && mapa[p] !== 'Não iniciado').length
   return { emAndamentoOuAprovado, total }
 }

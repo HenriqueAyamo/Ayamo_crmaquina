@@ -180,7 +180,7 @@ export default function EmpresasDetalhe() {
           aberturaInicial={false}
         >
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {PAISES_QUALIFICACAO.map((pais) => {
+            {Array.from(new Set([...PAISES_QUALIFICACAO, ...Object.keys(empresa.qualificacoesPaises ?? {})])).map((pais) => {
               const status = empresa.qualificacoesPaises?.[pais] ?? 'Não iniciado'
               return (
                 <div key={pais} className="flex items-center justify-between gap-2 rounded border border-ayamo-border p-2 text-sm">
