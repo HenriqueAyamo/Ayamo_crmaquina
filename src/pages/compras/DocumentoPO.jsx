@@ -37,22 +37,22 @@ export default function DocumentoPO() {
 
 As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new business.
 
-Purchase confirmation
-Quantity: 1
-Brand/Country of Origin: ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
-Incoterm/Port of Destination: ${atual.incoterm ?? ''} - ${propostaVinculada?.portoDestino ?? 'TBI'}
-Shipment from/to: ${atual.embarqueDe || 'TBI'} - ${atual.embarqueAte || 'TBI'}
+**Purchase confirmation**
+**Quantity:** 1
+**Brand/Country of Origin:** ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
+**Incoterm/Port of Destination:** ${atual.incoterm ?? ''} - ${propostaVinculada?.portoDestino ?? 'TBI'}
+**Shipment from/to:** ${atual.embarqueDe || 'TBI'} - ${atual.embarqueAte || 'TBI'}
 
 ${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade.toUpperCase()} - ${produto?.nome ?? ''}${produto?.embalagem ? ' - ' + produto.embalagem : ''} - ${atual.precoCusto.moeda} ${atual.precoCusto.valor}
 
-Remarks: ${atual.observacao ?? ''}
-Find attached our PO(s) with all the details.
+**Remarks:** ${atual.observacao ?? ''}
+Find attached our **PO(s)** with all the details.
 
-Kindly send to us your PFI(s).
+Kindly send to us your **PFI(s)**.
 
 Our Operational Team will be in touch for further instructions.
 
-Thanks for the business`
+**Thanks for the business**`
 
   return (
     <PaginaDocumento voltarPara={`/compras/${id}`} corpoEmail={corpoEmail}>

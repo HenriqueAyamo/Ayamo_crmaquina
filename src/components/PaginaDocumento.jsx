@@ -1,16 +1,30 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Copy, Printer } from 'lucide-react'
+import { textoPlano, textoParaHtml, renderizarNegrito } from '../utils/textoFormatado.jsx'
 
 export default function PaginaDocumento({ voltarPara, corpoEmail, children }) {
   const navigate = useNavigate()
   const [copiado, setCopiado] = useState(false)
 
-  function copiarEmail() {
-    navigator.clipboard.writeText(corpoEmail).then(() => {
-      setCopiado(true)
-      setTimeout(() => setCopiado(false), 2000)
-    })
+  async function copiarEmail() {
+    const plano = textoPlano(corpoEmail)
+    try {
+      if (navigator.clipboard.write && window.ClipboardItem) {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/plain': new Blob([plano], { type: 'text/plain' }),
+            'text/html': new Blob([textoParaHtml(corpoEmail)], { type: 'text/html' }),
+          }),
+        ])
+      } else {
+        await navigator.clipboard.writeText(plano)
+      }
+    } catch {
+      await navigator.clipboard.writeText(plano)
+    }
+    setCopiado(true)
+    setTimeout(() => setCopiado(false), 2000)
   }
 
   return (
@@ -42,7 +56,7 @@ export default function PaginaDocumento({ voltarPara, corpoEmail, children }) {
             {copiado ? 'Copiado!' : 'Copiar'}
           </button>
         </div>
-        <pre className="whitespace-pre-wrap font-sans text-sm text-ayamo-text">{corpoEmail}</pre>
+        <pre className="whitespace-pre-wrap font-sans text-sm text-ayamo-text">{renderizarNegrito(corpoEmail)}</pre>
       </div>
 
       <div className="rounded border border-ayamo-border bg-white p-8 text-sm text-gray-900 print:border-none print:p-0">

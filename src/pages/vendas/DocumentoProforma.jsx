@@ -44,19 +44,19 @@ export default function DocumentoProforma() {
 
 As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new business.
 
-Sales confirmation
-Quantity: 1
-Brand/Country of Origin: ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
-Incoterm/Port of Destination: ${proposta.incoterm ?? ''} - ${proposta.portoDestino ?? ''}
-Shipment from/to: ${proposta.embarqueDe || 'TBI'} - ${proposta.embarqueAte || 'TBI'}
+**Sales confirmation**
+**Quantity:** 1
+**Brand/Country of Origin:** ${fornecedor?.nome ?? ''} (${fornecedor?.pais ?? ''} Origin) - ${fornecedor?.pais ?? ''}
+**Incoterm/Port of Destination:** ${proposta.incoterm ?? ''} - ${proposta.portoDestino ?? ''}
+**Shipment from/to:** ${proposta.embarqueDe || 'TBI'} - ${proposta.embarqueAte || 'TBI'}
 
 ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade.toUpperCase()} - ${produto?.nome ?? ''}${produto?.embalagem ? ' - ' + produto.embalagem : ''} - ${item.precoVenda.moeda} ${item.precoVenda.valor}
 
-Find attached our PFI(s) with all the details.
+Find attached our **PFI(s)** with all the details.
 
 Kindly send it back to us signed with your instructions and (if applicable) the duly permits.
 
-Thanks for the business`
+**Thanks for the business**`
 
   return (
     <PaginaDocumento voltarPara={`/vendas/${id}`} corpoEmail={corpoEmail}>
