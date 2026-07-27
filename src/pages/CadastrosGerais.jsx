@@ -5,6 +5,7 @@ import AbaFamilias from './cadastros/AbaFamilias.jsx'
 import AbaProdutos from './cadastros/AbaProdutos.jsx'
 import AbaCategorias from './cadastros/AbaCategorias.jsx'
 import AbaMoedasUnidades from './cadastros/AbaMoedasUnidades.jsx'
+import AbaDadosAyamo from './cadastros/AbaDadosAyamo.jsx'
 
 const ABAS = [
   { id: 'divisoes', label: 'Divisões', Componente: AbaDivisoes },
@@ -12,6 +13,7 @@ const ABAS = [
   { id: 'produtos', label: 'Produtos', Componente: AbaProdutos },
   { id: 'categorias', label: 'Categorias de contato', Componente: AbaCategorias },
   { id: 'moedas', label: 'Moedas e unidades', Componente: AbaMoedasUnidades },
+  { id: 'dadosAyamo', label: 'Dados da Ayamo', Componente: AbaDadosAyamo },
 ]
 
 export default function CadastrosGerais() {

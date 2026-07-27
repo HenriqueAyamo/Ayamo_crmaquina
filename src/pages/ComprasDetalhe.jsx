@@ -76,6 +76,13 @@ export default function ComprasDetalhe() {
               <>
                 <button
                   type="button"
+                  onClick={() => navigate(`/compras/${atual.codigoBase}/po`)}
+                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+                >
+                  Gerar PO
+                </button>
+                <button
+                  type="button"
                   onClick={() => setModalNotaAberto(true)}
                   className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
                 >

@@ -4,8 +4,10 @@ import Shell from './layout/Shell.jsx'
 import Inicio from './pages/Inicio.jsx'
 import Compras from './pages/Compras.jsx'
 import ComprasDetalhe from './pages/ComprasDetalhe.jsx'
+import DocumentoPO from './pages/compras/DocumentoPO.jsx'
 import Vendas from './pages/Vendas.jsx'
 import VendasDetalhe from './pages/VendasDetalhe.jsx'
+import DocumentoProforma from './pages/vendas/DocumentoProforma.jsx'
 import Empresas from './pages/Empresas.jsx'
 import EmpresasDetalhe from './pages/EmpresasDetalhe.jsx'
 import Contatos from './pages/Contatos.jsx'
@@ -30,6 +32,8 @@ export default function App() {
           <Route path="/usuarios" element={<Usuarios />} />
           <Route path="/documentos" element={<Documentos />} />
         </Route>
+        <Route path="/compras/:id/po" element={<DocumentoPO />} />
+        <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
       </Routes>
     </DataProvider>
   )

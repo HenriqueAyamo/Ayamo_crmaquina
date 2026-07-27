@@ -7,6 +7,15 @@ export const propostas = [
     status: 'Aceita',
     dataEnvio: '2026-06-05',
     margemMinima: 10,
+    numeroContrato: 'S10201.1',
+    incoterm: 'CIF',
+    portoDestino: 'Manila North',
+    destinoFinal: 'Philippines',
+    prazoPagamento: '100% TT against copy of original documents',
+    embarqueDe: '2026-08-05',
+    embarqueAte: '2026-08-31',
+    consignatarioNome: '',
+    consignatarioEndereco: '',
     itens: [
       {
         produtoId: 1,
@@ -46,6 +55,15 @@ export const propostas = [
     status: 'Em negociação',
     dataEnvio: '2026-06-02',
     margemMinima: 12,
+    numeroContrato: 'S10202.1',
+    incoterm: 'CFR',
+    portoDestino: 'Taipei',
+    destinoFinal: 'Taiwan',
+    prazoPagamento: '100% TT',
+    embarqueDe: '2026-08-20',
+    embarqueAte: '2026-09-20',
+    consignatarioNome: '',
+    consignatarioEndereco: '',
     itens: [
       {
         produtoId: 9,

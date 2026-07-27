@@ -3,10 +3,25 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field from '../../components/Field.jsx'
 import LinhaOfertaCliente from './LinhaOfertaCliente.jsx'
+import PassoDadosProforma from './PassoDadosProforma.jsx'
 
 function baseProximoNumero(propostas) {
   const numeros = propostas.map((p) => Number(p.numero.replace('PROP-', '')))
   return Math.max(1000, ...numeros)
+}
+
+function valoresIniciaisProforma() {
+  return {
+    numeroContrato: '',
+    incoterm: 'CIF',
+    portoDestino: '',
+    destinoFinal: '',
+    prazoPagamento: '',
+    embarqueDe: '',
+    embarqueAte: '',
+    consignatarioNome: '',
+    consignatarioEndereco: '',
+  }
 }
 
 export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa }) {
@@ -15,6 +30,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const [passo, setPasso] = useState(1)
   const [clientesIds, setClientesIds] = useState([])
   const [selecao, setSelecao] = useState({})
+  const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
 
   const ofertasDisponiveis = ofertaFixa ? [ofertaFixa] : ofertas.items.filter((o) => o.status === 'Disponível')
   const clientesSelecionados = clientesIds.map((id) => clientes.find((c) => String(c.id) === id)).filter(Boolean)
@@ -39,6 +55,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     setPasso(1)
     setClientesIds([])
     setSelecao({})
+    setDadosProforma(valoresIniciaisProforma())
     onClose()
   }
 
@@ -105,6 +122,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         dataEnvio: hoje,
         margemMinima: 10,
         itens: itensCliente,
+        ...dadosProforma,
         historicoNegociacao: [
           {
             rodada: 1,
@@ -149,17 +167,17 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const podeAvancar = clientesIds.length > 0
   const podeCriar = selecaoValida
 
+  const TITULOS = {
+    1: ofertaFixa ? `Gerar venda a partir de ${ofertaFixa.codigo} — escolha os clientes` : 'Nova proposta — escolha os clientes',
+    2: 'Nova proposta — quantidade e preço por cliente',
+    3: 'Nova proposta — dados para a Proforma',
+  }
+
   return (
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title={
-        passo === 1
-          ? ofertaFixa
-            ? `Gerar venda a partir de ${ofertaFixa.codigo} — escolha os clientes`
-            : 'Nova proposta — escolha os clientes'
-          : 'Nova proposta — quantidade e preço por cliente'
-      }
+      title={TITULOS[passo]}
       width="lg"
       footer={
         <>
@@ -170,7 +188,16 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
           >
             Cancelar
           </button>
-          {passo === 1 ? (
+          {passo > 1 && (
+            <button
+              type="button"
+              onClick={() => setPasso(passo - 1)}
+              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
+            >
+              Voltar
+            </button>
+          )}
+          {passo === 1 && (
             <button
               type="button"
               disabled={!podeAvancar}
@@ -179,12 +206,22 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
             >
               Próximo
             </button>
-          ) : (
+          )}
+          {passo === 2 && (
             <button
               type="button"
               disabled={!podeCriar}
-              onClick={criarProposta}
+              onClick={() => setPasso(3)}
               className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
+            >
+              Próximo
+            </button>
+          )}
+          {passo === 3 && (
+            <button
+              type="button"
+              onClick={criarProposta}
+              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
             >
               Criar proposta
             </button>
@@ -226,6 +263,13 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
             />
           ))}
         </div>
+      )}
+
+      {passo === 3 && (
+        <PassoDadosProforma
+          dados={dadosProforma}
+          onAtualizar={(campo, valor) => setDadosProforma((atual) => ({ ...atual, [campo]: valor }))}
+        />
       )}
     </Modal>
   )

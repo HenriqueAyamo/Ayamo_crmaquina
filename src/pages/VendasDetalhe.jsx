@@ -154,7 +154,16 @@ export default function VendasDetalhe() {
               {formatarData(proposta.dataEnvio)}
             </p>
           </div>
-          <StatusBadge label={proposta.status} tone={TONE_STATUS[proposta.status] ?? 'neutral'} />
+          <div className="flex items-center gap-3">
+            <StatusBadge label={proposta.status} tone={TONE_STATUS[proposta.status] ?? 'neutral'} />
+            <button
+              type="button"
+              onClick={() => navigate(`/vendas/${proposta.numero}/proforma`)}
+              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
+            >
+              Gerar Proforma
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">

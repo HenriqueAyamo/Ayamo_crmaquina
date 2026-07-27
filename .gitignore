@@ -12,9 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Planilhas com dados reais da empresa (nunca commitar em repo publico)
+# Planilhas e modelos de documento com dados reais da empresa (nunca commitar em repo publico)
 *.xls
 *.xlsx
+/modelos_documentos/
 
 # Editor directories and files
 .vscode/*

@@ -25,6 +25,10 @@ export default function AbaProdutos() {
         { key: 'apelido', label: 'Apelido', type: 'text', required: true },
         { key: 'familiaId', label: 'Família', type: 'select', required: true, options: opcoesFamilia },
         { key: 'divisao', label: 'Divisão', type: 'derived', compute: (form) => nomeDivisaoDeFamilia(form.familiaId) },
+        { key: 'embalagem', label: 'Embalagem (para PO/Proforma)', type: 'text' },
+        { key: 'validadeMeses', label: 'Validade (meses)', type: 'number' },
+        { key: 'especificacaoRotulo', label: 'Especificação de rótulo', type: 'text' },
+        { key: 'hsCode', label: 'HS Code', type: 'text' },
       ]}
       columns={[
         { key: 'nome', header: 'Nome' },

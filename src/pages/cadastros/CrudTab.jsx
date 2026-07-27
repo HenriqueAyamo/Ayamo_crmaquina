@@ -30,8 +30,12 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
 
   function salvar(e) {
     e.preventDefault()
-    if (editando) collection.editar(editando.id, form)
-    else collection.criar(form)
+    const dados = { ...form }
+    fields.forEach((f) => {
+      if (f.type === 'number' && dados[f.key] !== '') dados[f.key] = Number(dados[f.key])
+    })
+    if (editando) collection.editar(editando.id, dados)
+    else collection.criar(dados)
     setModalAberto(false)
   }
 
@@ -134,6 +138,15 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
               )}
               {f.type === 'text' && (
                 <input
+                  className={inputClass}
+                  value={form[f.key] ?? ''}
+                  required={f.required}
+                  onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
+                />
+              )}
+              {f.type === 'number' && (
+                <input
+                  type="number"
                   className={inputClass}
                   value={form[f.key] ?? ''}
                   required={f.required}

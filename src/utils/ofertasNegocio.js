@@ -53,6 +53,12 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       data: new Date().toISOString().slice(0, 10),
       usuarioId: usuarioLogado.id,
       observacao: dados.observacao,
+      numeroContrato: dados.numeroContrato,
+      incoterm: dados.incoterm,
+      portoOrigem: dados.portoOrigem,
+      prazoPagamento: dados.prazoPagamento,
+      embarqueDe: dados.embarqueDe,
+      embarqueAte: dados.embarqueAte,
       historicoNegociacao: [
         ...(ofertaAtual.historicoNegociacao ?? []),
         {

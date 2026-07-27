@@ -1,7 +1,17 @@
 export const produtos = [
   { id: 1, nome: 'Frozen Chicken Leg Quarters', apelido: 'CLQ', familiaId: 1, situacao: 'Ativo' },
   { id: 2, nome: 'Frozen Chicken Meat Mechanically Separated', apelido: 'Chicken MDM', familiaId: 1, situacao: 'Ativo' },
-  { id: 3, nome: 'Frozen Pork Boneless Meat - Shoulder', apelido: 'Pork Shoulder Boneless Skinless', familiaId: 2, situacao: 'Ativo' },
+  {
+    id: 3,
+    nome: 'Frozen Pork Boneless Meat - Shoulder',
+    apelido: 'Pork Shoulder Boneless Skinless',
+    familiaId: 2,
+    situacao: 'Ativo',
+    embalagem: 'IWP, 25kg per carton',
+    validadeMeses: 24,
+    especificacaoRotulo: '90vl with shank',
+    hsCode: '02032900',
+  },
   { id: 4, nome: 'Frozen Pork Boneless Meat - Leg', apelido: 'Pork Leg Boneless Skinless', familiaId: 2, situacao: 'Ativo' },
   { id: 5, nome: 'Frozen Yellow Croaker Whole Round 250-500g', apelido: 'Yellow Croaker WR 250-500g', familiaId: 3, situacao: 'Ativo' },
   { id: 6, nome: 'Frozen Tilapia Gutted & Scaled 750-950g', apelido: 'Tilapia G&S 750-950g', familiaId: 3, situacao: 'Ativo' },

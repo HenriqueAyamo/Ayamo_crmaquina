@@ -143,6 +143,16 @@ export default function EmpresasDetalhe() {
             <dt className="text-ayamo-text-mut">Crédito utilizado</dt>
             <dd className="font-medium text-ayamo-text">{formatarValor(empresa.creditoUtilizado, empresa.moedaPadrao)}</dd>
           </div>
+          <div className="col-span-2">
+            <dt className="text-ayamo-text-mut">Endereço</dt>
+            <dd className="font-medium text-ayamo-text">{empresa.endereco || '—'}</dd>
+          </div>
+          {empresa.tipo === 'Fornecedor' && (
+            <div>
+              <dt className="text-ayamo-text-mut">SIF</dt>
+              <dd className="font-medium text-ayamo-text">{empresa.sif || '—'}</dd>
+            </div>
+          )}
         </dl>
       </div>
 

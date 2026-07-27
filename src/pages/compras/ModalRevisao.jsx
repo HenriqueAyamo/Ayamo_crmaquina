@@ -3,7 +3,18 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
-import { MOEDAS } from '../../data/unidades.js'
+import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
+
+function valoresPO(atual) {
+  return {
+    numeroContrato: atual.numeroContrato ?? '',
+    incoterm: atual.incoterm ?? 'CFR',
+    portoOrigem: atual.portoOrigem ?? '',
+    prazoPagamento: atual.prazoPagamento ?? '',
+    embarqueDe: atual.embarqueDe ?? '',
+    embarqueAte: atual.embarqueAte ?? '',
+  }
+}
 
 export default function ModalRevisao({ open, onClose, atual }) {
   const { registrarRevisaoOferta } = useData()
@@ -13,6 +24,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
   const [quantidade, setQuantidade] = useState(atual.quantidade)
   const [status, setStatus] = useState('Disponível')
   const [observacao, setObservacao] = useState('')
+  const [dadosPO, setDadosPO] = useState(valoresPO(atual))
 
   function fecharEResetar() {
     setValor('')
@@ -20,12 +32,13 @@ export default function ModalRevisao({ open, onClose, atual }) {
     setQuantidade(atual.quantidade)
     setStatus('Disponível')
     setObservacao('')
+    setDadosPO(valoresPO(atual))
     onClose()
   }
 
   function salvar(e) {
     e.preventDefault()
-    registrarRevisaoOferta(atual, { valor: Number(valor), moeda, quantidade: Number(quantidade), status, observacao })
+    registrarRevisaoOferta(atual, { valor: Number(valor), moeda, quantidade: Number(quantidade), status, observacao, ...dadosPO })
     fecharEResetar()
   }
 
@@ -78,6 +91,58 @@ export default function ModalRevisao({ open, onClose, atual }) {
         <Field label="Observação">
           <textarea className={inputClass} rows={2} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
         </Field>
+
+        <p className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Dados para o PO (opcional)</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Número do contrato">
+            <input
+              className={inputClass}
+              value={dadosPO.numeroContrato}
+              onChange={(e) => setDadosPO({ ...dadosPO, numeroContrato: e.target.value })}
+            />
+          </Field>
+          <Field label="Incoterm">
+            <select className={inputClass} value={dadosPO.incoterm} onChange={(e) => setDadosPO({ ...dadosPO, incoterm: e.target.value })}>
+              {INCOTERMS.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Porto de origem">
+          <input className={inputClass} value={dadosPO.portoOrigem} onChange={(e) => setDadosPO({ ...dadosPO, portoOrigem: e.target.value })} />
+        </Field>
+
+        <Field label="Prazo de pagamento">
+          <input
+            className={inputClass}
+            value={dadosPO.prazoPagamento}
+            onChange={(e) => setDadosPO({ ...dadosPO, prazoPagamento: e.target.value })}
+          />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Embarque de">
+            <input
+              type="date"
+              className={inputClass}
+              value={dadosPO.embarqueDe}
+              onChange={(e) => setDadosPO({ ...dadosPO, embarqueDe: e.target.value })}
+            />
+          </Field>
+          <Field label="Embarque até">
+            <input
+              type="date"
+              className={inputClass}
+              value={dadosPO.embarqueAte}
+              onChange={(e) => setDadosPO({ ...dadosPO, embarqueAte: e.target.value })}
+            />
+          </Field>
+        </div>
       </form>
     </Modal>
   )

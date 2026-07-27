@@ -21,3 +21,5 @@ export const UNIDADES_EMBALAGEM = [
 ]
 
 export const UNIDADES = [...UNIDADES_PESO, ...UNIDADES_EMBALAGEM]
+
+export const INCOTERMS = ['CFR', 'CIF', 'FOB', 'CPT', 'FCA', 'EXW', 'DDP', 'DAP', 'FAS']

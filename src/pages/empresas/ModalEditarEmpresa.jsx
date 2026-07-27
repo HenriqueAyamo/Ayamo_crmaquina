@@ -9,6 +9,8 @@ function valoresIniciais(empresa) {
   return {
     nome: empresa.nome,
     pais: empresa.pais,
+    endereco: empresa.endereco ?? '',
+    sif: empresa.sif ?? '',
     tipo: empresa.tipo,
     responsavelAyamoId: empresa.responsavelAyamoId,
     moedaPadrao: empresa.moedaPadrao,
@@ -65,6 +67,12 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
         </Field>
         <Field label="País" required>
           <input className={inputClass} required value={form.pais} onChange={(e) => setForm({ ...form, pais: e.target.value })} />
+        </Field>
+        <Field label="Endereço completo" hint="Usado nos documentos de PO/Proforma">
+          <textarea className={inputClass} rows={2} value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
+        </Field>
+        <Field label="SIF / número de estabelecimento">
+          <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tipo" required>

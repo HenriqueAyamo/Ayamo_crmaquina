@@ -3,7 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
-import { MOEDAS, UNIDADES_PESO } from '../../data/unidades.js'
+import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 
 function proximoCodigo(ofertas) {
   const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', ''))).filter((n) => !Number.isNaN(n))
@@ -20,6 +20,12 @@ function valoresIniciais() {
     unidade: 'ton',
     quantidade: '',
     observacao: '',
+    numeroContrato: '',
+    incoterm: 'CFR',
+    portoOrigem: '',
+    prazoPagamento: '',
+    embarqueDe: '',
+    embarqueAte: '',
   }
 }
 
@@ -53,6 +59,12 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       data: new Date().toISOString().slice(0, 10),
       usuarioId: usuarioLogado.id,
       observacao: form.observacao,
+      numeroContrato: form.numeroContrato,
+      incoterm: form.incoterm,
+      portoOrigem: form.portoOrigem,
+      prazoPagamento: form.prazoPagamento,
+      embarqueDe: form.embarqueDe,
+      embarqueAte: form.embarqueAte,
     })
     fecharEResetar()
     onCriada(nova)
@@ -145,6 +157,40 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             onChange={(e) => setForm({ ...form, observacao: e.target.value })}
           />
         </Field>
+
+        <p className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Dados para o PO (opcional)</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Número do contrato" hint="Ex.: P12179">
+            <input className={inputClass} value={form.numeroContrato} onChange={(e) => setForm({ ...form, numeroContrato: e.target.value })} />
+          </Field>
+          <Field label="Incoterm">
+            <select className={inputClass} value={form.incoterm} onChange={(e) => setForm({ ...form, incoterm: e.target.value })}>
+              {INCOTERMS.map((i) => (
+                <option key={i} value={i}>
+                  {i}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
+          <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
+        </Field>
+
+        <Field label="Prazo de pagamento" hint="Ex.: 100% TT">
+          <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Embarque de">
+            <input type="date" className={inputClass} value={form.embarqueDe} onChange={(e) => setForm({ ...form, embarqueDe: e.target.value })} />
+          </Field>
+          <Field label="Embarque até">
+            <input type="date" className={inputClass} value={form.embarqueAte} onChange={(e) => setForm({ ...form, embarqueAte: e.target.value })} />
+          </Field>
+        </div>
       </form>
     </Modal>
   )

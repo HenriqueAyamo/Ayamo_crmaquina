@@ -17,6 +17,8 @@ function valoresIniciais() {
   return {
     nome: '',
     pais: '',
+    endereco: '',
+    sif: '',
     tipo: 'Cliente',
     responsavelAyamoId: '',
     moedaPadrao: '',
@@ -156,6 +158,17 @@ export default function Empresas() {
               value={form.pais}
               onChange={(e) => setForm({ ...form, pais: e.target.value })}
             />
+          </Field>
+          <Field label="Endereço completo" hint="Usado nos documentos de PO/Proforma">
+            <textarea
+              className={inputClass}
+              rows={2}
+              value={form.endereco}
+              onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+            />
+          </Field>
+          <Field label="SIF / número de estabelecimento" hint="Se for fornecedor, usado no documento para o cliente final">
+            <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
           </Field>
           <Field label="Tipo" required>
             <select className={inputClass} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
