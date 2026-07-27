@@ -2,20 +2,22 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
-import { calcularMargem, obterNotaCambio } from '../data/cambio.js'
+import { obterNotaCambio } from '../data/cambio.js'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import HistoricoNegociacao from './vendas/HistoricoNegociacao.jsx'
+import TabelaItensProposta from './vendas/TabelaItensProposta.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
-import { formatarPreco, formatarData, formatarPercentual } from '../utils/formato.js'
+import { formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
   Rascunho: 'neutral',
   Enviada: 'info',
   'Em negociação': 'warning',
   'Aguardando aprovação': 'accent',
+  'Aguardando aprovação financeira': 'warning',
   Aceita: 'success',
   Recusada: 'danger',
   Expirada: 'neutral',
@@ -83,11 +85,14 @@ export default function VendasDetalhe() {
       'Contraproposta do cliente': 'Em negociação',
       'Escalar para comprador': 'Em negociação',
       'Solicitar aprovação do diretor': 'Aguardando aprovação',
+      'Solicitar aprovação financeira': 'Aguardando aprovação financeira',
+      'Aprovação financeira concedida': 'Aceita',
+      'Recusar aprovação financeira': 'Recusada',
       'Aceite e fechamento': 'Aceita',
       'Recusar proposta': 'Recusada',
     }
 
-    if (tipo === 'Recusar proposta') {
+    if (tipo === 'Recusar proposta' || tipo === 'Recusar aprovação financeira') {
       ajustarEstoqueOferta(itemPrincipal.ofertaCodigo, itemPrincipal.quantidade)
     }
 
@@ -101,7 +106,8 @@ export default function VendasDetalhe() {
   function handleAceitarFechar() {
     const { bloqueado, motivo } = verificarLimiteCredito(proposta.clienteId, resumoMargem.vendaUSD)
     if (bloqueado) {
-      setErroCredito(motivo)
+      setErroCredito(`Enviado para aprovação do Financeiro — ${motivo}`)
+      registrarRodada('Solicitar aprovação financeira', { observacao: motivo })
       return
     }
     setErroCredito(null)
@@ -113,6 +119,17 @@ export default function VendasDetalhe() {
 
   function handleRecusar() {
     registrarRodada('Recusar proposta', { observacao: 'Proposta recusada pelo cliente.' })
+  }
+
+  function handleAprovarCredito() {
+    registrarRodada('Aprovação financeira concedida', { observacao: 'Crédito liberado pelo Financeiro.' })
+    registrarUsoCreditoCliente(proposta.clienteId, resumoMargem.vendaUSD)
+    avisarConcorrenciaEstoque(itemPrincipal.ofertaCodigo, proposta.id)
+    setModalFechamentoAberto(true)
+  }
+
+  function handleRecusarCredito() {
+    registrarRodada('Recusar aprovação financeira', { observacao: 'Crédito não liberado pelo Financeiro.' })
   }
 
   const nota = obterNotaCambio(itemPrincipal.precoCusto, itemPrincipal.precoVenda)
@@ -142,7 +159,7 @@ export default function VendasDetalhe() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Visualizar como:</span>
-          {['Vendedor', 'Comprador'].map((opcao) => (
+          {['Vendedor', 'Comprador', 'Financeiro'].map((opcao) => (
             <button
               key={opcao}
               type="button"
@@ -158,49 +175,7 @@ export default function VendasDetalhe() {
       </div>
 
       <h2 className="mb-3 text-base font-semibold text-ayamo-text">Itens</h2>
-      <div className="mb-2 overflow-x-auto rounded border border-ayamo-border bg-ayamo-surface">
-        <table className="w-full border-collapse text-sm">
-          <thead className="bg-ayamo-bg">
-            <tr>
-              <th className="border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase text-ayamo-text-mut">Produto</th>
-              <th className="border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase text-ayamo-text-mut">Quantidade</th>
-              {perfil === 'Vendedor' && (
-                <th className="border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase text-ayamo-text-mut">Preço de custo</th>
-              )}
-              <th className="border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase text-ayamo-text-mut">Preço de venda</th>
-              {perfil === 'Vendedor' && (
-                <th className="border-b border-ayamo-border px-4 py-2.5 text-left text-xs font-semibold uppercase text-ayamo-text-mut">Margem</th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {proposta.itens.map((item, index) => {
-              const margemItem = calcularMargem(item.precoCusto, item.precoVenda)
-              return (
-                <tr key={index} className="border-b border-ayamo-border last:border-b-0">
-                  <td className="px-4 py-2.5 text-[13px] text-ayamo-text">{getProduto(item.produtoId)?.nome}</td>
-                  <td className="px-4 py-2.5 text-[13px] text-ayamo-text">
-                    {item.quantidade.toLocaleString('pt-BR')} {item.unidade}
-                  </td>
-                  {perfil === 'Vendedor' && (
-                    <td className="px-4 py-2.5 text-[13px] text-ayamo-text">
-                      {formatarPreco(item.precoCusto.valor, item.precoCusto.moeda, item.precoCusto.unidade)}
-                    </td>
-                  )}
-                  <td className="px-4 py-2.5 text-[13px] text-ayamo-text">
-                    {formatarPreco(item.precoVenda.valor, item.precoVenda.moeda, item.precoVenda.unidade)}
-                  </td>
-                  {perfil === 'Vendedor' && (
-                    <td className="px-4 py-2.5 text-[13px] font-medium text-ayamo-text">
-                      {formatarPercentual(margemItem.margemPercentual)}
-                    </td>
-                  )}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <TabelaItensProposta proposta={proposta} perfil={perfil} getProduto={getProduto} />
       {perfil === 'Vendedor' && nota && <p className="mb-6 text-xs text-ayamo-text-mut">{nota}</p>}
       {perfil !== 'Vendedor' && <div className="mb-6" />}
 
@@ -261,6 +236,8 @@ export default function VendasDetalhe() {
         onRegistrarRodada={registrarRodada}
         onAceitarFechar={handleAceitarFechar}
         onRecusar={handleRecusar}
+        onAprovarCredito={handleAprovarCredito}
+        onRecusarCredito={handleRecusarCredito}
       />
 
       <ModalFechamento

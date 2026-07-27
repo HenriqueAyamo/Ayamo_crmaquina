@@ -79,4 +79,12 @@ export const usuarios = [
     situacao: 'Ativo',
     responsabilidades: [],
   },
+  {
+    id: 11,
+    nome: 'Michael Gonçalves',
+    email: 'michael.goncalves@ayamo.com',
+    perfil: 'Financeiro',
+    situacao: 'Ativo',
+    responsabilidades: [],
+  },
 ]

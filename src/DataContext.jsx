@@ -11,7 +11,7 @@ import { propostas as propostasMock } from './data/propostas.js'
 import { documentos as documentosMock } from './data/documentos.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
-import { formatarPreco } from './utils/formato.js'
+import { criarAcoesOferta } from './utils/ofertasNegocio.js'
 
 const DataContext = createContext(null)
 
@@ -122,116 +122,8 @@ export function DataProvider({ children }) {
     return usuarios.items.find((u) => u.id === usuarioId)
   }
 
-  function ajustarEstoqueOferta(ofertaCodigo, delta) {
-    const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
-    if (!oferta) return
-    const novaQuantidade = Math.max(0, oferta.quantidade + delta)
-    const novoStatus =
-      novaQuantidade === 0 ? 'Esgotada' : oferta.status === 'Esgotada' ? 'Disponível' : oferta.status
-    ofertas.editar(oferta.id, { quantidade: novaQuantidade, status: novoStatus })
-  }
-
-  function registrarNotaOferta(ofertaAtual, dados) {
-    const hoje = new Date().toISOString().slice(0, 10)
-    ofertas.editar(ofertaAtual.id, {
-      status: dados.novoStatus ?? ofertaAtual.status,
-      historicoNegociacao: [
-        ...(ofertaAtual.historicoNegociacao ?? []),
-        { autor: 'Comprador', tipo: dados.tipo, data: hoje, observacao: dados.observacao },
-      ],
-    })
-  }
-
-  function registrarRevisaoOferta(ofertaAtual, dados) {
-    const novaOferta = ofertas.criar({
-      codigo: `${ofertaAtual.codigoBase}-R${ofertaAtual.versao + 1}`,
-      codigoBase: ofertaAtual.codigoBase,
-      versao: ofertaAtual.versao + 1,
-      produtoId: ofertaAtual.produtoId,
-      fornecedorId: ofertaAtual.fornecedorId,
-      precoCusto: { valor: dados.valor, moeda: dados.moeda, unidade: ofertaAtual.unidade },
-      quantidade: dados.quantidade,
-      unidade: ofertaAtual.unidade,
-      status: dados.status,
-      data: new Date().toISOString().slice(0, 10),
-      usuarioId: usuarioLogado.id,
-      observacao: dados.observacao,
-      historicoNegociacao: [
-        ...(ofertaAtual.historicoNegociacao ?? []),
-        {
-          autor: 'Comprador',
-          tipo: 'Novo preço registrado com o fornecedor',
-          data: new Date().toISOString().slice(0, 10),
-          observacao: dados.observacao || `Preço atualizado para ${formatarPreco(dados.valor, dados.moeda, ofertaAtual.unidade)}.`,
-        },
-      ],
-    })
-
-    // Qualquer proposta de venda ainda aberta que dependa deste código de oferta
-    // recebe o novo custo automaticamente e volta para o vendedor decidir (margem recalculada).
-    propostas.items
-      .filter(
-        (p) =>
-          !['Aceita', 'Recusada', 'Expirada'].includes(p.status) &&
-          p.itens.some((item) => item.ofertaCodigo === ofertaAtual.codigo),
-      )
-      .forEach((p) => {
-        const novosItens = p.itens.map((item) =>
-          item.ofertaCodigo === ofertaAtual.codigo
-            ? { ...item, ofertaCodigo: novaOferta.codigo, precoCusto: { ...novaOferta.precoCusto } }
-            : item,
-        )
-        propostas.editar(p.id, {
-          status: 'Em negociação',
-          itens: novosItens,
-          historicoNegociacao: [
-            ...p.historicoNegociacao,
-            {
-              rodada: p.historicoNegociacao.length + 1,
-              autor: 'Comprador',
-              tipo: 'Novo custo do fornecedor',
-              preco: { ...novaOferta.precoCusto },
-              quantidade: novosItens[0].quantidade,
-              data: novaOferta.data,
-              observacao: `Custo atualizado (${novaOferta.codigo}). Margem recalculada — aguardando decisão do vendedor.`,
-            },
-          ],
-        })
-      })
-
-    return novaOferta
-  }
-
-  function avisarConcorrenciaEstoque(ofertaCodigo, propostaFechadaId) {
-    const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
-    if (!oferta) return
-    const hoje = new Date().toISOString().slice(0, 10)
-
-    propostas.items
-      .filter(
-        (p) =>
-          p.id !== propostaFechadaId &&
-          !['Aceita', 'Recusada', 'Expirada'].includes(p.status) &&
-          p.itens.some((item) => item.ofertaCodigo === ofertaCodigo && item.quantidade > oferta.quantidade),
-      )
-      .forEach((p) => {
-        const item = p.itens.find((i) => i.ofertaCodigo === ofertaCodigo)
-        propostas.editar(p.id, {
-          historicoNegociacao: [
-            ...p.historicoNegociacao,
-            {
-              rodada: p.historicoNegociacao.length + 1,
-              autor: 'Sistema',
-              tipo: 'Alerta de estoque',
-              preco: item.precoVenda,
-              quantidade: item.quantidade,
-              data: hoje,
-              observacao: `Uma proposta concorrente sobre a oferta ${ofertaCodigo} foi fechada e consumiu o estoque. Restam apenas ${oferta.quantidade.toLocaleString('pt-BR')} ${oferta.unidade} — esta proposta pede ${item.quantidade.toLocaleString('pt-BR')} ${item.unidade}. Confirme com o comprador antes de fechar.`,
-            },
-          ],
-        })
-      })
-  }
+  const { ajustarEstoqueOferta, registrarNotaOferta, alterarStatusOferta, registrarRevisaoOferta, avisarConcorrenciaEstoque } =
+    criarAcoesOferta({ ofertas, propostas, usuarioLogado })
 
   function verificarLimiteCredito(clienteId, valorNegocioUSD) {
     const empresa = getEmpresa(clienteId)
@@ -281,6 +173,7 @@ export function DataProvider({ children }) {
     getPendencias,
     ajustarEstoqueOferta,
     registrarNotaOferta,
+    alterarStatusOferta,
     registrarRevisaoOferta,
     avisarConcorrenciaEstoque,
     verificarLimiteCredito,

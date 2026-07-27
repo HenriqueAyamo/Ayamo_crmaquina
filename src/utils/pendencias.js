@@ -60,6 +60,21 @@ export function calcularPendencias(usuario, ctx) {
       })
   }
 
+  if (usuario.perfil === 'Financeiro') {
+    propostas.items
+      .filter((p) => p.status === 'Aguardando aprovação financeira')
+      .forEach((p) => {
+        const ultima = p.historicoNegociacao[p.historicoNegociacao.length - 1]
+        pendencias.push({
+          tipo: 'proposta',
+          id: p.numero,
+          titulo: p.numero,
+          descricao: `Aprovação de crédito pendente — ${getEmpresa(p.clienteId)?.nome ?? ''} (vendedor ${getUsuario(p.vendedorId)?.nome ?? ''})`,
+          data: ultima?.data ?? p.dataEnvio,
+        })
+      })
+  }
+
   if (usuario.perfil === 'Diretor') {
     propostas.items
       .filter((p) => p.status === 'Aguardando aprovação')

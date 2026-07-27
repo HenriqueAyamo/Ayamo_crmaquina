@@ -9,13 +9,24 @@ const ACOES_RODADA = [
 ]
 
 const STATUS_ENCERRADOS = ['Aceita', 'Recusada', 'Expirada']
+const AGUARDANDO_FINANCEIRO = 'Aguardando aprovação financeira'
 
-export default function HistoricoNegociacao({ proposta, itemAtual, perfil, onRegistrarRodada, onAceitarFechar, onRecusar }) {
+export default function HistoricoNegociacao({
+  proposta,
+  itemAtual,
+  perfil,
+  onRegistrarRodada,
+  onAceitarFechar,
+  onRecusar,
+  onAprovarCredito,
+  onRecusarCredito,
+}) {
   const [modalTipo, setModalTipo] = useState(null)
 
   const encerrada = STATUS_ENCERRADOS.includes(proposta.status)
-  const acoesVisiveis = ACOES_RODADA.filter((acao) => acao.perfis.includes(perfil))
-  const podeFechar = perfil === 'Vendedor'
+  const aguardandoFinanceiro = proposta.status === AGUARDANDO_FINANCEIRO
+  const acoesVisiveis = encerrada || aguardandoFinanceiro ? [] : ACOES_RODADA.filter((acao) => acao.perfis.includes(perfil))
+  const podeFechar = !aguardandoFinanceiro && perfil === 'Vendedor'
 
   function confirmarRodada(dados) {
     onRegistrarRodada(modalTipo, dados)
@@ -43,7 +54,30 @@ export default function HistoricoNegociacao({ proposta, itemAtual, perfil, onReg
         ))}
       </ol>
 
-      {!encerrada && (
+      {aguardandoFinanceiro && perfil === 'Financeiro' && (
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={onAprovarCredito}
+            className="rounded bg-ayamo-success px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Aprovar crédito e fechar
+          </button>
+          <button
+            type="button"
+            onClick={onRecusarCredito}
+            className="rounded bg-ayamo-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Recusar aprovação financeira
+          </button>
+        </div>
+      )}
+
+      {aguardandoFinanceiro && perfil !== 'Financeiro' && (
+        <p className="text-sm text-ayamo-text-mut">Aguardando o Financeiro aprovar o crédito do cliente para fechar.</p>
+      )}
+
+      {!encerrada && !aguardandoFinanceiro && (
         <div className="flex flex-wrap gap-3">
           {acoesVisiveis.map((acao) => (
             <button

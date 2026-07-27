@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalRevisao from './compras/ModalRevisao.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
+import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 
@@ -22,6 +23,7 @@ export default function ComprasDetalhe() {
   const { ofertas, empresas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado } = useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
+  const [modalStatusAberto, setModalStatusAberto] = useState(false)
   const [modalVendaAberto, setModalVendaAberto] = useState(false)
   const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
   const podeVender = ['Vendedor', 'Administrador'].includes(usuarioLogado.perfil)
@@ -78,6 +80,13 @@ export default function ComprasDetalhe() {
                   className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
                 >
                   Registrar contato com fornecedor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalStatusAberto(true)}
+                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
+                >
+                  Alterar status
                 </button>
                 <button
                   type="button"
@@ -161,6 +170,7 @@ export default function ComprasDetalhe() {
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
       <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />
+      <ModalAlterarStatus open={modalStatusAberto} onClose={() => setModalStatusAberto(false)} atual={atual} />
       <NovaPropostaModal
         open={modalVendaAberto}
         onClose={() => setModalVendaAberto(false)}

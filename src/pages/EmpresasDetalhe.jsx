@@ -8,6 +8,7 @@ import Modal from '../components/Modal.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalEditarEmpresa from './empresas/ModalEditarEmpresa.jsx'
+import HistoricoNegocios from './empresas/HistoricoNegocios.jsx'
 import { formatarValor } from '../utils/formato.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
@@ -144,6 +145,8 @@ export default function EmpresasDetalhe() {
           </div>
         </dl>
       </div>
+
+      <HistoricoNegocios empresa={empresa} />
 
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-base font-semibold text-ayamo-text">Contatos</h2>

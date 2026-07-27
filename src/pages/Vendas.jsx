@@ -14,6 +14,7 @@ const TONE_STATUS = {
   Enviada: 'info',
   'Em negociação': 'warning',
   'Aguardando aprovação': 'accent',
+  'Aguardando aprovação financeira': 'warning',
   Aceita: 'success',
   Recusada: 'danger',
   Expirada: 'neutral',
