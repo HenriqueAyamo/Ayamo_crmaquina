@@ -15,6 +15,7 @@ import HistoricoPreco from './compras/HistoricoPreco.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { exportarOfertasExcel } from '../utils/exportarOfertas.js'
 import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
+import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
 
 const ImportarPlanilha = lazy(() => import('./compras/ImportarPlanilha.jsx'))
 
@@ -211,6 +212,16 @@ export default function Compras() {
                 key: 'status',
                 header: 'Status',
                 render: (item) => <StatusBadge label={item.status} tone={TONE_STATUS[item.status] ?? 'neutral'} />,
+              },
+              {
+                key: 'statusProducao',
+                header: 'Produção',
+                render: (item) =>
+                  item.statusProducao ? (
+                    <StatusBadge label={item.statusProducao} tone={TONE_STATUS_PRODUCAO[item.statusProducao] ?? 'neutral'} />
+                  ) : (
+                    '—'
+                  ),
               },
               { key: 'validade', header: 'Validade', render: (item) => <SeloValidade validadeAte={item.validadeAte} /> },
               { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },

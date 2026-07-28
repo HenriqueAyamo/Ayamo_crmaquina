@@ -12,6 +12,7 @@ import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
+import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
 
 const TONE_STATUS = {
   Disponível: 'success',
@@ -73,6 +74,9 @@ export default function ComprasDetalhe() {
               tone={(atual.tipoRegistro ?? 'Position') === 'Position' ? 'info' : 'accent'}
             />
             <StatusBadge label={atual.status} tone={TONE_STATUS[atual.status] ?? 'neutral'} />
+            {atual.statusProducao && (
+              <StatusBadge label={atual.statusProducao} tone={TONE_STATUS_PRODUCAO[atual.statusProducao] ?? 'neutral'} />
+            )}
             {podeVender && atual.status === 'Disponível' && atual.quantidade > 0 && (
               <>
                 <button

@@ -45,6 +45,7 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
       codigoBase: ofertaAtual.codigoBase,
       versao: ofertaAtual.versao + 1,
       tipoRegistro: dados.tipoRegistro ?? ofertaAtual.tipoRegistro ?? 'Position',
+      statusProducao: dados.statusProducao ?? ofertaAtual.statusProducao ?? null,
       produtoId: ofertaAtual.produtoId,
       fornecedorId: ofertaAtual.fornecedorId,
       precoCusto: { valor: dados.valor, moeda: dados.moeda, unidade: ofertaAtual.unidade },

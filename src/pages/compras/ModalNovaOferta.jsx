@@ -6,6 +6,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
 import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
+import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 
 function proximoCodigo(ofertas) {
   const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', ''))).filter((n) => !Number.isNaN(n))
@@ -16,6 +17,7 @@ function proximoCodigo(ofertas) {
 function valoresIniciais() {
   return {
     tipoRegistro: 'Position',
+    statusProducao: 'Pronto para embarque',
     produtoId: '',
     fornecedorId: '',
     valor: '',
@@ -64,6 +66,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       codigoBase: codigo,
       versao: 0,
       tipoRegistro: form.tipoRegistro,
+      statusProducao: form.tipoRegistro === 'Position' ? form.statusProducao : null,
       produtoId: Number(form.produtoId),
       fornecedorId: Number(form.fornecedorId),
       precoCusto: { valor: Number(form.valor), moeda: form.moeda, unidade: form.unidade },
@@ -135,6 +138,22 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             ))}
           </div>
         </Field>
+
+        {form.tipoRegistro === 'Position' && (
+          <Field label="Status de produção" hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
+            <select
+              className={inputClass}
+              value={form.statusProducao}
+              onChange={(e) => setForm({ ...form, statusProducao: e.target.value })}
+            >
+              {STATUS_PRODUCAO.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Produto" required>
           <SelectBusca

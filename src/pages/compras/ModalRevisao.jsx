@@ -5,6 +5,7 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
+import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 
 function valoresPO(atual) {
   return {
@@ -25,6 +26,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
   const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
   const [tipoRegistro, setTipoRegistro] = useState(atual.tipoRegistro ?? 'Position')
+  const [statusProducao, setStatusProducao] = useState(atual.statusProducao ?? 'Pronto para embarque')
   const [valor, setValor] = useState('')
   const [moeda, setMoeda] = useState(atual.precoCusto.moeda)
   const [quantidade, setQuantidade] = useState(atual.quantidade ?? '')
@@ -34,6 +36,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
 
   function fecharEResetar() {
     setTipoRegistro(atual.tipoRegistro ?? 'Position')
+    setStatusProducao(atual.statusProducao ?? 'Pronto para embarque')
     setValor('')
     setMoeda(atual.precoCusto.moeda)
     setQuantidade(atual.quantidade ?? '')
@@ -47,6 +50,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
     e.preventDefault()
     registrarRevisaoOferta(atual, {
       tipoRegistro,
+      statusProducao: tipoRegistro === 'Position' ? statusProducao : null,
       valor: Number(valor),
       moeda,
       quantidade: quantidade === '' ? null : Number(quantidade),
@@ -96,6 +100,18 @@ export default function ModalRevisao({ open, onClose, atual }) {
             ))}
           </div>
         </Field>
+
+        {tipoRegistro === 'Position' && (
+          <Field label="Status de produção" hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
+            <select className={inputClass} value={statusProducao} onChange={(e) => setStatusProducao(e.target.value)}>
+              {STATUS_PRODUCAO.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Novo preço" required>
