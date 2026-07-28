@@ -1,5 +1,6 @@
 import { useData } from '../../DataContext.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
+import CampoData from '../../components/CampoData.jsx'
 import { INCOTERMS } from '../../data/unidades.js'
 
 export default function PassoDadosProforma({ dados, onAtualizar }) {
@@ -54,20 +55,10 @@ export default function PassoDadosProforma({ dados, onAtualizar }) {
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Embarque de">
-          <input
-            className={inputClass}
-            placeholder="dd/mm/aaaa"
-            value={dados.embarqueDe}
-            onChange={(e) => onAtualizar('embarqueDe', e.target.value)}
-          />
+          <CampoData value={dados.embarqueDe} onChange={(v) => onAtualizar('embarqueDe', v)} />
         </Field>
         <Field label="Embarque até">
-          <input
-            className={inputClass}
-            placeholder="dd/mm/aaaa"
-            value={dados.embarqueAte}
-            onChange={(e) => onAtualizar('embarqueAte', e.target.value)}
-          />
+          <CampoData value={dados.embarqueAte} onChange={(v) => onAtualizar('embarqueAte', v)} />
         </Field>
       </div>
 

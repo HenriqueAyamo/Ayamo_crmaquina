@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS } from '../../data/unidades.js'
 
 function valoresIniciais() {
@@ -41,6 +42,10 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
 
   function salvar(e) {
     e.preventDefault()
+    if (!form.fornecedorId || !form.produtoId) {
+      window.alert('Selecione o fornecedor e o produto.')
+      return
+    }
     const dados = {
       fornecedorId: Number(form.fornecedorId),
       produtoId: Number(form.produtoId),
@@ -77,25 +82,15 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
     >
       <form id="claim-form" onSubmit={salvar} className="flex flex-col gap-4">
         <Field label="Fornecedor" required>
-          <select className={inputClass} required value={form.fornecedorId} onChange={(e) => setForm({ ...form, fornecedorId: e.target.value })}>
-            <option value="">Selecione</option>
-            {fornecedores.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca value={form.fornecedorId} onChange={(fornecedorId) => setForm({ ...form, fornecedorId })} opcoes={fornecedores.map((f) => ({ value: f.id, label: f.nome }))} />
         </Field>
 
         <Field label="Produto" required>
-          <select className={inputClass} required value={form.produtoId} onChange={(e) => setForm({ ...form, produtoId: e.target.value })}>
-            <option value="">Selecione</option>
-            {produtosAtivos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca
+            value={form.produtoId}
+            onChange={(produtoId) => setForm({ ...form, produtoId })}
+            opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+          />
         </Field>
 
         <Field label="Descrição" required>

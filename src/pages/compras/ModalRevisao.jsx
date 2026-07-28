@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import CampoData from '../../components/CampoData.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 
 function valoresPO(atual) {
@@ -160,20 +161,10 @@ export default function ModalRevisao({ open, onClose, atual }) {
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Embarque de">
-            <input
-              className={inputClass}
-              placeholder="dd/mm/aaaa"
-              value={dadosPO.embarqueDe}
-              onChange={(e) => setDadosPO({ ...dadosPO, embarqueDe: e.target.value })}
-            />
+            <CampoData value={dadosPO.embarqueDe} onChange={(embarqueDe) => setDadosPO({ ...dadosPO, embarqueDe })} />
           </Field>
           <Field label="Embarque até">
-            <input
-              className={inputClass}
-              placeholder="dd/mm/aaaa"
-              value={dadosPO.embarqueAte}
-              onChange={(e) => setDadosPO({ ...dadosPO, embarqueAte: e.target.value })}
-            />
+            <CampoData value={dadosPO.embarqueAte} onChange={(embarqueAte) => setDadosPO({ ...dadosPO, embarqueAte })} />
           </Field>
         </div>
 
@@ -181,13 +172,8 @@ export default function ModalRevisao({ open, onClose, atual }) {
           <Field label="Site / planta de fabricação">
             <input className={inputClass} value={dadosPO.mfgSite} onChange={(e) => setDadosPO({ ...dadosPO, mfgSite: e.target.value })} />
           </Field>
-          <Field label="Oferta válida até" hint="dd/mm/aaaa">
-            <input
-              className={inputClass}
-              placeholder="dd/mm/aaaa"
-              value={dadosPO.validadeAte}
-              onChange={(e) => setDadosPO({ ...dadosPO, validadeAte: e.target.value })}
-            />
+          <Field label="Oferta válida até">
+            <CampoData value={dadosPO.validadeAte} onChange={(validadeAte) => setDadosPO({ ...dadosPO, validadeAte })} />
           </Field>
         </div>
 

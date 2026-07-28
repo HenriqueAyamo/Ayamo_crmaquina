@@ -11,8 +11,9 @@ import HistoricoNegocios from './empresas/HistoricoNegocios.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
-import { formatarValor } from '../utils/formato.js'
+import { formatarValor, formatarData } from '../utils/formato.js'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
+import { ultimaInteracaoEmpresa, toneUltimaInteracao } from '../utils/ultimaInteracao.js'
 
 const TONE_SITUACAO = { Ativo: 'success', Inativo: 'neutral', Bloqueado: 'danger' }
 const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral', Vencido: 'danger' }
@@ -20,7 +21,7 @@ const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Nã
 export default function EmpresasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { empresas, contatos, categoriasContato, produtos, getUsuario } = useData()
+  const { empresas, contatos, categoriasContato, produtos, ofertas, propostas, getUsuario } = useData()
 
   const empresa = empresas.items.find((e) => e.id === Number(id))
 
@@ -34,6 +35,7 @@ export default function EmpresasDetalhe() {
     return <EmptyState title="Empresa não encontrada" />
   }
 
+  const ultimaInteracao = ultimaInteracaoEmpresa(empresa, { ofertas, propostas })
   const contatosDaEmpresa = contatos.items.filter((c) => c.empresaId === empresa.id)
   const categoriasAtivas = categoriasContato.items.filter((c) => c.situacao === 'Ativo')
 
@@ -122,6 +124,19 @@ export default function EmpresasDetalhe() {
           <div>
             <dt className="text-ayamo-text-mut">Responsável Ayamo</dt>
             <dd className="font-medium text-ayamo-text">{getUsuario(empresa.responsavelAyamoId)?.nome ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Última negociação/contato</dt>
+            <dd>
+              {ultimaInteracao.dias == null ? (
+                <StatusBadge label="Nunca negociamos" tone="neutral" />
+              ) : (
+                <StatusBadge
+                  label={`${formatarData(ultimaInteracao.data)} — há ${ultimaInteracao.dias} dia(s)`}
+                  tone={toneUltimaInteracao(ultimaInteracao.dias)}
+                />
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-ayamo-text-mut">Moeda padrão</dt>

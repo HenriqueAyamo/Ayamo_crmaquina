@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 
 function valoresIniciais() {
@@ -51,6 +52,10 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
 
   function salvar(e) {
     e.preventDefault()
+    if (!form.clienteId || !form.produtoId) {
+      window.alert('Selecione o cliente e o produto.')
+      return
+    }
     const dados = {
       clienteId: Number(form.clienteId),
       produtoId: Number(form.produtoId),
@@ -92,25 +97,15 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
     >
       <form id="demanda-form" onSubmit={salvar} className="flex flex-col gap-4">
         <Field label="Cliente" required>
-          <select className={inputClass} required value={form.clienteId} onChange={(e) => setForm({ ...form, clienteId: e.target.value })}>
-            <option value="">Selecione</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca value={form.clienteId} onChange={(clienteId) => setForm({ ...form, clienteId })} opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))} />
         </Field>
 
         <Field label="Produto" required>
-          <select className={inputClass} required value={form.produtoId} onChange={(e) => setForm({ ...form, produtoId: e.target.value })}>
-            <option value="">Selecione</option>
-            {produtosAtivos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca
+            value={form.produtoId}
+            onChange={(produtoId) => setForm({ ...form, produtoId })}
+            opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+          />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">

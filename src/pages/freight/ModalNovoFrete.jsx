@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import CampoData from '../../components/CampoData.jsx'
 import { MOEDAS } from '../../data/unidades.js'
 import { TIPOS_CONTAINER } from '../../data/tiposContainer.js'
 
@@ -122,13 +123,8 @@ export default function ModalNovoFrete({ open, onClose, editando }) {
           </Field>
         </div>
 
-        <Field label="Válido até" hint="dd/mm/aaaa">
-          <input
-            className={inputClass}
-            placeholder="dd/mm/aaaa"
-            value={form.validadeAte}
-            onChange={(e) => setForm({ ...form, validadeAte: e.target.value })}
-          />
+        <Field label="Válido até">
+          <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
         </Field>
 
         <Field label="Observação">

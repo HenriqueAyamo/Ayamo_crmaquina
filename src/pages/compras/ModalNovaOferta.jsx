@@ -3,6 +3,8 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import CampoData from '../../components/CampoData.jsx'
+import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 
 function proximoCodigo(ofertas) {
@@ -52,6 +54,10 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
 
   function salvar(e) {
     e.preventDefault()
+    if (!form.produtoId || !form.fornecedorId) {
+      window.alert('Selecione o produto e o fornecedor.')
+      return
+    }
     const codigo = proximoCodigo(ofertas.items)
     const nova = ofertas.criar({
       codigo,
@@ -131,25 +137,19 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         </Field>
 
         <Field label="Produto" required>
-          <select className={inputClass} required value={form.produtoId} onChange={(e) => setForm({ ...form, produtoId: e.target.value })}>
-            <option value="">Selecione</option>
-            {produtosAtivos.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca
+            value={form.produtoId}
+            onChange={(produtoId) => setForm({ ...form, produtoId })}
+            opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+          />
         </Field>
 
         <Field label="Fornecedor" required>
-          <select className={inputClass} required value={form.fornecedorId} onChange={(e) => setForm({ ...form, fornecedorId: e.target.value })}>
-            <option value="">Selecione</option>
-            {fornecedores.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.nome}
-              </option>
-            ))}
-          </select>
+          <SelectBusca
+            value={form.fornecedorId}
+            onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
+            opcoes={fornecedores.map((f) => ({ value: f.id, label: f.nome }))}
+          />
         </Field>
 
         {entidadesAtivas.length > 0 && (
@@ -240,12 +240,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         </div>
 
         <Field label="Oferta válida até" hint="Usado para o selo de validade na lista de Compras">
-          <input
-            className={inputClass}
-            placeholder="dd/mm/aaaa"
-            value={form.validadeAte}
-            onChange={(e) => setForm({ ...form, validadeAte: e.target.value })}
-          />
+          <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
         </Field>
 
         <Field label="Prazo de pagamento" hint="Ex.: 100% TT">
@@ -254,20 +249,10 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Embarque de">
-            <input
-              className={inputClass}
-              placeholder="dd/mm/aaaa"
-              value={form.embarqueDe}
-              onChange={(e) => setForm({ ...form, embarqueDe: e.target.value })}
-            />
+            <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
           </Field>
           <Field label="Embarque até">
-            <input
-              className={inputClass}
-              placeholder="dd/mm/aaaa"
-              value={form.embarqueAte}
-              onChange={(e) => setForm({ ...form, embarqueAte: e.target.value })}
-            />
+            <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
           </Field>
         </div>
       </form>
