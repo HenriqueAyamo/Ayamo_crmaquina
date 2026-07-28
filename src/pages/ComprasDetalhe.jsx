@@ -10,6 +10,7 @@ import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
+import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
@@ -221,6 +222,8 @@ export default function ComprasDetalhe() {
           ))}
         </ol>
       </SecaoRecolhivel>
+
+      <SecaoInspecoes contexto="Compra" refCodigo={atual.codigoBase} />
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
       <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />

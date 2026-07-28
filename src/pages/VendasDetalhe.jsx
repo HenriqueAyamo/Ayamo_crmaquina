@@ -11,6 +11,7 @@ import ModalFechamento from './vendas/ModalFechamento.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
+import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
 import { formatarData } from '../utils/formato.js'
 
 const TONE_STATUS = {
@@ -250,6 +251,8 @@ export default function VendasDetalhe() {
         onAprovarCredito={handleAprovarCredito}
         onRecusarCredito={handleRecusarCredito}
       />
+
+      <SecaoInspecoes contexto="Venda" refCodigo={proposta.numero} />
 
       <ModalFechamento
         open={modalFechamentoAberto}
