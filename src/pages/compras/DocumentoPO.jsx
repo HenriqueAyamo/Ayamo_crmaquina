@@ -45,7 +45,7 @@ As per our agreement, on behalf of Ayamo, it's a pleasure to confirm this new bu
 **Incoterm/Port of Destination:** ${atual.incoterm ?? ''} - ${propostaVinculada?.portoDestino ?? 'TBI'}
 **Shipment from/to:** ${atual.embarqueDe || 'TBI'} - ${atual.embarqueAte || 'TBI'}
 
-${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade.toUpperCase()} - ${produto?.nome ?? ''}${produto?.embalagem ? ' - ' + produto.embalagem : ''} - ${atual.precoCusto.moeda} ${atual.precoCusto.valor}
+${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade.toUpperCase()} - ${produto?.nome ?? ''}${produto?.nomeCientifico ? ` (${produto.nomeCientifico})` : ''}${produto?.embalagem ? ' - ' + produto.embalagem : ''} - ${atual.precoCusto.moeda} ${atual.precoCusto.valor}
 
 **Remarks:** ${atual.observacao ?? ''}
 Find attached our **PO(s)** with all the details.
@@ -100,6 +100,7 @@ Our Operational Team will be in touch for further instructions.
             <td className="border border-gray-300 p-2 align-top">
               <p>
                 {produto?.nome}
+                {produto?.nomeCientifico ? ` (${produto.nomeCientifico})` : ''}
                 {produto?.embalagem ? ` - ${produto.embalagem}` : ''}
               </p>
               <p className="text-xs text-gray-600">

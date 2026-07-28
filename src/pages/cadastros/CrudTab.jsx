@@ -120,7 +120,7 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
       >
         <form id="crud-tab-form" onSubmit={salvar} className="flex flex-col gap-4">
           {fields.map((f) => (
-            <Field key={f.key} label={f.label} required={f.required}>
+            <Field key={f.key} label={f.label} required={f.required} hint={f.hint}>
               {f.type === 'select' && (
                 <select
                   className={inputClass}

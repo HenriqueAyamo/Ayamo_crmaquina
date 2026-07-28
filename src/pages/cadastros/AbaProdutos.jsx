@@ -26,6 +26,7 @@ export default function AbaProdutos() {
         fields={[
           { key: 'nome', label: 'Nome', type: 'text', required: true },
           { key: 'apelido', label: 'Apelido', type: 'text', required: true },
+          { key: 'nomeCientifico', label: 'Nome científico', type: 'text', hint: 'Quando preenchido, aparece na Proforma e no PO junto ao nome do produto.' },
           { key: 'familiaId', label: 'Família', type: 'select', required: true, options: opcoesFamilia },
           { key: 'divisao', label: 'Divisão', type: 'derived', compute: (form) => nomeDivisaoDeFamilia(form.familiaId) },
           { key: 'embalagem', label: 'Embalagem (para PO/Proforma)', type: 'text' },
@@ -38,6 +39,7 @@ export default function AbaProdutos() {
         columns={[
           { key: 'nome', header: 'Nome' },
           { key: 'apelido', header: 'Apelido' },
+          { key: 'nomeCientifico', header: 'Nome científico', render: (item) => item.nomeCientifico || '—' },
           { key: 'familia', header: 'Família', render: (item) => nomeFamilia(item.familiaId) },
           { key: 'divisao', header: 'Divisão', render: (item) => nomeDivisaoDeFamilia(item.familiaId) },
           { key: 'proteinaPercentual', header: 'Proteína %', render: (item) => (item.proteinaPercentual ? `${item.proteinaPercentual}%` : '—') },
