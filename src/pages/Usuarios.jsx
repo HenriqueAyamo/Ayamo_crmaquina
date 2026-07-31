@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
@@ -8,7 +8,9 @@ import Modal from '../components/Modal.jsx'
 import ModalFooterAcoes from '../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
-import { MOTIVOS } from '../utils/permissoes.js'
+import { MOTIVOS, podeGerenciarUsuarios } from '../utils/permissoes.js'
+
+const ImportarPlanilhaUsuarios = lazy(() => import('./usuarios/ImportarPlanilhaUsuarios.jsx'))
 
 const PERFIS = ['Comprador', 'Vendedor', 'Diretor', 'Financeiro', 'Controladoria', 'Administrador']
 
@@ -21,6 +23,8 @@ export default function Usuarios() {
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(valoresIniciais())
+  const [importarAberto, setImportarAberto] = useState(false)
+  const podeImportar = podeGerenciarUsuarios(usuarioLogado.perfil)
 
   const diretores = usuarios.items.filter((u) => u.perfil === 'Diretor' && u.situacao === 'Ativo')
   const divisoesAtivas = divisoes.items.filter((d) => d.situacao === 'Ativo')
@@ -110,6 +114,27 @@ export default function Usuarios() {
   return (
     <div>
       <PageHeader title="Usuários" subtitle="Colaboradores da Ayamo e hierarquia de aprovação" actionLabel="Novo usuário" onAction={abrirNovo} />
+
+      <div className="mb-4 flex justify-end">
+        <DisabledActionTooltip desabilitado={!podeImportar} motivo={MOTIVOS.gerenciarUsuarios}>
+          <button
+            type="button"
+            disabled={!podeImportar}
+            onClick={() => setImportarAberto((atual) => !atual)}
+            className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {importarAberto ? 'Fechar importação' : 'Importar planilha'}
+          </button>
+        </DisabledActionTooltip>
+      </div>
+
+      {importarAberto && podeImportar && (
+        <div className="mb-4">
+          <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
+            <ImportarPlanilhaUsuarios onImportado={() => setImportarAberto(false)} />
+          </Suspense>
+        </div>
+      )}
 
       <DataTable
         rowKey="id"
