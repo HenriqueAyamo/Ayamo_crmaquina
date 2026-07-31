@@ -2,6 +2,7 @@ import { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { formatarPreco, formatarValor } from '../../utils/formato.js'
 import { MOEDAS } from '../../data/unidades.js'
+import { converterParaUSD, converterDeUSD } from '../../data/cambio.js'
 
 export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada }) {
   const marcada = travada || Boolean(dados)
@@ -55,7 +56,15 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
                 <select
                   className={inputClass}
                   value={porCliente.moedaVenda}
-                  onChange={(e) => onAtualizar(cliente.id, 'moedaVenda', e.target.value)}
+                  onChange={(e) => {
+                    const novaMoeda = e.target.value
+                    if (Number(porCliente.precoVenda) > 0) {
+                      const precoUSD = converterParaUSD(Number(porCliente.precoVenda), porCliente.moedaVenda)
+                      const precoConvertido = Math.round(converterDeUSD(precoUSD, novaMoeda) * 100) / 100
+                      onAtualizar(cliente.id, 'precoVenda', precoConvertido)
+                    }
+                    onAtualizar(cliente.id, 'moedaVenda', novaMoeda)
+                  }}
                 >
                   {MOEDAS.map((m) => (
                     <option key={m.codigo} value={m.codigo}>
