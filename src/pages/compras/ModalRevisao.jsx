@@ -127,8 +127,14 @@ export default function ModalRevisao({ open, onClose, atual }) {
             <option value="Expirada">Expirada</option>
           </select>
         </Field>
-        <Field label="Observação">
-          <textarea className={inputClass} rows={2} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+        <Field label="Observação" hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
+          <textarea
+            className={inputClass}
+            rows={2}
+            placeholder="Ex.: Fornecedor pediu confirmação até sexta-feira."
+            value={observacao}
+            onChange={(e) => setObservacao(e.target.value)}
+          />
         </Field>
 
         <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>

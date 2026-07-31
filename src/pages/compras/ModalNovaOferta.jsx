@@ -217,10 +217,11 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           />
         </Field>
 
-        <Field label="Observação">
+        <Field label="Observação" hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
           <textarea
             className={inputClass}
             rows={2}
+            placeholder="Ex.: Fornecedor pediu confirmação até sexta-feira."
             value={form.observacao}
             onChange={(e) => setForm({ ...form, observacao: e.target.value })}
           />
