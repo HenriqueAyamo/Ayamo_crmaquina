@@ -6,6 +6,7 @@ import DataTable from '../components/DataTable.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
 import PopupNovidadesDemandas from '../components/PopupNovidadesDemandas.jsx'
+import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 
 const ICONE_TIPO = {
   Compras: { icon: ShoppingCart, cor: 'text-ayamo-primary' },
@@ -38,7 +39,7 @@ export default function Inicio() {
   const { ofertas, propostas, documentos, claims, demandas, fretes, getProduto, getEmpresa, usuarioLogado, getPendencias } = useData()
   const navigate = useNavigate()
 
-  const ofertasAtivas = ofertas.items.filter((o) => o.status === 'Disponível' || o.status === 'Em revisão').length
+  const ofertasAtivas = obterOfertasAtuais(ofertas.items).filter((o) => o.status === 'Disponível' || o.status === 'Em revisão').length
   const propostasEmNegociacao = propostas.items.filter((p) => p.status === 'Em negociação').length
   const propostasAguardandoAprovacao = propostas.items.filter((p) => p.status === 'Aguardando aprovação').length
 

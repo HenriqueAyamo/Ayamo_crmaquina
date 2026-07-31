@@ -5,7 +5,7 @@ const STATUS_ENCERRADOS_PROPOSTA = ['Aceita', 'Recusada', 'Expirada']
 export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
   function ajustarEstoqueOferta(ofertaCodigo, delta) {
     const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
-    if (!oferta) return
+    if (!oferta || oferta.quantidade == null) return
     const novaQuantidade = Math.max(0, oferta.quantidade + delta)
     const novoStatus =
       novaQuantidade === 0 ? 'Esgotada' : oferta.status === 'Esgotada' ? 'Disponível' : oferta.status
@@ -128,7 +128,7 @@ export function criarAcoesOferta({ ofertas, propostas, usuarioLogado }) {
 
   function avisarConcorrenciaEstoque(ofertaCodigo, propostaFechadaId) {
     const oferta = ofertas.items.find((o) => o.codigo === ofertaCodigo)
-    if (!oferta) return
+    if (!oferta || oferta.quantidade == null) return
     const hoje = new Date().toISOString().slice(0, 10)
 
     propostas.items

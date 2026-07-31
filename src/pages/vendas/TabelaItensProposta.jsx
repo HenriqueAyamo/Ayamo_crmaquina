@@ -1,5 +1,7 @@
-import { calcularMargem } from '../../data/cambio.js'
+import { calcularMargem, avaliarMargem } from '../../data/cambio.js'
 import { formatarPreco, formatarPercentual } from '../../utils/formato.js'
+
+const CLASSE_TONE = { danger: 'text-ayamo-danger', warning: 'text-ayamo-warning', success: 'text-ayamo-success' }
 
 export default function TabelaItensProposta({ proposta, perfil, getProduto }) {
   const mostrarCustoMargem = perfil === 'Vendedor'
@@ -23,6 +25,10 @@ export default function TabelaItensProposta({ proposta, perfil, getProduto }) {
         <tbody>
           {proposta.itens.map((item, index) => {
             const margemItem = calcularMargem(item.precoCusto, item.precoVenda)
+            const avaliacao = avaliarMargem(
+              { margemPercentual: margemItem.margemPercentual, margemUSDporTon: margemItem.margemUSD },
+              proposta,
+            )
             return (
               <tr key={index} className="border-b border-ayamo-border last:border-b-0">
                 <td className="px-4 py-2.5 text-[13px] text-ayamo-text">{getProduto(item.produtoId)?.nome}</td>
@@ -38,7 +44,7 @@ export default function TabelaItensProposta({ proposta, perfil, getProduto }) {
                   {formatarPreco(item.precoVenda.valor, item.precoVenda.moeda, item.precoVenda.unidade)}
                 </td>
                 {mostrarCustoMargem && (
-                  <td className="px-4 py-2.5 text-[13px] font-medium text-ayamo-text">
+                  <td className={`px-4 py-2.5 text-[13px] font-medium ${CLASSE_TONE[avaliacao.tone] ?? 'text-ayamo-text'}`}>
                     {formatarPercentual(margemItem.margemPercentual)}
                   </td>
                 )}

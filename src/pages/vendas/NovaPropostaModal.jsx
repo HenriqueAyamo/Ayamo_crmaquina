@@ -6,6 +6,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import LinhaOfertaCliente from './LinhaOfertaCliente.jsx'
 import PassoDadosProforma from './PassoDadosProforma.jsx'
 import { useAutoSaveRascunho } from '../../hooks/useAutoSaveRascunho.js'
+import { obterOfertasAtuais } from '../../utils/ofertasAtuais.js'
 
 const CHAVE_RASCUNHO = 'ayamo_crm_v1_rascunho_novaProposta'
 
@@ -45,7 +46,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
   const ofertasDisponiveis = ofertaFixa
     ? [ofertaFixa]
-    : ofertas.items.filter((o) => o.status === 'Disponível' && (o.tipoRegistro ?? 'Position') === 'Position')
+    : obterOfertasAtuais(ofertas.items).filter((o) => o.status === 'Disponível' && (o.tipoRegistro ?? 'Position') === 'Position')
   const clientesSelecionados = clientesIds.map((id) => clientes.find((c) => String(c.id) === id)).filter(Boolean)
 
   useEffect(() => {
@@ -221,7 +222,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const excedeAlgumEstoque = Object.entries(selecao).some(([ofertaId, dados]) => {
     const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
     const total = clientesSelecionados.reduce((soma, cliente) => soma + Number(dados.porCliente[cliente.id]?.quantidade || 0), 0)
-    return oferta && total > oferta.quantidade
+    return oferta && oferta.quantidade != null && total > oferta.quantidade
   })
 
   const podeAvancar = clientesIds.length > 0

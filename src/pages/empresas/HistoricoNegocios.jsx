@@ -51,7 +51,11 @@ export default function HistoricoNegocios({ empresa }) {
               render: (item) => formatarPreco(item.precoCusto.valor, item.precoCusto.moeda, item.precoCusto.unidade),
               sortValue: (item) => item.precoCusto.valor,
             },
-            { key: 'quantidade', header: 'Quantidade', render: (item) => item.quantidade.toLocaleString('pt-BR') },
+            {
+              key: 'quantidade',
+              header: 'Quantidade',
+              render: (item) => (item.quantidade == null ? 'A definir' : item.quantidade.toLocaleString('pt-BR')),
+            },
             {
               key: 'status',
               header: 'Status',

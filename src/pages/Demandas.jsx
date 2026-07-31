@@ -7,6 +7,7 @@ import StatusBadge from '../components/StatusBadge.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import ModalNovaDemanda from './demandas/ModalNovaDemanda.jsx'
 import { formatarValor, formatarData } from '../utils/formato.js'
+import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 
 const TONE_STATUS = { Aberta: 'info', Atendida: 'success', Cancelada: 'neutral' }
 
@@ -31,7 +32,7 @@ export default function Demandas() {
   }, [demandas.items, busca, statusFiltro, getProduto])
 
   function contarOfertasCompativeis(produtoId) {
-    return ofertas.items.filter((o) => o.produtoId === produtoId && o.status === 'Disponível').length
+    return obterOfertasAtuais(ofertas.items).filter((o) => o.produtoId === produtoId && o.status === 'Disponível').length
   }
 
   function abrirNova() {

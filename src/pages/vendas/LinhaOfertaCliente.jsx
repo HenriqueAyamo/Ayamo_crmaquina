@@ -8,7 +8,7 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
   const totalAlocado = dados
     ? clientesSelecionados.reduce((soma, c) => soma + Number(dados.porCliente[c.id]?.quantidade || 0), 0)
     : 0
-  const excedeDisponivel = totalAlocado > oferta.quantidade
+  const excedeDisponivel = oferta.quantidade != null && totalAlocado > oferta.quantidade
 
   return (
     <div className="rounded border border-ayamo-border p-3">
@@ -20,8 +20,13 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
         )}
         {produtoNome} ({oferta.codigo}) — {formatarPreco(oferta.precoCusto.valor, oferta.precoCusto.moeda, oferta.precoCusto.unidade)}
         <span className="text-ayamo-text-mut">
-          · disponível: {oferta.quantidade.toLocaleString('pt-BR')} {oferta.unidade}
+          · disponível: {oferta.quantidade == null ? 'a definir' : `${oferta.quantidade.toLocaleString('pt-BR')} ${oferta.unidade}`}
         </span>
+        {oferta.statusProducao && oferta.statusProducao !== 'Pronto para embarque' && (
+          <span className="rounded-full border border-ayamo-warning/25 bg-ayamo-warning/15 px-2 py-0.5 text-xs font-medium text-ayamo-warning">
+            {oferta.statusProducao} — ainda não está pronto
+          </span>
+        )}
       </label>
 
       {marcada && (
@@ -65,7 +70,8 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
             )
           })}
           <p className={`text-xs ${excedeDisponivel ? 'font-medium text-ayamo-warning' : 'text-ayamo-text-mut'}`}>
-            Total alocado: {totalAlocado.toLocaleString('pt-BR')} / {oferta.quantidade.toLocaleString('pt-BR')} {oferta.unidade}
+            Total alocado: {totalAlocado.toLocaleString('pt-BR')} /{' '}
+            {oferta.quantidade == null ? 'a definir' : `${oferta.quantidade.toLocaleString('pt-BR')} ${oferta.unidade}`}
             {excedeDisponivel && ' — acima do estoque disponível, confirme com o comprador antes de fechar'}
           </p>
         </div>
