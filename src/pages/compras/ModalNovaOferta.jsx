@@ -6,6 +6,7 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
 import SelectBusca from '../../components/SelectBusca.jsx'
+import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 
@@ -225,48 +226,50 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           />
         </Field>
 
-        <p className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Dados para o PO (opcional)</p>
+        <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Número do contrato" hint="Ex.: P12179">
+                <input className={inputClass} value={form.numeroContrato} onChange={(e) => setForm({ ...form, numeroContrato: e.target.value })} />
+              </Field>
+              <Field label="Incoterm">
+                <select className={inputClass} value={form.incoterm} onChange={(e) => setForm({ ...form, incoterm: e.target.value })}>
+                  {INCOTERMS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Número do contrato" hint="Ex.: P12179">
-            <input className={inputClass} value={form.numeroContrato} onChange={(e) => setForm({ ...form, numeroContrato: e.target.value })} />
-          </Field>
-          <Field label="Incoterm">
-            <select className={inputClass} value={form.incoterm} onChange={(e) => setForm({ ...form, incoterm: e.target.value })}>
-              {INCOTERMS.map((i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
+                <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
+              </Field>
+              <Field label="Site / planta de fabricação">
+                <input className={inputClass} value={form.mfgSite} onChange={(e) => setForm({ ...form, mfgSite: e.target.value })} />
+              </Field>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
-            <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
-          </Field>
-          <Field label="Site / planta de fabricação">
-            <input className={inputClass} value={form.mfgSite} onChange={(e) => setForm({ ...form, mfgSite: e.target.value })} />
-          </Field>
-        </div>
+            <Field label="Oferta válida até" hint="Usado para o selo de validade na lista de Compras">
+              <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
+            </Field>
 
-        <Field label="Oferta válida até" hint="Usado para o selo de validade na lista de Compras">
-          <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
-        </Field>
+            <Field label="Prazo de pagamento" hint="Ex.: 100% TT">
+              <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
+            </Field>
 
-        <Field label="Prazo de pagamento" hint="Ex.: 100% TT">
-          <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Embarque de">
-            <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
-          </Field>
-          <Field label="Embarque até">
-            <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
-          </Field>
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Embarque de">
+                <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
+              </Field>
+              <Field label="Embarque até">
+                <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
+              </Field>
+            </div>
+          </div>
+        </SecaoRecolhivel>
       </form>
     </Modal>
   )

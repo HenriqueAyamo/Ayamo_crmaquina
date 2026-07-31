@@ -5,6 +5,7 @@ import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
+import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 
@@ -130,72 +131,74 @@ export default function ModalRevisao({ open, onClose, atual }) {
           <textarea className={inputClass} rows={2} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
         </Field>
 
-        <p className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Dados para o PO (opcional)</p>
+        <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>
+          <div className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Número do contrato">
+                <input
+                  className={inputClass}
+                  value={dadosPO.numeroContrato}
+                  onChange={(e) => setDadosPO({ ...dadosPO, numeroContrato: e.target.value })}
+                />
+              </Field>
+              <Field label="Incoterm">
+                <select className={inputClass} value={dadosPO.incoterm} onChange={(e) => setDadosPO({ ...dadosPO, incoterm: e.target.value })}>
+                  {INCOTERMS.map((i) => (
+                    <option key={i} value={i}>
+                      {i}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Número do contrato">
-            <input
-              className={inputClass}
-              value={dadosPO.numeroContrato}
-              onChange={(e) => setDadosPO({ ...dadosPO, numeroContrato: e.target.value })}
-            />
-          </Field>
-          <Field label="Incoterm">
-            <select className={inputClass} value={dadosPO.incoterm} onChange={(e) => setDadosPO({ ...dadosPO, incoterm: e.target.value })}>
-              {INCOTERMS.map((i) => (
-                <option key={i} value={i}>
-                  {i}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
+            <Field label="Porto de origem">
+              <input className={inputClass} value={dadosPO.portoOrigem} onChange={(e) => setDadosPO({ ...dadosPO, portoOrigem: e.target.value })} />
+            </Field>
 
-        <Field label="Porto de origem">
-          <input className={inputClass} value={dadosPO.portoOrigem} onChange={(e) => setDadosPO({ ...dadosPO, portoOrigem: e.target.value })} />
-        </Field>
+            <Field label="Prazo de pagamento">
+              <input
+                className={inputClass}
+                value={dadosPO.prazoPagamento}
+                onChange={(e) => setDadosPO({ ...dadosPO, prazoPagamento: e.target.value })}
+              />
+            </Field>
 
-        <Field label="Prazo de pagamento">
-          <input
-            className={inputClass}
-            value={dadosPO.prazoPagamento}
-            onChange={(e) => setDadosPO({ ...dadosPO, prazoPagamento: e.target.value })}
-          />
-        </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Embarque de">
+                <CampoData value={dadosPO.embarqueDe} onChange={(embarqueDe) => setDadosPO({ ...dadosPO, embarqueDe })} />
+              </Field>
+              <Field label="Embarque até">
+                <CampoData value={dadosPO.embarqueAte} onChange={(embarqueAte) => setDadosPO({ ...dadosPO, embarqueAte })} />
+              </Field>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Embarque de">
-            <CampoData value={dadosPO.embarqueDe} onChange={(embarqueDe) => setDadosPO({ ...dadosPO, embarqueDe })} />
-          </Field>
-          <Field label="Embarque até">
-            <CampoData value={dadosPO.embarqueAte} onChange={(embarqueAte) => setDadosPO({ ...dadosPO, embarqueAte })} />
-          </Field>
-        </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Site / planta de fabricação">
+                <input className={inputClass} value={dadosPO.mfgSite} onChange={(e) => setDadosPO({ ...dadosPO, mfgSite: e.target.value })} />
+              </Field>
+              <Field label="Oferta válida até">
+                <CampoData value={dadosPO.validadeAte} onChange={(validadeAte) => setDadosPO({ ...dadosPO, validadeAte })} />
+              </Field>
+            </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Site / planta de fabricação">
-            <input className={inputClass} value={dadosPO.mfgSite} onChange={(e) => setDadosPO({ ...dadosPO, mfgSite: e.target.value })} />
-          </Field>
-          <Field label="Oferta válida até">
-            <CampoData value={dadosPO.validadeAte} onChange={(validadeAte) => setDadosPO({ ...dadosPO, validadeAte })} />
-          </Field>
-        </div>
-
-        {entidadesAtivas.length > 0 && (
-          <Field label="Entidade Ayamo compradora">
-            <select
-              className={inputClass}
-              value={dadosPO.ayamoEntidadeId}
-              onChange={(e) => setDadosPO({ ...dadosPO, ayamoEntidadeId: e.target.value })}
-            >
-              {entidadesAtivas.map((ent) => (
-                <option key={ent.id} value={ent.id}>
-                  {ent.razaoSocial}
-                </option>
-              ))}
-            </select>
-          </Field>
-        )}
+            {entidadesAtivas.length > 0 && (
+              <Field label="Entidade Ayamo compradora">
+                <select
+                  className={inputClass}
+                  value={dadosPO.ayamoEntidadeId}
+                  onChange={(e) => setDadosPO({ ...dadosPO, ayamoEntidadeId: e.target.value })}
+                >
+                  {entidadesAtivas.map((ent) => (
+                    <option key={ent.id} value={ent.id}>
+                      {ent.razaoSocial}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
+          </div>
+        </SecaoRecolhivel>
       </form>
     </Modal>
   )
