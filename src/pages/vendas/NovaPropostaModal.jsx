@@ -5,6 +5,7 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import LinhaOfertaCliente from './LinhaOfertaCliente.jsx'
 import PassoDadosProforma from './PassoDadosProforma.jsx'
+import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { useAutoSaveRascunho } from '../../hooks/useAutoSaveRascunho.js'
 import { obterOfertasAtuais } from '../../utils/ofertasAtuais.js'
 
@@ -75,7 +76,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   function restaurarRascunho() {
     const dados = rascunho?.dados
     if (dados) {
-      setPasso(dados.passo ?? 1)
+      setPasso(Math.min(dados.passo ?? 1, 2))
       setClientesIds(dados.clientesIds ?? [])
       setSelecao(dados.selecao ?? {})
       setDadosProforma(dados.dadosProforma ?? valoresIniciaisProforma())
@@ -231,7 +232,6 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const TITULOS = {
     1: ofertaFixa ? `Gerar venda a partir de ${ofertaFixa.codigo} — escolha os clientes` : 'Nova proposta — escolha os clientes',
     2: clienteFixo ? `Gerar venda para ${clienteFixo.nome} — ofertas e quantidade` : 'Nova proposta — quantidade e preço por cliente',
-    3: 'Nova proposta — dados para a Proforma',
   }
 
   return (
@@ -272,17 +272,8 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
             <button
               type="button"
               disabled={!podeCriar}
-              onClick={() => setPasso(3)}
-              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
-            >
-              Próximo
-            </button>
-          )}
-          {passo === 3 && (
-            <button
-              type="button"
               onClick={criarProposta}
-              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
             >
               Criar proposta
             </button>
@@ -337,11 +328,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
               onAtualizar={(clienteId, campo, valor) => atualizarSelecaoCliente(oferta.id, clienteId, campo, valor)}
             />
           ))}
-        </div>
-      )}
 
-      {passo === 3 && (
-        <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Margem mínima aceitável" hint="Piso usado para colorir a margem em Vendas — não é mais fixo em 3%.">
               <CampoNumerico value={margemMinima} onChange={setMargemMinima} />
@@ -354,10 +341,12 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
             </Field>
           </div>
 
-          <PassoDadosProforma
-            dados={dadosProforma}
-            onAtualizar={(campo, valor) => setDadosProforma((atual) => ({ ...atual, [campo]: valor }))}
-          />
+          <SecaoRecolhivel titulo="Dados para a Proforma (opcional)" aberturaInicial={false}>
+            <PassoDadosProforma
+              dados={dadosProforma}
+              onAtualizar={(campo, valor) => setDadosProforma((atual) => ({ ...atual, [campo]: valor }))}
+            />
+          </SecaoRecolhivel>
         </div>
       )}
     </Modal>
