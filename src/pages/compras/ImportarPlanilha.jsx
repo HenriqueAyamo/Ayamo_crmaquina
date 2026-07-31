@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
-import * as XLSX from 'xlsx'
+import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
+import { lerLinhasExcel, valorPorAlias } from '../../utils/importarExcel.js'
+import UploadPlanilha from '../../components/UploadPlanilha.jsx'
 
 const COLUNAS_ACEITAS =
   'Ref., Product - Packing (ou Produto), Supplier (ou Fornecedor), Brand, Currency, Price, Volume FCL (ou Quantidade), Incoterm, Shipment Period, Destination, Offer Validity, Payment Term, Offer date, Purchase Trader, Comments'
@@ -22,12 +23,6 @@ const ALIASES = {
   data: ['offer date', 'data'],
   trader: ['purchase trader', 'trader', 'comprador'],
   comentarios: ['comments', 'comentarios', 'comentários', 'business', 'market'],
-}
-
-function valorPorAlias(linha, chave) {
-  const chavesLinha = Object.keys(linha)
-  const alvo = chavesLinha.find((k) => ALIASES[chave].includes(k.trim().toLowerCase()))
-  return alvo ? linha[alvo] : undefined
 }
 
 function nomeProdutoDaColuna(bruto) {
@@ -64,7 +59,6 @@ function paraDataISO(bruto) {
 
 export default function ImportarPlanilha({ onImportado }) {
   const { ofertas, produtos, empresas, usuarios, usuarioLogado } = useData()
-  const inputRef = useRef(null)
   const [resumo, setResumo] = useState(null)
 
   function acharProduto(nomeColuna) {
@@ -98,12 +92,12 @@ export default function ImportarPlanilha({ onImportado }) {
 
     linhas.forEach((linha, index) => {
       const numeroLinha = index + 2
-      const colunaProduto = valorPorAlias(linha, 'produto')
+      const colunaProduto = valorPorAlias(linha, ALIASES, 'produto')
       const produto = acharProduto(colunaProduto)
-      const fornecedor = acharFornecedor(valorPorAlias(linha, 'fornecedor'))
-      const valor = primeiroNumero(valorPorAlias(linha, 'preco'))
-      const quantidade = primeiroNumero(valorPorAlias(linha, 'quantidade'))
-      const moeda = String(valorPorAlias(linha, 'moeda') ?? '')
+      const fornecedor = acharFornecedor(valorPorAlias(linha, ALIASES, 'fornecedor'))
+      const valor = primeiroNumero(valorPorAlias(linha, ALIASES, 'preco'))
+      const quantidade = primeiroNumero(valorPorAlias(linha, ALIASES, 'quantidade'))
+      const moeda = String(valorPorAlias(linha, ALIASES, 'moeda') ?? '')
         .trim()
         .toUpperCase()
 
@@ -112,7 +106,7 @@ export default function ImportarPlanilha({ onImportado }) {
         return
       }
       if (!fornecedor) {
-        erros.push(`Linha ${numeroLinha}: fornecedor "${valorPorAlias(linha, 'fornecedor') ?? ''}" não encontrado`)
+        erros.push(`Linha ${numeroLinha}: fornecedor "${valorPorAlias(linha, ALIASES, 'fornecedor') ?? ''}" não encontrado`)
         return
       }
       if (!valor || Number.isNaN(valor)) {
@@ -124,13 +118,13 @@ export default function ImportarPlanilha({ onImportado }) {
         return
       }
 
-      const { de: embarqueDe, ate: embarqueAte } = separarPeriodo(valorPorAlias(linha, 'embarque'))
-      const trader = acharTrader(valorPorAlias(linha, 'trader'))
-      const ref = valorPorAlias(linha, 'ref')
-      const brand = valorPorAlias(linha, 'brand')
-      const destino = valorPorAlias(linha, 'destino')
+      const { de: embarqueDe, ate: embarqueAte } = separarPeriodo(valorPorAlias(linha, ALIASES, 'embarque'))
+      const trader = acharTrader(valorPorAlias(linha, ALIASES, 'trader'))
+      const ref = valorPorAlias(linha, ALIASES, 'ref')
+      const brand = valorPorAlias(linha, ALIASES, 'brand')
+      const destino = valorPorAlias(linha, ALIASES, 'destino')
       const comentariosBrutos = [
-        valorPorAlias(linha, 'comentarios'),
+        valorPorAlias(linha, ALIASES, 'comentarios'),
         destino ? `Destination: ${destino}` : null,
         brand && brand.toLowerCase() !== (fornecedor.marca ?? '').toLowerCase() ? `Brand: ${brand}` : null,
       ]
@@ -151,15 +145,15 @@ export default function ImportarPlanilha({ onImportado }) {
         quantidadeOriginal: quantidade,
         unidade: 'ton',
         status: 'Disponível',
-        data: paraDataISO(valorPorAlias(linha, 'data')) ?? hoje,
+        data: paraDataISO(valorPorAlias(linha, ALIASES, 'data')) ?? hoje,
         usuarioId: trader.id,
         observacao: comentariosBrutos || 'Importado de planilha.',
         numeroContrato: ref ? String(ref) : '',
-        incoterm: String(valorPorAlias(linha, 'incoterm') ?? 'CFR').trim().toUpperCase(),
+        incoterm: String(valorPorAlias(linha, ALIASES, 'incoterm') ?? 'CFR').trim().toUpperCase(),
         embarqueDe,
         embarqueAte,
-        validadeAte: valorPorAlias(linha, 'validade') ?? '',
-        prazoPagamento: valorPorAlias(linha, 'prazoPagamento') ?? '',
+        validadeAte: valorPorAlias(linha, ALIASES, 'validade') ?? '',
+        prazoPagamento: valorPorAlias(linha, ALIASES, 'prazoPagamento') ?? '',
         historicoNegociacao: [],
       })
     })
@@ -168,54 +162,17 @@ export default function ImportarPlanilha({ onImportado }) {
     onImportado?.()
   }
 
-  function processarArquivo(arquivo) {
-    const leitor = new FileReader()
-    leitor.onload = (evento) => {
-      const pasta = XLSX.read(evento.target.result, { type: 'array' })
-      const planilha = pasta.Sheets[pasta.SheetNames[0]]
-      processarLinhas(XLSX.utils.sheet_to_json(planilha))
-    }
-    leitor.readAsArrayBuffer(arquivo)
-  }
-
   return (
-    <div className="rounded border border-dashed border-ayamo-border p-4">
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".xlsx,.xls"
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files[0]) processarArquivo(e.target.files[0])
-          e.target.value = ''
-        }}
-      />
-      <button
-        type="button"
-        onClick={() => inputRef.current.click()}
-        className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-      >
-        Selecionar planilha (.xlsx)
-      </button>
-      <p className="mt-2 text-xs text-ayamo-text-mut">
-        Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
-        Fornecedor podem bater por nome parecido, não precisa ser idêntico.
-      </p>
-
-      {resumo && (
-        <div className="mt-3 text-sm">
-          <p className="text-ayamo-text">
-            {resumo.importadas} de {resumo.total} linha(s) importadas com sucesso.
-          </p>
-          {resumo.erros.length > 0 && (
-            <ul className="mt-2 list-disc pl-5 text-ayamo-danger">
-              {resumo.erros.map((erro) => (
-                <li key={erro}>{erro}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-    </div>
+    <UploadPlanilha
+      onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(processarLinhas)}
+      hint={
+        <>
+          Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
+          Fornecedor podem bater por nome parecido, não precisa ser idêntico.
+        </>
+      }
+      mensagemResumo={resumo && `${resumo.importadas} de ${resumo.total} linha(s) importadas com sucesso.`}
+      erros={resumo?.erros}
+    />
   )
 }
