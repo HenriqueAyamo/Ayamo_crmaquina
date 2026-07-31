@@ -187,6 +187,13 @@ export function DataProvider({ children }) {
     [ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
   )
 
+  const resetarTodosDados = useCallback(() => {
+    Object.keys(localStorage)
+      .filter((chave) => chave.startsWith(STORAGE_PREFIX))
+      .forEach((chave) => localStorage.removeItem(chave))
+    window.location.reload()
+  }, [])
+
   const value = useMemo(
     () => ({
       divisoes,
@@ -222,6 +229,7 @@ export function DataProvider({ children }) {
       avisarConcorrenciaEstoque,
       verificarLimiteCredito,
       registrarUsoCreditoCliente,
+      resetarTodosDados,
     }),
     [
       divisoes,
@@ -256,6 +264,7 @@ export function DataProvider({ children }) {
       avisarConcorrenciaEstoque,
       verificarLimiteCredito,
       registrarUsoCreditoCliente,
+      resetarTodosDados,
     ],
   )
 

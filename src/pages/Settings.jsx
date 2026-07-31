@@ -16,10 +16,11 @@ function valoresIniciais(usuario) {
 }
 
 export default function Settings() {
-  const { usuarioLogado, usuarios } = useData()
+  const { usuarioLogado, usuarios, resetarTodosDados } = useData()
   const [form, setForm] = useState(() => valoresIniciais(usuarioLogado))
   const [previewNoEmail, setPreviewNoEmail] = useState(false)
   const [salvo, setSalvo] = useState(false)
+  const [confirmandoReset, setConfirmandoReset] = useState(false)
 
   const logoSegura = sanitizarUrlImagem(form.logoUrl)
 
@@ -95,6 +96,42 @@ export default function Settings() {
             <div className="rounded border border-ayamo-border bg-ayamo-surface p-4">{assinaturaHtml}</div>
           )}
         </div>
+      </div>
+
+      <div className="mt-8 rounded border border-ayamo-danger/40 bg-ayamo-danger/5 p-5">
+        <h2 className="text-sm font-semibold text-ayamo-danger">Zona de risco</h2>
+        <p className="mt-1 text-sm text-ayamo-text-mut">
+          Apaga tudo que foi cadastrado neste navegador (compras, propostas, empresas, demandas etc.) e volta pros
+          dados de exemplo originais. Útil pra limpar registros de teste. Não afeta outros dispositivos/navegadores.
+        </p>
+
+        {!confirmandoReset ? (
+          <button
+            type="button"
+            onClick={() => setConfirmandoReset(true)}
+            className="mt-3 rounded border border-ayamo-danger px-4 py-2 text-sm font-medium text-ayamo-danger hover:bg-ayamo-danger/10"
+          >
+            Apagar todos os dados e recomeçar do exemplo
+          </button>
+        ) : (
+          <div className="mt-3 flex items-center gap-3">
+            <span className="text-sm font-medium text-ayamo-text">Tem certeza? Essa ação não pode ser desfeita.</span>
+            <button
+              type="button"
+              onClick={resetarTodosDados}
+              className="rounded bg-ayamo-danger px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Sim, apagar tudo
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmandoReset(false)}
+              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
