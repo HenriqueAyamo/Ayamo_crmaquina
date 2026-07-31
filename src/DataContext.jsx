@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { divisoes as divisoesMock } from './data/divisoes.js'
 import { familias as familiasMock } from './data/familias.js'
 import { produtos as produtosMock } from './data/produtos.js'
@@ -43,39 +43,60 @@ function useCollection(chave, seed) {
   const [items, setItems] = useState(() => carregarStorage(chave, seed))
   const proximoId = useRef(items.reduce((max, item) => Math.max(max, item.id), 0) + 1)
 
-  function atualizar(computar) {
-    setItems((atual) => {
-      const novosItens = computar(atual)
-      salvarStorage(chave, novosItens)
-      return novosItens
-    })
-  }
+  const atualizar = useCallback(
+    (computar) => {
+      setItems((atual) => {
+        const novosItens = computar(atual)
+        salvarStorage(chave, novosItens)
+        return novosItens
+      })
+    },
+    [chave],
+  )
 
-  function criar(dados) {
-    const novo = { situacao: 'Ativo', ...dados, id: proximoId.current }
-    proximoId.current += 1
-    atualizar((atual) => [...atual, novo])
-    return novo
-  }
+  const criar = useCallback(
+    (dados) => {
+      const novo = { situacao: 'Ativo', ...dados, id: proximoId.current }
+      proximoId.current += 1
+      atualizar((atual) => [...atual, novo])
+      return novo
+    },
+    [atualizar],
+  )
 
-  function editar(id, dados) {
-    atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, ...dados } : item)))
-  }
+  const editar = useCallback(
+    (id, dados) => {
+      atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, ...dados } : item)))
+    },
+    [atualizar],
+  )
 
-  function inativar(id) {
-    atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, situacao: 'Inativo' } : item)))
-  }
+  const inativar = useCallback(
+    (id) => {
+      atualizar((atual) => atual.map((item) => (item.id === id ? { ...item, situacao: 'Inativo' } : item)))
+    },
+    [atualizar],
+  )
 
-  function remover(id) {
-    atualizar((atual) => atual.filter((item) => item.id !== id))
-  }
+  const remover = useCallback(
+    (id) => {
+      atualizar((atual) => atual.filter((item) => item.id !== id))
+    },
+    [atualizar],
+  )
 
-  function substituir(novosItens) {
-    proximoId.current = novosItens.reduce((max, item) => Math.max(max, item.id), 0) + 1
-    atualizar(() => novosItens)
-  }
+  const substituir = useCallback(
+    (novosItens) => {
+      proximoId.current = novosItens.reduce((max, item) => Math.max(max, item.id), 0) + 1
+      atualizar(() => novosItens)
+    },
+    [atualizar],
+  )
 
-  return { items, criar, editar, inativar, remover, substituir }
+  return useMemo(
+    () => ({ items, criar, editar, inativar, remover, substituir }),
+    [items, criar, editar, inativar, remover, substituir],
+  )
 }
 
 export function DataProvider({ children }) {
@@ -100,37 +121,30 @@ export function DataProvider({ children }) {
     return salvo ?? usuariosMock[0]?.id ?? 1
   })
 
-  function setUsuarioLogadoId(id) {
+  const setUsuarioLogadoId = useCallback((id) => {
     setUsuarioLogadoIdState(id)
     salvarStorage('usuarioLogadoId', id)
-  }
+  }, [])
 
   const usuarioLogado = usuarios.items.find((u) => u.id === usuarioLogadoId) ?? usuarios.items[0]
 
-  function getFamilia(familiaId) {
-    return familias.items.find((f) => f.id === familiaId)
-  }
+  const getFamilia = useCallback((familiaId) => familias.items.find((f) => f.id === familiaId), [familias.items])
 
-  function getProduto(produtoId) {
-    return produtos.items.find((p) => p.id === produtoId)
-  }
+  const getProduto = useCallback((produtoId) => produtos.items.find((p) => p.id === produtoId), [produtos.items])
 
-  function getDivisaoIdDeProduto(produtoId) {
-    const familia = getFamilia(getProduto(produtoId)?.familiaId)
-    return familia?.divisaoId ?? null
-  }
+  const getDivisaoIdDeProduto = useCallback(
+    (produtoId) => {
+      const familia = getFamilia(getProduto(produtoId)?.familiaId)
+      return familia?.divisaoId ?? null
+    },
+    [getFamilia, getProduto],
+  )
 
-  function getDivisao(divisaoId) {
-    return divisoes.items.find((d) => d.id === divisaoId)
-  }
+  const getDivisao = useCallback((divisaoId) => divisoes.items.find((d) => d.id === divisaoId), [divisoes.items])
 
-  function getEmpresa(empresaId) {
-    return empresas.items.find((e) => e.id === empresaId)
-  }
+  const getEmpresa = useCallback((empresaId) => empresas.items.find((e) => e.id === empresaId), [empresas.items])
 
-  function getUsuario(usuarioId) {
-    return usuarios.items.find((u) => u.id === usuarioId)
-  }
+  const getUsuario = useCallback((usuarioId) => usuarios.items.find((u) => u.id === usuarioId), [usuarios.items])
 
   const {
     ajustarEstoqueOferta,
@@ -139,68 +153,111 @@ export function DataProvider({ children }) {
     registrarRevisaoOferta,
     notificarLogistica,
     avisarConcorrenciaEstoque,
-  } = criarAcoesOferta({ ofertas, propostas, usuarioLogado })
+  } = useMemo(() => criarAcoesOferta({ ofertas, propostas, usuarioLogado }), [ofertas, propostas, usuarioLogado])
 
-  function verificarLimiteCredito(clienteId, valorNegocioUSD) {
-    const empresa = getEmpresa(clienteId)
-    if (!empresa) return { bloqueado: true, motivo: 'Cliente não encontrado.' }
-    if (!empresa.limiteCredito || empresa.limiteCredito <= 0) {
-      return { bloqueado: true, motivo: 'Cliente sem limite de crédito cadastrado — fechamento bloqueado pelo Financeiro.' }
-    }
-    const limiteUSD = converterParaUSD(empresa.limiteCredito, empresa.moedaPadrao)
-    const utilizadoUSD = converterParaUSD(empresa.creditoUtilizado, empresa.moedaPadrao)
-    if (utilizadoUSD + valorNegocioUSD > limiteUSD) {
-      return { bloqueado: true, motivo: 'Fechamento excede o limite de crédito disponível do cliente — bloqueado pelo Financeiro.' }
-    }
-    return { bloqueado: false }
-  }
+  const verificarLimiteCredito = useCallback(
+    (clienteId, valorNegocioUSD) => {
+      const empresa = getEmpresa(clienteId)
+      if (!empresa) return { bloqueado: true, motivo: 'Cliente não encontrado.' }
+      if (!empresa.limiteCredito || empresa.limiteCredito <= 0) {
+        return { bloqueado: true, motivo: 'Cliente sem limite de crédito cadastrado — fechamento bloqueado pelo Financeiro.' }
+      }
+      const limiteUSD = converterParaUSD(empresa.limiteCredito, empresa.moedaPadrao)
+      const utilizadoUSD = converterParaUSD(empresa.creditoUtilizado, empresa.moedaPadrao)
+      if (utilizadoUSD + valorNegocioUSD > limiteUSD) {
+        return { bloqueado: true, motivo: 'Fechamento excede o limite de crédito disponível do cliente — bloqueado pelo Financeiro.' }
+      }
+      return { bloqueado: false }
+    },
+    [getEmpresa],
+  )
 
-  function registrarUsoCreditoCliente(clienteId, valorNegocioUSD) {
-    const empresa = getEmpresa(clienteId)
-    if (!empresa) return
-    const acrescimo = converterDeUSD(valorNegocioUSD, empresa.moedaPadrao)
-    empresas.editar(empresa.id, { creditoUtilizado: empresa.creditoUtilizado + acrescimo })
-  }
+  const registrarUsoCreditoCliente = useCallback(
+    (clienteId, valorNegocioUSD) => {
+      const empresa = getEmpresa(clienteId)
+      if (!empresa) return
+      const acrescimo = converterDeUSD(valorNegocioUSD, empresa.moedaPadrao)
+      empresas.editar(empresa.id, { creditoUtilizado: empresa.creditoUtilizado + acrescimo })
+    },
+    [getEmpresa, empresas],
+  )
 
-  function getPendencias(usuario) {
-    return calcularPendencias(usuario, { ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto })
-  }
+  const getPendencias = useCallback(
+    (usuario) => calcularPendencias(usuario, { ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto }),
+    [ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
+  )
 
-  const value = {
-    divisoes,
-    familias,
-    produtos,
-    categoriasContato,
-    usuarios,
-    empresas,
-    contatos,
-    ofertas,
-    propostas,
-    documentos,
-    usuarioLogado,
-    setUsuarioLogadoId,
-    dadosAyamo,
-    demandas,
-    claims,
-    fretes,
-    inspecoes,
-    getFamilia,
-    getProduto,
-    getDivisao,
-    getDivisaoIdDeProduto,
-    getEmpresa,
-    getUsuario,
-    calcularResumoProposta,
-    getPendencias,
-    ajustarEstoqueOferta,
-    registrarNotaOferta,
-    alterarStatusOferta,
-    registrarRevisaoOferta,
-    notificarLogistica,
-    avisarConcorrenciaEstoque,
-    verificarLimiteCredito,
-    registrarUsoCreditoCliente,
-  }
+  const value = useMemo(
+    () => ({
+      divisoes,
+      familias,
+      produtos,
+      categoriasContato,
+      usuarios,
+      empresas,
+      contatos,
+      ofertas,
+      propostas,
+      documentos,
+      usuarioLogado,
+      setUsuarioLogadoId,
+      dadosAyamo,
+      demandas,
+      claims,
+      fretes,
+      inspecoes,
+      getFamilia,
+      getProduto,
+      getDivisao,
+      getDivisaoIdDeProduto,
+      getEmpresa,
+      getUsuario,
+      calcularResumoProposta,
+      getPendencias,
+      ajustarEstoqueOferta,
+      registrarNotaOferta,
+      alterarStatusOferta,
+      registrarRevisaoOferta,
+      notificarLogistica,
+      avisarConcorrenciaEstoque,
+      verificarLimiteCredito,
+      registrarUsoCreditoCliente,
+    }),
+    [
+      divisoes,
+      familias,
+      produtos,
+      categoriasContato,
+      usuarios,
+      empresas,
+      contatos,
+      ofertas,
+      propostas,
+      documentos,
+      usuarioLogado,
+      setUsuarioLogadoId,
+      dadosAyamo,
+      demandas,
+      claims,
+      fretes,
+      inspecoes,
+      getFamilia,
+      getProduto,
+      getDivisao,
+      getDivisaoIdDeProduto,
+      getEmpresa,
+      getUsuario,
+      getPendencias,
+      ajustarEstoqueOferta,
+      registrarNotaOferta,
+      alterarStatusOferta,
+      registrarRevisaoOferta,
+      notificarLogistica,
+      avisarConcorrenciaEstoque,
+      verificarLimiteCredito,
+      registrarUsoCreditoCliente,
+    ],
+  )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>
 }
