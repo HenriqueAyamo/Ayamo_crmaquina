@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Truck } from 'lucide-react'
+import { ArrowLeft, Trash2, Truck } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -12,8 +12,10 @@ import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
+import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
+import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
 
 const TONE_STATUS = {
   Disponível: 'success',
@@ -34,6 +36,7 @@ export default function ComprasDetalhe() {
   const [modalEnviarAberto, setModalEnviarAberto] = useState(false)
   const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
   const podeVender = ['Vendedor', 'Administrador'].includes(usuarioLogado.perfil)
+  const podeExcluir = podeExcluirRegistros(usuarioLogado.perfil)
   const clientes = empresas.items.filter((e) => e.tipo === 'Cliente' && e.situacao === 'Ativo')
 
   const versoes = ofertas.items
@@ -48,6 +51,12 @@ export default function ComprasDetalhe() {
   const produto = getProduto(atual.produtoId)
   const fornecedor = getEmpresa(atual.fornecedorId)
   const divisao = divisoes.items.find((d) => d.id === getDivisaoIdDeProduto(atual.produtoId))
+
+  function excluirOferta() {
+    if (!window.confirm(`Excluir a oferta ${atual.codigoBase} e todas as suas ${versoes.length} revisão(ões)? Essa ação não pode ser desfeita.`)) return
+    versoes.forEach((v) => ofertas.remover(v.id))
+    navigate('/compras')
+  }
 
   return (
     <div>
@@ -130,6 +139,17 @@ export default function ComprasDetalhe() {
                 </button>
               </>
             )}
+            <DisabledActionTooltip desabilitado={!podeExcluir} motivo={MOTIVOS.excluirRegistro}>
+              <button
+                type="button"
+                disabled={!podeExcluir}
+                onClick={excluirOferta}
+                className="flex items-center gap-1 rounded border border-ayamo-danger px-3 py-1.5 text-xs font-medium text-ayamo-danger hover:bg-ayamo-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 size={13} />
+                Excluir
+              </button>
+            </DisabledActionTooltip>
           </div>
         </div>
 

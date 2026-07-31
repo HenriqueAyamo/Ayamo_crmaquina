@@ -4,6 +4,7 @@ export const MOTIVOS = {
   gerenciarUsuarios: 'Apenas Administrador pode gerenciar usuários e papéis.',
   ultimoAdministrador: 'Precisa haver ao menos 1 Administrador ativo no sistema.',
   proprioUsuario: 'Você não pode remover ou inativar o próprio usuário.',
+  excluirRegistro: 'Apenas Administrador pode excluir compras ou vendas.',
 }
 
 export function podeNegociarCompra(perfil) {
@@ -15,5 +16,9 @@ export function podeGerarVenda(perfil) {
 }
 
 export function podeGerenciarUsuarios(perfil) {
+  return perfil === 'Administrador'
+}
+
+export function podeExcluirRegistros(perfil) {
   return perfil === 'Administrador'
 }

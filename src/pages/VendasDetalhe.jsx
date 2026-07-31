@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { obterNotaCambio } from '../data/cambio.js'
 import StatusBadge from '../components/StatusBadge.jsx'
@@ -12,7 +12,9 @@ import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
+import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarData } from '../utils/formato.js'
+import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
 
 const TONE_STATUS = {
   Rascunho: 'neutral',
@@ -41,6 +43,7 @@ export default function VendasDetalhe() {
     verificarLimiteCredito,
     registrarUsoCreditoCliente,
     avisarConcorrenciaEstoque,
+    usuarioLogado,
   } = useData()
 
   const [perfil, setPerfil] = useState('Vendedor')
@@ -53,6 +56,14 @@ export default function VendasDetalhe() {
 
   if (!proposta) {
     return <EmptyState title="Proposta não encontrada" />
+  }
+
+  const podeExcluir = podeExcluirRegistros(usuarioLogado.perfil)
+
+  function excluirProposta() {
+    if (!window.confirm(`Excluir a proposta ${proposta.numero}? Essa ação não pode ser desfeita.`)) return
+    propostas.remover(proposta.id)
+    navigate('/vendas')
   }
 
   const itemPrincipal = proposta.itens[0]
@@ -166,6 +177,17 @@ export default function VendasDetalhe() {
             >
               Gerar Proforma
             </button>
+            <DisabledActionTooltip desabilitado={!podeExcluir} motivo={MOTIVOS.excluirRegistro}>
+              <button
+                type="button"
+                disabled={!podeExcluir}
+                onClick={excluirProposta}
+                className="flex items-center gap-1 rounded border border-ayamo-danger px-3 py-1.5 text-xs font-medium text-ayamo-danger hover:bg-ayamo-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <Trash2 size={13} />
+                Excluir
+              </button>
+            </DisabledActionTooltip>
           </div>
         </div>
 
