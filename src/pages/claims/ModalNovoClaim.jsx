@@ -21,9 +21,11 @@ function valoresIniciais() {
 export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAtivos, editando }) {
   const { claims, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
+  const [erros, setErros] = useState({})
 
   useEffect(() => {
     if (!open) return
+    setErros({})
     if (editando) {
       setForm({
         fornecedorId: String(editando.fornecedorId),
@@ -43,7 +45,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
   function salvar(e) {
     e.preventDefault()
     if (!form.fornecedorId || !form.produtoId) {
-      window.alert('Selecione o fornecedor e o produto.')
+      setErros({ fornecedorId: !form.fornecedorId, produtoId: !form.produtoId })
       return
     }
     const dados = {
@@ -81,15 +83,21 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
       }
     >
       <form id="claim-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Fornecedor" required>
-          <SelectBusca value={form.fornecedorId} onChange={(fornecedorId) => setForm({ ...form, fornecedorId })} opcoes={fornecedores.map((f) => ({ value: f.id, label: f.nome }))} />
+        <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
+          <SelectBusca
+            value={form.fornecedorId}
+            onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
+            opcoes={fornecedores.map((f) => ({ value: f.id, label: f.nome }))}
+            erro={erros.fornecedorId}
+          />
         </Field>
 
-        <Field label="Produto" required>
+        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
             opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+            erro={erros.produtoId}
           />
         </Field>
 

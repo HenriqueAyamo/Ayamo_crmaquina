@@ -26,9 +26,11 @@ function valoresIniciais() {
 export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtivos, editando }) {
   const { demandas, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
+  const [erros, setErros] = useState({})
 
   useEffect(() => {
     if (!open) return
+    setErros({})
     if (editando) {
       setForm({
         clienteId: String(editando.clienteId),
@@ -53,7 +55,7 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
   function salvar(e) {
     e.preventDefault()
     if (!form.clienteId || !form.produtoId) {
-      window.alert('Selecione o cliente e o produto.')
+      setErros({ clienteId: !form.clienteId, produtoId: !form.produtoId })
       return
     }
     const dados = {
@@ -96,15 +98,21 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
       }
     >
       <form id="demanda-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Cliente" required>
-          <SelectBusca value={form.clienteId} onChange={(clienteId) => setForm({ ...form, clienteId })} opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))} />
+        <Field label="Cliente" required error={erros.clienteId ? 'Selecione o cliente.' : undefined}>
+          <SelectBusca
+            value={form.clienteId}
+            onChange={(clienteId) => setForm({ ...form, clienteId })}
+            opcoes={clientes.map((c) => ({ value: c.id, label: c.nome }))}
+            erro={erros.clienteId}
+          />
         </Field>
 
-        <Field label="Produto" required>
+        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
             opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+            erro={erros.produtoId}
           />
         </Field>
 

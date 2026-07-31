@@ -4,7 +4,7 @@ import { inputClass } from './Field.jsx'
 
 // <select> comum vira ruim de usar quando a lista passa de umas 10 opções — este componente
 // deixa digitar pra filtrar em vez de rolar uma lista longa.
-export default function SelectBusca({ value, onChange, opcoes, placeholder = 'Selecione', disabled = false }) {
+export default function SelectBusca({ value, onChange, opcoes, placeholder = 'Selecione', disabled = false, erro = false }) {
   const [aberto, setAberto] = useState(false)
   const [busca, setBusca] = useState('')
   const containerRef = useRef(null)
@@ -36,7 +36,7 @@ export default function SelectBusca({ value, onChange, opcoes, placeholder = 'Se
         type="button"
         disabled={disabled}
         onClick={() => setAberto((atual) => !atual)}
-        className={`${inputClass} flex items-center justify-between text-left disabled:cursor-not-allowed disabled:opacity-60`}
+        className={`${inputClass} flex items-center justify-between text-left disabled:cursor-not-allowed disabled:opacity-60 ${erro ? 'border-ayamo-danger' : ''}`}
       >
         <span className={selecionada ? 'text-ayamo-text' : 'text-ayamo-text-mut'}>{selecionada ? selecionada.label : placeholder}</span>
         <ChevronDown size={14} className="flex-shrink-0 text-ayamo-text-mut" />

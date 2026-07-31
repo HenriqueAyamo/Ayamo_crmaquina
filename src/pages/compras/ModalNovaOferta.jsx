@@ -40,24 +40,27 @@ function valoresIniciais() {
 export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada, inicial }) {
   const { ofertas, dadosAyamo, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
+  const [erros, setErros] = useState({})
   const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
   useEffect(() => {
     if (open) {
       setForm({ ...valoresIniciais(), ayamoEntidadeId: entidadesAtivas[0]?.id ?? '', ...inicial })
+      setErros({})
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
 
   function fecharEResetar() {
     setForm(valoresIniciais())
+    setErros({})
     onClose()
   }
 
   function salvar(e) {
     e.preventDefault()
     if (!form.produtoId || !form.fornecedorId) {
-      window.alert('Selecione o produto e o fornecedor.')
+      setErros({ produtoId: !form.produtoId, fornecedorId: !form.fornecedorId })
       return
     }
     const codigo = proximoCodigo(ofertas.items)
@@ -155,19 +158,21 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         )}
 
-        <Field label="Produto" required>
+        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
             opcoes={produtosAtivos.map((p) => ({ value: p.id, label: p.nome }))}
+            erro={erros.produtoId}
           />
         </Field>
 
-        <Field label="Fornecedor" required>
+        <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
           <SelectBusca
             value={form.fornecedorId}
             onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
             opcoes={fornecedores.map((f) => ({ value: f.id, label: f.nome }))}
+            erro={erros.fornecedorId}
           />
         </Field>
 

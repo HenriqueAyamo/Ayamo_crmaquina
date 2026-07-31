@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { X } from 'lucide-react'
 
 const WIDTH_CLASSES = {
@@ -7,10 +8,24 @@ const WIDTH_CLASSES = {
 }
 
 export default function Modal({ open, onClose, title, children, footer, width = 'md' }) {
+  useEffect(() => {
+    if (!open) return
+    function aoTeclar(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', aoTeclar)
+    return () => document.removeEventListener('keydown', aoTeclar)
+  }, [open, onClose])
+
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
       <div
         className={`flex max-h-[90vh] w-full flex-col rounded-lg bg-ayamo-surface shadow-xl ${WIDTH_CLASSES[width]}`}
       >
