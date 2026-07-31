@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 
 function valoresIniciais(contato) {
@@ -43,20 +44,7 @@ export default function ModalContato({ open, onClose, empresaId, contatoEditando
       open={open}
       onClose={onClose}
       title={contatoEditando ? 'Editar contato' : 'Adicionar contato'}
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="contato-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Salvar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={onClose} formId="contato-form" />}
     >
       <form id="contato-form" onSubmit={salvar} className="flex flex-col gap-4">
         <Field label="Nome" required>

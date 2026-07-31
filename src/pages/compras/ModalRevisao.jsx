@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
@@ -66,20 +67,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
       open={open}
       onClose={fecharEResetar}
       title="Registrar revisão de preço"
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={fecharEResetar}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="revisao-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Registrar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="revisao-form" labelSalvar="Registrar" />}
     >
       <form id="revisao-form" onSubmit={salvar} className="flex flex-col gap-4">
         <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 
 const STATUS_OPCOES = ['Disponível', 'Em revisão', 'Esgotada', 'Expirada']
@@ -27,20 +28,7 @@ export default function ModalAlterarStatus({ open, onClose, atual }) {
       open={open}
       onClose={fecharEResetar}
       title="Alterar status da oferta"
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={fecharEResetar}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="status-oferta-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Salvar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="status-oferta-form" />}
     >
       <form id="status-oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
         <p className="text-sm text-ayamo-text-mut">

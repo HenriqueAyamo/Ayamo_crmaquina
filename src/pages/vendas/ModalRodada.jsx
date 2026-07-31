@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 
@@ -34,20 +35,7 @@ export default function ModalRodada({ open, tipo, itemAtual, onClose, onConfirma
       open={open}
       onClose={onClose}
       title={tipo}
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="rodada-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Registrar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={onClose} formId="rodada-form" labelSalvar="Registrar" />}
     >
       <form id="rodada-form" onSubmit={confirmar} className="flex flex-col gap-4">
         {exigePreco && (

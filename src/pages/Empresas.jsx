@@ -7,6 +7,7 @@ import FilterBar from '../components/FilterBar.jsx'
 import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Modal from '../components/Modal.jsx'
+import ModalFooterAcoes from '../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import CampoNumerico from '../components/CampoNumerico.jsx'
 import { formatarValor } from '../utils/formato.js'
@@ -309,24 +310,7 @@ export default function Empresas() {
         open={modalAberto}
         onClose={() => setModalAberto(false)}
         title="Nova empresa"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setModalAberto(false)}
-              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="empresa-form"
-              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-            >
-              Salvar
-            </button>
-          </>
-        }
+        footer={<ModalFooterAcoes onCancelar={() => setModalAberto(false)} formId="empresa-form" />}
       >
         <form id="empresa-form" onSubmit={salvar} className="flex flex-col gap-4">
           <Field label="Nome" required>

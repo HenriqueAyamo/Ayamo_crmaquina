@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import CampoData from '../../components/CampoData.jsx'
@@ -99,20 +100,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       open={open}
       onClose={fecharEResetar}
       title="Nova oferta"
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={fecharEResetar}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="oferta-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Salvar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="oferta-form" />}
     >
       <form id="oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
         <button

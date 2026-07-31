@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 
 export default function ModalNotaOferta({ open, onClose, atual }) {
@@ -27,20 +28,7 @@ export default function ModalNotaOferta({ open, onClose, atual }) {
       open={open}
       onClose={fecharEResetar}
       title="Registrar contato com fornecedor"
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={fecharEResetar}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button type="submit" form="nota-oferta-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-            Registrar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="nota-oferta-form" labelSalvar="Registrar" />}
     >
       <form id="nota-oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
         <p className="text-sm text-ayamo-text-mut">

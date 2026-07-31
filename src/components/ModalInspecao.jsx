@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../DataContext.jsx'
 import Modal from './Modal.jsx'
+import ModalFooterAcoes from './ModalFooterAcoes.jsx'
 import Field, { inputClass } from './Field.jsx'
 import { redimensionarImagem } from '../utils/redimensionarImagem.js'
 
@@ -46,25 +47,7 @@ export default function ModalInspecao({ open, onClose, contexto, refCodigo }) {
       open={open}
       onClose={fecharEResetar}
       title="Registrar inspeção do produto"
-      footer={
-        <>
-          <button
-            type="button"
-            onClick={fecharEResetar}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            form="inspecao-form"
-            disabled={processandoImagem}
-            className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-          >
-            Registrar
-          </button>
-        </>
-      }
+      footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="inspecao-form" labelSalvar="Registrar" disabled={processandoImagem} />}
     >
       <form id="inspecao-form" onSubmit={salvar} className="flex flex-col gap-4">
         <Field label="Observação" required hint="Ex.: cor, embalagem, temperatura, avarias — o que foi conferido na inspeção.">

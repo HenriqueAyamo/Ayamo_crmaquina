@@ -5,6 +5,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import DataTable from '../components/DataTable.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Modal from '../components/Modal.jsx'
+import ModalFooterAcoes from '../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { MOTIVOS } from '../utils/permissoes.js'
@@ -191,20 +192,7 @@ export default function Usuarios() {
         onClose={() => setModalAberto(false)}
         title={editando ? 'Editar usuário' : 'Novo usuário'}
         width="lg"
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setModalAberto(false)}
-              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-            >
-              Cancelar
-            </button>
-            <button type="submit" form="usuario-form" className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90">
-              Salvar
-            </button>
-          </>
-        }
+        footer={<ModalFooterAcoes onCancelar={() => setModalAberto(false)} formId="usuario-form" />}
       >
         <form id="usuario-form" onSubmit={salvar} className="flex flex-col gap-4">
           <Field label="Nome" required>

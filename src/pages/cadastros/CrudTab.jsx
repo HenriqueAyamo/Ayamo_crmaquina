@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import DataTable from '../../components/DataTable.jsx'
 import Modal from '../../components/Modal.jsx'
+import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 
@@ -99,24 +100,7 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
         open={modalAberto}
         onClose={() => setModalAberto(false)}
         title={editando ? `Editar ${itemLabel}` : `Novo ${itemLabel}`}
-        footer={
-          <>
-            <button
-              type="button"
-              onClick={() => setModalAberto(false)}
-              className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              form="crud-tab-form"
-              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-            >
-              Salvar
-            </button>
-          </>
-        }
+        footer={<ModalFooterAcoes onCancelar={() => setModalAberto(false)} formId="crud-tab-form" />}
       >
         <form id="crud-tab-form" onSubmit={salvar} className="flex flex-col gap-4">
           {fields.map((f) => (
