@@ -34,7 +34,7 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
     setErros({})
     if (editando) {
       setForm({
-        clienteId: String(editando.clienteId),
+        clienteId: editando.clienteId != null ? String(editando.clienteId) : '',
         produtoId: String(editando.produtoId),
         proteinaPercentual: editando.proteinaPercentual ?? '',
         quantidade: editando.quantidade,

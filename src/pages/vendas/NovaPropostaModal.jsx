@@ -32,7 +32,7 @@ function valoresIniciaisProforma() {
 }
 
 export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa, clienteFixo }) {
-  const { ofertas, propostas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
+  const { ofertas, propostas, demandas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
   const [buscaCliente, setBuscaCliente] = useState('')
@@ -208,6 +208,28 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       const oferta = ofertas.items.find((o) => o.id === Number(ofertaId))
       const totalAlocado = clientesSelecionados.reduce((soma, cliente) => soma + Number(dados.porCliente[cliente.id]?.quantidade || 0), 0)
       ajustarEstoqueOferta(oferta.codigo, -totalAlocado)
+
+      // Vendeu mais do que a oferta tinha disponível — gera demanda automática pra Compras saberem o que falta comprar.
+      const faltante = oferta.quantidade != null ? totalAlocado - oferta.quantidade : 0
+      if (faltante > 0) {
+        demandas.criar({
+          clienteId: null,
+          produtoId: oferta.produtoId,
+          quantidade: faltante,
+          precoAlvo: null,
+          incoterm: oferta.incoterm ?? 'CFR',
+          origem: '',
+          destino: '',
+          embalagem: '',
+          mesEmbarque: '',
+          observacao: `Gerada automaticamente — venda(s) ${numerosCriados.join(', ')} alocaram mais do que o estoque disponível em ${oferta.codigo} (faltam ${faltante.toLocaleString('pt-BR')} ${oferta.unidade}).`,
+          origemAutomatica: 'gap_estoque',
+          ofertaCodigo: oferta.codigo,
+          status: 'Aberta',
+          vendedorId: usuarioLogado.id,
+          data: hoje,
+        })
+      }
     })
 
     if (autoSaveAtivo) limparRascunho()

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, lazy, Suspense } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
@@ -10,10 +10,11 @@ import Field, { inputClass } from '../components/Field.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import ModalNovoFrete from './freight/ModalNovoFrete.jsx'
 import { formatarValor, formatarData } from '../utils/formato.js'
-import { TIPOS_CONTAINER } from '../data/tiposContainer.js'
 import { chartColor } from '../utils/chartColors.js'
-import { converterParaUSD } from '../data/cambio.js'
+import { totalFreight } from '../utils/frete.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
+
+const ImportarPlanilhaFretes = lazy(() => import('./freight/ImportarPlanilhaFretes.jsx'))
 
 export default function Freight() {
   const { fretes, usuarioLogado } = useData()
@@ -23,15 +24,21 @@ export default function Freight() {
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
+  const [importarAberto, setImportarAberto] = useState(false)
+
+  const tiposContainer = useMemo(
+    () => [...new Set(fretes.items.map((f) => f.tipoContainer).filter(Boolean))].sort(),
+    [fretes.items],
+  )
 
   const fretesFiltrados = useMemo(() => {
     const termo = busca.toLowerCase()
     return fretes.items.filter((f) => {
       const combinaBusca =
         !termo ||
-        f.origem.toLowerCase().includes(termo) ||
-        f.destino.toLowerCase().includes(termo) ||
-        f.transportadora.toLowerCase().includes(termo)
+        (f.pol ?? '').toLowerCase().includes(termo) ||
+        (f.pod ?? '').toLowerCase().includes(termo) ||
+        (f.transportadora ?? '').toLowerCase().includes(termo)
       const combinaTipo = !tipoFiltro || f.tipoContainer === tipoFiltro
       return combinaBusca && combinaTipo
     })
@@ -40,10 +47,9 @@ export default function Freight() {
   const mediaPorRota = useMemo(() => {
     const mapa = new Map()
     fretes.items.forEach((f) => {
-      const rota = `${f.origem} → ${f.destino}`
-      const valorUSD = converterParaUSD(f.valor.valor, f.valor.moeda)
+      const rota = `${f.pol || '—'} → ${f.pod || '—'}`
       const atual = mapa.get(rota) ?? { soma: 0, n: 0 }
-      mapa.set(rota, { soma: atual.soma + valorUSD, n: atual.n + 1 })
+      mapa.set(rota, { soma: atual.soma + totalFreight(f), n: atual.n + 1 })
     })
     return [...mapa.entries()]
       .map(([rotulo, { soma, n }], indice) => ({ rotulo, valor: Math.round(soma / n), cor: chartColor(indice) }))
@@ -62,13 +68,31 @@ export default function Freight() {
   }
 
   function excluirFrete(frete) {
-    if (!window.confirm(`Excluir o frete ${frete.origem} → ${frete.destino} (${frete.transportadora})? Essa ação não pode ser desfeita.`)) return
+    if (!window.confirm(`Excluir o frete ${frete.pol} → ${frete.pod} (${frete.transportadora})? Essa ação não pode ser desfeita.`)) return
     fretes.remover(frete.id)
   }
 
   return (
     <div>
       <PageHeader title="Freight" subtitle="Tabela de fretes por rota e transportadora" actionLabel="Novo frete" onAction={abrirNovo} />
+
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setImportarAberto((atual) => !atual)}
+          className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
+        >
+          {importarAberto ? 'Fechar importação' : 'Importar planilha'}
+        </button>
+      </div>
+
+      {importarAberto && (
+        <div className="mb-4">
+          <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
+            <ImportarPlanilhaFretes onImportado={() => setImportarAberto(false)} />
+          </Suspense>
+        </div>
+      )}
 
       {mediaPorRota.length > 0 && (
         <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
@@ -81,7 +105,7 @@ export default function Freight() {
         <Field label="Buscar">
           <input
             className={inputClass}
-            placeholder="Origem, destino ou transportadora"
+            placeholder="POL, POD ou armador"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
@@ -89,7 +113,7 @@ export default function Freight() {
         <Field label="Tipo de contêiner">
           <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
             <option value="">Todos</option>
-            {TIPOS_CONTAINER.map((t) => (
+            {tiposContainer.map((t) => (
               <option key={t} value={t}>
                 {t}
               </option>
@@ -100,22 +124,27 @@ export default function Freight() {
 
       <CardList
         rowKey="id"
-        storageKey="fretes"
         data={fretesFiltrados}
         onRowClick={(item) => abrirEdicao(item)}
         emptyLabel="Nenhum frete registrado"
         columns={[
-          { key: 'origem', header: 'Origem', toggleable: false },
-          { key: 'destino', header: 'Destino', toggleable: false },
-          { key: 'transportadora', header: 'Transportadora' },
-          { key: 'tipoContainer', header: 'Contêiner' },
           {
-            key: 'valor',
-            header: 'Valor',
-            render: (item) => formatarValor(item.valor.valor, item.valor.moeda),
-            sortValue: (item) => item.valor.valor,
+            key: 'rota',
+            header: 'Rota',
+            render: (item) => `${item.pol || '—'} → ${item.pod || '—'}`,
           },
-          { key: 'validade', header: 'Validade', render: (item) => <SeloValidade validadeAte={item.validadeAte} /> },
+          { key: 'anoTrimestre', header: 'Período', render: (item) => `${item.ano || '—'} ${item.trimestre || ''}` },
+          { key: 'mercado', header: 'Market', render: (item) => item.mercado || '—' },
+          { key: 'transportadora', header: 'Shipping Line / Agent', render: (item) => item.transportadora || '—' },
+          { key: 'tipoContainer', header: 'Contêiner', render: (item) => item.tipoContainer || '—' },
+          { key: 'commodity', header: 'Commodity', render: (item) => item.commodity || '—' },
+          {
+            key: 'total',
+            header: 'Total freight',
+            render: (item) => formatarValor(totalFreight(item), 'USD'),
+            sortValue: (item) => totalFreight(item),
+          },
+          { key: 'validade', header: 'Vigência até', render: (item) => <SeloValidade validadeAte={item.vigenciaAte} /> },
           { key: 'data', header: 'Registrado em', render: (item) => formatarData(item.data) },
           {
             key: '_acoes',
