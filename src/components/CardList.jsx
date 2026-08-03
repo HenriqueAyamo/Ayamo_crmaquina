@@ -32,6 +32,7 @@ export default function CardList({ columns, data, rowKey, onRowClick, emptyLabel
       {data.map((row) => {
         const chave = getKey(row)
         const expandido = linhaExpandida && expandidos.has(chave)
+        const acoes = colunaAcoes?.render(row)
         return (
           <div
             key={chave}
@@ -73,9 +74,9 @@ export default function CardList({ columns, data, rowKey, onRowClick, emptyLabel
               </div>
             )}
 
-            {colunaAcoes && (
+            {acoes && (
               <div className="mt-3 flex justify-end border-t border-ayamo-border pt-3" onClick={(e) => e.stopPropagation()}>
-                {colunaAcoes.render(row)}
+                {acoes}
               </div>
             )}
           </div>

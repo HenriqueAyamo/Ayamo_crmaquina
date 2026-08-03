@@ -17,6 +17,7 @@ import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarData, formatarPreco } from '../utils/formato.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
+import { diasSemResposta, mensagemCobrancaProposta } from '../utils/mensagensWhatsApp.js'
 
 const TONE_STATUS = {
   Rascunho: 'neutral',
@@ -55,6 +56,7 @@ export default function VendasDetalhe() {
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalCompraAberto, setModalCompraAberto] = useState(false)
   const [modalWhatsappAberto, setModalWhatsappAberto] = useState(false)
+  const [modalCobrancaAberto, setModalCobrancaAberto] = useState(false)
   const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
@@ -97,6 +99,8 @@ export default function VendasDetalhe() {
 
 Aguardamos seu retorno para seguirmos com o fechamento.`
   }
+
+  const podeCobrar = ['Rascunho', 'Enviada', 'Em negociação'].includes(proposta.status)
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
@@ -202,6 +206,15 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
             >
               Enviar via WhatsApp
             </button>
+            {podeCobrar && (
+              <button
+                type="button"
+                onClick={() => setModalCobrancaAberto(true)}
+                className="rounded border border-ayamo-warning px-3 py-1.5 text-xs font-medium text-ayamo-warning hover:bg-ayamo-bg"
+              >
+                Cobrar resposta ({diasSemResposta(proposta)}d)
+              </button>
+            )}
             <button
               type="button"
               onClick={() => navigate(`/vendas/${proposta.numero}/proforma`)}
@@ -401,6 +414,14 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
         titulo={`Enviar via WhatsApp — ${cliente?.nome ?? ''}`}
         contatos={contatosCliente}
         mensagemInicial={mensagemPropostaCliente()}
+      />
+
+      <ModalEnviarWhatsApp
+        open={modalCobrancaAberto}
+        onClose={() => setModalCobrancaAberto(false)}
+        titulo={`Cobrar resposta via WhatsApp — ${cliente?.nome ?? ''}`}
+        contatos={contatosCliente}
+        mensagemInicial={mensagemCobrancaProposta(proposta, getProduto(itemPrincipal.produtoId)?.nome ?? '')}
       />
     </div>
   )
