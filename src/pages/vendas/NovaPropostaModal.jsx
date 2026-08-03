@@ -35,6 +35,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const { ofertas, propostas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
 
   const [passo, setPasso] = useState(1)
+  const [buscaCliente, setBuscaCliente] = useState('')
   const [clientesIds, setClientesIds] = useState([])
   const [selecao, setSelecao] = useState({})
   const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
@@ -109,6 +110,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
   function fecharEResetar() {
     setPasso(1)
+    setBuscaCliente('')
     setClientesIds([])
     setSelecao({})
     setDadosProforma(valoresIniciaisProforma())
@@ -164,6 +166,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
             produtoId: oferta.produtoId,
             ofertaCodigo: oferta.codigo,
             quantidade: Number(porCliente.quantidade),
+            numeroContainers: porCliente.numeroContainers === '' || porCliente.numeroContainers == null ? null : Number(porCliente.numeroContainers),
             unidade: oferta.unidade,
             precoCusto: { ...oferta.precoCusto },
             precoVenda: { valor: Number(porCliente.precoVenda), moeda: porCliente.moedaVenda, unidade: oferta.unidade },
@@ -297,13 +300,24 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
 
       {passo === 1 && (
         <Field label="Clientes" required hint="Selecione um ou mais — uma proposta independente é criada para cada um.">
-          <div className="flex flex-col gap-1 rounded border border-ayamo-border p-2">
-            {clientes.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-ayamo-text hover:bg-ayamo-bg">
-                <input type="checkbox" checked={clientesIds.includes(String(c.id))} onChange={() => alternarCliente(String(c.id))} />
-                {c.nome} — {c.pais}
-              </label>
-            ))}
+          <input
+            className={`${inputClass} mb-2`}
+            placeholder="Buscar cliente por nome ou país..."
+            value={buscaCliente}
+            onChange={(e) => setBuscaCliente(e.target.value)}
+          />
+          <div className="flex max-h-64 flex-col gap-1 overflow-y-auto rounded border border-ayamo-border p-2">
+            {clientes
+              .filter((c) => {
+                const termo = buscaCliente.trim().toLowerCase()
+                return !termo || c.nome.toLowerCase().includes(termo) || c.pais.toLowerCase().includes(termo)
+              })
+              .map((c) => (
+                <label key={c.id} className="flex items-center gap-2 rounded px-2 py-1.5 text-sm text-ayamo-text hover:bg-ayamo-bg">
+                  <input type="checkbox" checked={clientesIds.includes(String(c.id))} onChange={() => alternarCliente(String(c.id))} />
+                  {c.nome} — {c.pais}
+                </label>
+              ))}
           </div>
         </Field>
       )}

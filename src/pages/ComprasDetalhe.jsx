@@ -175,6 +175,7 @@ export default function ComprasDetalhe() {
             <dt className="text-ayamo-text-mut">Quantidade</dt>
             <dd className="font-medium text-ayamo-text">
               {atual.quantidade == null ? 'A definir' : `${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade}`}
+              {atual.numeroContainers ? ` (${atual.numeroContainers} contêiner${atual.numeroContainers > 1 ? 'es' : ''})` : ''}
             </dd>
           </div>
           <div>

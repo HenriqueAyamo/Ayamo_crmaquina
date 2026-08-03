@@ -8,6 +8,7 @@ import CampoData from '../../components/CampoData.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
+import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 
 function valoresPO(atual) {
   return {
@@ -31,6 +32,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
   const [statusProducao, setStatusProducao] = useState(atual.statusProducao ?? 'Pronto para embarque')
   const [valor, setValor] = useState('')
   const [moeda, setMoeda] = useState(atual.precoCusto.moeda)
+  const [numeroContainers, setNumeroContainers] = useState(atual.numeroContainers ?? '')
   const [quantidade, setQuantidade] = useState(atual.quantidade ?? '')
   const [status, setStatus] = useState('Disponível')
   const [observacao, setObservacao] = useState('')
@@ -41,6 +43,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
     setStatusProducao(atual.statusProducao ?? 'Pronto para embarque')
     setValor('')
     setMoeda(atual.precoCusto.moeda)
+    setNumeroContainers(atual.numeroContainers ?? '')
     setQuantidade(atual.quantidade ?? '')
     setStatus('Disponível')
     setObservacao('')
@@ -55,6 +58,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
       statusProducao: tipoRegistro === 'Position' ? statusProducao : null,
       valor: Number(valor),
       moeda,
+      numeroContainers: numeroContainers === '' ? null : Number(numeroContainers),
       quantidade: quantidade === '' ? null : Number(quantidade),
       status,
       observacao,
@@ -119,6 +123,15 @@ export default function ModalRevisao({ open, onClose, atual }) {
             <CampoNumerico required={tipoRegistro === 'Position'} value={quantidade} onChange={setQuantidade} />
           </Field>
         </div>
+        <Field label="Número de contêineres" hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
+          <CampoNumerico
+            value={numeroContainers}
+            onChange={(valor) => {
+              setNumeroContainers(valor)
+              if (valor !== '') setQuantidade(String(Number(valor) * TONELADAS_POR_CONTAINER))
+            }}
+          />
+        </Field>
         <Field label="Status da revisão" required>
           <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="Disponível">Disponível</option>

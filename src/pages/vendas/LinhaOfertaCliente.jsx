@@ -3,6 +3,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { formatarPreco, formatarValor } from '../../utils/formato.js'
 import { MOEDAS } from '../../data/unidades.js'
 import { converterParaUSD, converterDeUSD } from '../../data/cambio.js'
+import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 
 export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada }) {
   const marcada = travada || Boolean(dados)
@@ -32,19 +33,27 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
 
       {marcada && (
         <div className="mt-3 flex flex-col gap-2">
-          <div className="grid grid-cols-[1fr_repeat(4,140px)] gap-2 text-xs font-semibold uppercase text-ayamo-text-mut">
+          <div className="grid grid-cols-[1fr_repeat(5,120px)] gap-2 text-xs font-semibold uppercase text-ayamo-text-mut">
             <span>Cliente</span>
+            <span>Contêineres</span>
             <span>Quantidade</span>
             <span>Preço de venda</span>
             <span>Moeda</span>
             <span>Total da venda</span>
           </div>
           {clientesSelecionados.map((cliente) => {
-            const porCliente = dados?.porCliente[cliente.id] ?? { quantidade: '', precoVenda: '', moedaVenda: oferta.precoCusto.moeda }
+            const porCliente = dados?.porCliente[cliente.id] ?? { quantidade: '', numeroContainers: '', precoVenda: '', moedaVenda: oferta.precoCusto.moeda }
             const totalVenda = Number(porCliente.quantidade || 0) * Number(porCliente.precoVenda || 0)
             return (
-              <div key={cliente.id} className="grid grid-cols-[1fr_repeat(4,140px)] items-center gap-2">
+              <div key={cliente.id} className="grid grid-cols-[1fr_repeat(5,120px)] items-center gap-2">
                 <span className="text-sm text-ayamo-text">{cliente.nome}</span>
+                <CampoNumerico
+                  value={porCliente.numeroContainers ?? ''}
+                  onChange={(valor) => {
+                    onAtualizar(cliente.id, 'numeroContainers', valor)
+                    if (valor !== '') onAtualizar(cliente.id, 'quantidade', String(Number(valor) * TONELADAS_POR_CONTAINER))
+                  }}
+                />
                 <CampoNumerico
                   value={porCliente.quantidade}
                   onChange={(valor) => onAtualizar(cliente.id, 'quantidade', valor)}

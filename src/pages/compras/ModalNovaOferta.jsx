@@ -9,6 +9,7 @@ import SelectBusca from '../../components/SelectBusca.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
+import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
 import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
 
@@ -27,6 +28,7 @@ function valoresIniciais() {
     valor: '',
     moeda: 'USD',
     unidade: 'ton',
+    numeroContainers: '',
     quantidade: '',
     observacao: '',
     numeroContrato: '',
@@ -144,6 +146,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       produtoId: Number(form.produtoId),
       fornecedorId: Number(form.fornecedorId),
       precoCusto: { valor: Number(form.valor), moeda: form.moeda, unidade: form.unidade },
+      numeroContainers: form.numeroContainers === '' ? null : Number(form.numeroContainers),
       quantidade: form.quantidade === '' ? null : Number(form.quantidade),
       quantidadeOriginal: form.quantidade === '' ? null : Number(form.quantidade),
       unidade: form.unidade,
@@ -320,17 +323,31 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         </div>
 
-        <Field
-          label="Quantidade"
-          required={form.tipoRegistro === 'Position'}
-          hint={form.tipoRegistro === 'Oferta' ? 'Opcional — o fornecedor pode não ter definido ainda.' : undefined}
-        >
-          <CampoNumerico
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Número de contêineres" hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
+            <CampoNumerico
+              value={form.numeroContainers}
+              onChange={(numeroContainers) =>
+                setForm({
+                  ...form,
+                  numeroContainers,
+                  quantidade: numeroContainers === '' ? form.quantidade : String(Number(numeroContainers) * TONELADAS_POR_CONTAINER),
+                })
+              }
+            />
+          </Field>
+          <Field
+            label="Quantidade (ton)"
             required={form.tipoRegistro === 'Position'}
-            value={form.quantidade}
-            onChange={(quantidade) => setForm({ ...form, quantidade })}
-          />
-        </Field>
+            hint={form.tipoRegistro === 'Oferta' ? 'Opcional — o fornecedor pode não ter definido ainda.' : undefined}
+          >
+            <CampoNumerico
+              required={form.tipoRegistro === 'Position'}
+              value={form.quantidade}
+              onChange={(quantidade) => setForm({ ...form, quantidade })}
+            />
+          </Field>
+        </div>
 
         <Field label="Observação" hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
           <textarea
