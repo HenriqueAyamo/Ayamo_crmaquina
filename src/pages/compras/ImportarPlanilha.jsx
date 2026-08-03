@@ -160,6 +160,16 @@ export default function ImportarPlanilha({ onImportado }) {
         status: 'ok',
         titulo: `${produto.nome} — ${fornecedor.nome}`,
         detalhe: `${formatarPreco(valor, moeda || 'USD', 'ton')} · ${quantidade.toLocaleString('pt-BR')} ton · Trader: ${trader.nome}`,
+        campos: [
+          { label: 'Ref.', valor: ref ? String(ref) : '' },
+          { label: 'Incoterm', valor: dadosCriacao.incoterm },
+          { label: 'Destino', valor: destino ?? '' },
+          { label: 'Embarque', valor: `${embarqueDe || '—'} → ${embarqueAte || '—'}` },
+          { label: 'Validade da oferta', valor: dadosCriacao.validadeAte },
+          { label: 'Prazo de pagamento', valor: dadosCriacao.prazoPagamento },
+          { label: 'Marca', valor: brand ?? '' },
+          { label: 'Observação', valor: dadosCriacao.observacao },
+        ],
         dadosCriacao,
       }
     })

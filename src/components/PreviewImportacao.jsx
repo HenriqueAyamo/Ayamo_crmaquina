@@ -12,11 +12,11 @@ export default function PreviewImportacao({ linhas, validas, onConfirmar, onCanc
         <p className="text-xs text-ayamo-text-mut">Confira antes de confirmar. Nada foi salvo ainda.</p>
       </div>
 
-      <div className="max-h-80 overflow-y-auto">
+      <div className="max-h-[32rem] overflow-y-auto">
         {linhas.map((linha) => (
           <div
             key={linha.numeroLinha}
-            className="flex items-start gap-3 border-b border-ayamo-border px-4 py-2.5 last:border-b-0"
+            className="flex items-start gap-3 border-b border-ayamo-border px-4 py-3 last:border-b-0"
           >
             {linha.status === 'ok' ? (
               <CheckCircle2 size={16} className="mt-0.5 flex-shrink-0 text-ayamo-success" />
@@ -27,8 +27,20 @@ export default function PreviewImportacao({ linhas, validas, onConfirmar, onCanc
               <p className="text-xs font-medium text-ayamo-text-mut">Linha {linha.numeroLinha}</p>
               {linha.status === 'ok' ? (
                 <>
-                  <p className="text-sm text-ayamo-text">{linha.titulo}</p>
+                  <p className="text-sm font-medium text-ayamo-text">{linha.titulo}</p>
                   <p className="text-xs text-ayamo-text-mut">{linha.detalhe}</p>
+                  {linha.campos?.length > 0 && (
+                    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 rounded bg-ayamo-bg p-2 sm:grid-cols-3">
+                      {linha.campos.map((campo) => (
+                        <div key={campo.label} className="min-w-0">
+                          <dt className="text-[11px] uppercase tracking-wide text-ayamo-text-mut">{campo.label}</dt>
+                          <dd className="truncate text-xs text-ayamo-text" title={campo.valor}>
+                            {campo.valor || '—'}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
                 </>
               ) : (
                 <p className="text-sm text-ayamo-danger">{linha.mensagem}</p>

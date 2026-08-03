@@ -86,6 +86,19 @@ export default function ImportarPlanilhaEmpresas({ onImportado }) {
         status: 'ok',
         titulo: nome,
         detalhe: detalhes.join(' · '),
+        campos: [
+          { label: 'País', valor: String(valorPorAlias(linha, ALIASES, 'pais') ?? existente?.pais ?? '') },
+          { label: 'Endereço', valor: String(valorPorAlias(linha, ALIASES, 'endereco') ?? existente?.endereco ?? '') },
+          { label: 'CNPJ', valor: String(valorPorAlias(linha, ALIASES, 'cnpj') ?? existente?.cnpj ?? '') },
+          { label: 'SIF', valor: String(valorPorAlias(linha, ALIASES, 'sif') ?? existente?.sif ?? '') },
+          { label: 'Marca', valor: String(valorPorAlias(linha, ALIASES, 'marca') ?? existente?.marca ?? '') },
+          { label: 'Moeda padrão', valor: String(valorPorAlias(linha, ALIASES, 'moeda') ?? 'USD') },
+          { label: 'Produto novo', valor: novoProduto ? `${novoProduto.nome} — ${novoProduto.volumeMensal} ${novoProduto.unidade}/mês` : '' },
+          {
+            label: 'Contato novo',
+            valor: contatoNovo ? `${contatoNovo.nome}${contatoNovo.cargo ? ` (${contatoNovo.cargo})` : ''} · ${contatoNovo.telefone} · ${contatoNovo.email}` : '',
+          },
+        ],
         dadosAcao: { nome, existente, novoProduto, responsavelId: responsavel?.id ?? null, contatoNovo, linha },
       }
     })
