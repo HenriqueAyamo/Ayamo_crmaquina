@@ -31,6 +31,7 @@ export default function Compras() {
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
+  const [produtoFiltro, setProdutoFiltro] = useState('')
   const [divisaoFiltro, setDivisaoFiltro] = useState('')
   const [fornecedorFiltro, setFornecedorFiltro] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
@@ -49,13 +50,14 @@ export default function Compras() {
     return ofertasAtuais.filter((o) => {
       const produto = getProduto(o.produtoId)
       const combinaBusca = !termo || produto?.nome.toLowerCase().includes(termo)
+      const combinaProduto = !produtoFiltro || o.produtoId === Number(produtoFiltro)
       const combinaDivisao = !divisaoFiltro || getDivisaoIdDeProduto(o.produtoId) === Number(divisaoFiltro)
       const combinaFornecedor = !fornecedorFiltro || o.fornecedorId === Number(fornecedorFiltro)
       const combinaStatus = !statusFiltro || o.status === statusFiltro
       const combinaTipo = !tipoFiltro || (o.tipoRegistro ?? 'Position') === tipoFiltro
-      return combinaBusca && combinaDivisao && combinaFornecedor && combinaStatus && combinaTipo
+      return combinaBusca && combinaProduto && combinaDivisao && combinaFornecedor && combinaStatus && combinaTipo
     })
-  }, [ofertasAtuais, busca, divisaoFiltro, fornecedorFiltro, statusFiltro, tipoFiltro, getProduto, getDivisaoIdDeProduto])
+  }, [ofertasAtuais, busca, produtoFiltro, divisaoFiltro, fornecedorFiltro, statusFiltro, tipoFiltro, getProduto, getDivisaoIdDeProduto])
 
   return (
     <div>
@@ -115,6 +117,16 @@ export default function Compras() {
           <FilterBar>
             <Field label="Buscar">
               <input className={inputClass} placeholder="Produto" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            </Field>
+            <Field label="Produto">
+              <select className={inputClass} value={produtoFiltro} onChange={(e) => setProdutoFiltro(e.target.value)}>
+                <option value="">Todos</option>
+                {produtosAtivos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome}
+                  </option>
+                ))}
+              </select>
             </Field>
             <Field label="Tipo">
               <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
