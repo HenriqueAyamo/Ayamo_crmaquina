@@ -25,6 +25,7 @@ const Usuarios = lazy(() => import('./pages/Usuarios.jsx'))
 const Documentos = lazy(() => import('./pages/Documentos.jsx'))
 const Settings = lazy(() => import('./pages/Settings.jsx'))
 const Training = lazy(() => import('./pages/Training.jsx'))
+const UsoIA = lazy(() => import('./pages/UsoIA.jsx'))
 
 function CarregandoPagina() {
   return <div className="p-8 text-sm text-ayamo-text-mut">Carregando...</div>
@@ -56,6 +57,7 @@ export default function App() {
               <Route path="/documentos" element={<Documentos />} />
               <Route path="/configuracoes" element={<Settings />} />
               <Route path="/training" element={<Training />} />
+              <Route path="/uso-ia" element={<UsoIA />} />
             </Route>
             <Route path="/compras/:id/po" element={<DocumentoPO />} />
             <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />

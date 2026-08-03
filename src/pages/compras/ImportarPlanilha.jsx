@@ -3,8 +3,11 @@ import { useData } from '../../DataContext.jsx'
 import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
 import { lerLinhasExcel, valorPorAlias } from '../../utils/importarExcel.js'
 import { formatarPreco } from '../../utils/formato.js'
+import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
 import UploadPlanilha from '../../components/UploadPlanilha.jsx'
 import PreviewImportacao from '../../components/PreviewImportacao.jsx'
+import Field, { inputClass } from '../../components/Field.jsx'
+import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 
 const COLUNAS_ACEITAS =
   'Ref., Product - Packing (ou Produto), Supplier (ou Fornecedor), Brand, Currency, Price, Volume FCL (ou Quantidade), Incoterm, Shipment Period, Destination, Offer Validity, Payment Term, Offer date, Purchase Trader, Comments'
@@ -63,6 +66,9 @@ export default function ImportarPlanilha({ onImportado }) {
   const { ofertas, produtos, empresas, usuarios, usuarioLogado } = useData()
   const [preview, setPreview] = useState(null)
   const [resumoFinal, setResumoFinal] = useState(null)
+  const [textoIA, setTextoIA] = useState('')
+  const [carregandoIA, setCarregandoIA] = useState(false)
+  const [erroIA, setErroIA] = useState(null)
 
   function acharProduto(nomeColuna) {
     const nome = nomeProdutoDaColuna(nomeColuna)
@@ -90,92 +96,152 @@ export default function ImportarPlanilha({ onImportado }) {
     return usuarios.items.find((u) => u.nome.toLowerCase().includes(alvo) || alvo.includes(u.nome.toLowerCase())) ?? usuarioLogado
   }
 
-  function analisarLinhas(linhas) {
+  // Recebe os campos já extraídos (de uma linha de planilha OU de uma oferta lida pela IA) e monta
+  // a linha de preview — é o ponto em comum entre os dois jeitos de importar.
+  function montarLinhaOferta(numeroLinha, bruto) {
     const hoje = new Date().toISOString().slice(0, 10)
+    const produto = acharProduto(bruto.produtoNome)
+    const fornecedor = acharFornecedor(bruto.fornecedorNome)
+    const valor = primeiroNumero(bruto.valor)
+    const quantidade = primeiroNumero(bruto.quantidade)
+    const moeda = String(bruto.moeda ?? '').trim().toUpperCase()
 
-    const linhasPreview = linhas.map((linha, index) => {
-      const numeroLinha = index + 2
-      const colunaProduto = valorPorAlias(linha, ALIASES, 'produto')
-      const produto = acharProduto(colunaProduto)
-      const fornecedor = acharFornecedor(valorPorAlias(linha, ALIASES, 'fornecedor'))
-      const valor = primeiroNumero(valorPorAlias(linha, ALIASES, 'preco'))
-      const quantidade = primeiroNumero(valorPorAlias(linha, ALIASES, 'quantidade'))
-      const moeda = String(valorPorAlias(linha, ALIASES, 'moeda') ?? '')
-        .trim()
-        .toUpperCase()
+    if (!produto) {
+      return { numeroLinha, status: 'erro', mensagem: `Produto "${bruto.produtoNome ?? ''}" não encontrado (nem por nome parecido) no cadastro` }
+    }
+    if (!fornecedor) {
+      return { numeroLinha, status: 'erro', mensagem: `Fornecedor "${bruto.fornecedorNome ?? ''}" não encontrado` }
+    }
+    if (!valor || Number.isNaN(valor)) {
+      return { numeroLinha, status: 'erro', mensagem: 'Preço inválido' }
+    }
+    if (!quantidade || Number.isNaN(quantidade)) {
+      return { numeroLinha, status: 'erro', mensagem: 'Quantidade inválida' }
+    }
 
-      if (!produto) {
-        return { numeroLinha, status: 'erro', mensagem: `Produto "${colunaProduto ?? ''}" não encontrado (nem por nome parecido) no cadastro` }
-      }
-      if (!fornecedor) {
-        return {
-          numeroLinha,
-          status: 'erro',
-          mensagem: `Fornecedor "${valorPorAlias(linha, ALIASES, 'fornecedor') ?? ''}" não encontrado`,
-        }
-      }
-      if (!valor || Number.isNaN(valor)) {
-        return { numeroLinha, status: 'erro', mensagem: 'Preço inválido' }
-      }
-      if (!quantidade || Number.isNaN(quantidade)) {
-        return { numeroLinha, status: 'erro', mensagem: 'Quantidade inválida' }
-      }
+    const trader = acharTrader(bruto.traderNome)
+    const comentariosBrutos = [
+      bruto.comentarios,
+      bruto.destino ? `Destination: ${bruto.destino}` : null,
+      bruto.brand && bruto.brand.toLowerCase() !== (fornecedor.marca ?? '').toLowerCase() ? `Brand: ${bruto.brand}` : null,
+    ]
+      .filter(Boolean)
+      .join(' — ')
 
-      const { de: embarqueDe, ate: embarqueAte } = separarPeriodo(valorPorAlias(linha, ALIASES, 'embarque'))
-      const trader = acharTrader(valorPorAlias(linha, ALIASES, 'trader'))
-      const ref = valorPorAlias(linha, ALIASES, 'ref')
-      const brand = valorPorAlias(linha, ALIASES, 'brand')
-      const destino = valorPorAlias(linha, ALIASES, 'destino')
-      const comentariosBrutos = [
-        valorPorAlias(linha, ALIASES, 'comentarios'),
-        destino ? `Destination: ${destino}` : null,
-        brand && brand.toLowerCase() !== (fornecedor.marca ?? '').toLowerCase() ? `Brand: ${brand}` : null,
-      ]
-        .filter(Boolean)
-        .join(' — ')
+    const dadosCriacao = {
+      tipoRegistro: 'Position',
+      produtoId: produto.id,
+      fornecedorId: fornecedor.id,
+      precoCusto: { valor, moeda: moeda || 'USD', unidade: 'ton' },
+      quantidade,
+      quantidadeOriginal: quantidade,
+      unidade: 'ton',
+      status: 'Disponível',
+      data: paraDataISO(bruto.data) ?? hoje,
+      usuarioId: trader.id,
+      observacao: comentariosBrutos || 'Importado de planilha.',
+      numeroContrato: bruto.ref ? String(bruto.ref) : '',
+      incoterm: String(bruto.incoterm ?? 'CFR').trim().toUpperCase(),
+      embarqueDe: bruto.embarqueDe || '',
+      embarqueAte: bruto.embarqueAte || '',
+      validadeAte: bruto.validade ?? '',
+      prazoPagamento: bruto.prazoPagamento ?? '',
+      historicoNegociacao: [],
+    }
 
-      const dadosCriacao = {
-        tipoRegistro: 'Position',
-        produtoId: produto.id,
-        fornecedorId: fornecedor.id,
-        precoCusto: { valor, moeda: moeda || 'USD', unidade: 'ton' },
-        quantidade,
-        quantidadeOriginal: quantidade,
-        unidade: 'ton',
-        status: 'Disponível',
-        data: paraDataISO(valorPorAlias(linha, ALIASES, 'data')) ?? hoje,
-        usuarioId: trader.id,
-        observacao: comentariosBrutos || 'Importado de planilha.',
-        numeroContrato: ref ? String(ref) : '',
-        incoterm: String(valorPorAlias(linha, ALIASES, 'incoterm') ?? 'CFR').trim().toUpperCase(),
-        embarqueDe,
-        embarqueAte,
-        validadeAte: valorPorAlias(linha, ALIASES, 'validade') ?? '',
-        prazoPagamento: valorPorAlias(linha, ALIASES, 'prazoPagamento') ?? '',
-        historicoNegociacao: [],
-      }
+    return {
+      numeroLinha,
+      status: 'ok',
+      titulo: `${produto.nome} — ${fornecedor.nome}`,
+      detalhe: `${formatarPreco(valor, moeda || 'USD', 'ton')} · ${quantidade.toLocaleString('pt-BR')} ton · Trader: ${trader.nome}`,
+      campos: [
+        { label: 'Ref.', valor: bruto.ref ? String(bruto.ref) : '' },
+        { label: 'Incoterm', valor: dadosCriacao.incoterm },
+        { label: 'Destino', valor: bruto.destino ?? '' },
+        { label: 'Embarque', valor: `${dadosCriacao.embarqueDe || '—'} → ${dadosCriacao.embarqueAte || '—'}` },
+        { label: 'Validade da oferta', valor: dadosCriacao.validadeAte },
+        { label: 'Prazo de pagamento', valor: dadosCriacao.prazoPagamento },
+        { label: 'Marca', valor: bruto.brand ?? '' },
+        { label: 'Observação', valor: dadosCriacao.observacao },
+      ],
+      dadosCriacao,
+    }
+  }
 
-      return {
-        numeroLinha,
-        status: 'ok',
-        titulo: `${produto.nome} — ${fornecedor.nome}`,
-        detalhe: `${formatarPreco(valor, moeda || 'USD', 'ton')} · ${quantidade.toLocaleString('pt-BR')} ton · Trader: ${trader.nome}`,
-        campos: [
-          { label: 'Ref.', valor: ref ? String(ref) : '' },
-          { label: 'Incoterm', valor: dadosCriacao.incoterm },
-          { label: 'Destino', valor: destino ?? '' },
-          { label: 'Embarque', valor: `${embarqueDe || '—'} → ${embarqueAte || '—'}` },
-          { label: 'Validade da oferta', valor: dadosCriacao.validadeAte },
-          { label: 'Prazo de pagamento', valor: dadosCriacao.prazoPagamento },
-          { label: 'Marca', valor: brand ?? '' },
-          { label: 'Observação', valor: dadosCriacao.observacao },
-        ],
-        dadosCriacao,
-      }
-    })
+  function analisarLinhasExcel(linhas) {
+    const linhasPreview = linhas.map((linha, index) =>
+      montarLinhaOferta(index + 2, {
+        ref: valorPorAlias(linha, ALIASES, 'ref'),
+        produtoNome: valorPorAlias(linha, ALIASES, 'produto'),
+        fornecedorNome: valorPorAlias(linha, ALIASES, 'fornecedor'),
+        brand: valorPorAlias(linha, ALIASES, 'brand'),
+        moeda: valorPorAlias(linha, ALIASES, 'moeda'),
+        valor: valorPorAlias(linha, ALIASES, 'preco'),
+        quantidade: valorPorAlias(linha, ALIASES, 'quantidade'),
+        incoterm: valorPorAlias(linha, ALIASES, 'incoterm'),
+        ...(({ de, ate }) => ({ embarqueDe: de, embarqueAte: ate }))(separarPeriodo(valorPorAlias(linha, ALIASES, 'embarque'))),
+        destino: valorPorAlias(linha, ALIASES, 'destino'),
+        validade: valorPorAlias(linha, ALIASES, 'validade'),
+        prazoPagamento: valorPorAlias(linha, ALIASES, 'prazoPagamento'),
+        traderNome: valorPorAlias(linha, ALIASES, 'trader'),
+        comentarios: valorPorAlias(linha, ALIASES, 'comentarios'),
+        data: valorPorAlias(linha, ALIASES, 'data'),
+      }),
+    )
 
     setResumoFinal(null)
     setPreview(linhasPreview)
+  }
+
+  function analisarOfertasIA(ofertasIA) {
+    const linhasPreview = ofertasIA.map((o, index) =>
+      montarLinhaOferta(index + 2, {
+        ref: o.ref,
+        produtoNome: o.produto,
+        fornecedorNome: o.fornecedor,
+        brand: o.brand,
+        moeda: o.moeda,
+        valor: o.preco,
+        quantidade: o.quantidade,
+        incoterm: o.incoterm,
+        embarqueDe: o.embarqueDe,
+        embarqueAte: o.embarqueAte,
+        destino: o.destino,
+        validade: o.validadeOferta,
+        prazoPagamento: o.prazoPagamento,
+        traderNome: o.trader,
+        comentarios: o.comentarios,
+        data: null,
+      }),
+    )
+
+    setResumoFinal(null)
+    setPreview(linhasPreview)
+  }
+
+  async function extrairComIA(imagemArquivo) {
+    setCarregandoIA(true)
+    setErroIA(null)
+    try {
+      const imagemBase64 = imagemArquivo ? await arquivoParaBase64(imagemArquivo) : undefined
+      const { ofertas: ofertasExtraidas } = await extrairOfertaIA({
+        texto: textoIA || undefined,
+        imagemBase64,
+        mimeType: imagemArquivo?.type,
+        tipo: 'Importação de Compras (IA)',
+        usuario: usuarioLogado.nome,
+      })
+      if (ofertasExtraidas.length === 0) {
+        setErroIA('A IA não identificou nenhuma oferta nesse conteúdo.')
+        return
+      }
+      analisarOfertasIA(ofertasExtraidas)
+      setTextoIA('')
+    } catch (erro) {
+      setErroIA(erro.message)
+    } finally {
+      setCarregandoIA(false)
+    }
   }
 
   function confirmarImportacao() {
@@ -201,9 +267,9 @@ export default function ImportarPlanilha({ onImportado }) {
   const validas = preview?.filter((l) => l.status === 'ok').length ?? 0
 
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <UploadPlanilha
-        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(analisarLinhas)}
+        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(analisarLinhasExcel)}
         hint={
           <>
             Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
@@ -213,6 +279,48 @@ export default function ImportarPlanilha({ onImportado }) {
         mensagemResumo={resumoFinal && `${resumoFinal.importadas} de ${resumoFinal.total} linha(s) importadas com sucesso.`}
         erros={resumoFinal?.erros}
       />
+
+      <SecaoRecolhivel titulo="Importar com IA (texto ou foto)" aberturaInicial={false}>
+        <div className="flex flex-col gap-3 rounded border border-dashed border-ayamo-primary/40 bg-ayamo-primary/5 p-4">
+          <p className="text-xs text-ayamo-text-mut">
+            Cole o texto de uma oferta recebida (WhatsApp, e-mail) OU envie uma foto/print — a IA identifica os campos
+            automaticamente. Nada é gravado até você conferir e confirmar, igual na importação por planilha.
+          </p>
+          <Field label="Texto da oferta (opcional se enviar imagem)">
+            <textarea
+              className={inputClass}
+              rows={4}
+              placeholder="Cole aqui o texto recebido do fornecedor/trader..."
+              value={textoIA}
+              onChange={(e) => setTextoIA(e.target.value)}
+            />
+          </Field>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="cursor-pointer rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg">
+              Selecionar imagem
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const arquivo = e.target.files[0]
+                  e.target.value = ''
+                  if (arquivo) extrairComIA(arquivo)
+                }}
+              />
+            </label>
+            <button
+              type="button"
+              disabled={!textoIA.trim() || carregandoIA}
+              onClick={() => extrairComIA(null)}
+              className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {carregandoIA ? 'Extraindo...' : 'Extrair texto com IA'}
+            </button>
+          </div>
+          {erroIA && <p className="text-sm text-ayamo-danger">{erroIA}</p>}
+        </div>
+      </SecaoRecolhivel>
 
       {preview && (
         <PreviewImportacao

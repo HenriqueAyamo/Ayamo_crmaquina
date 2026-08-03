@@ -16,6 +16,7 @@ import {
   Trophy,
   UserCircle,
   BookOpen,
+  Sparkles,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
@@ -60,6 +61,7 @@ const NAV_GROUPS = [
       { to: '/documentos', label: 'Documentos', icon: FileText },
       { to: '/configuracoes', label: 'Minha Conta', icon: UserCircle },
       { to: '/training', label: 'Training', icon: BookOpen },
+      { to: '/uso-ia', label: 'Uso de IA', icon: Sparkles },
     ],
   },
 ]
