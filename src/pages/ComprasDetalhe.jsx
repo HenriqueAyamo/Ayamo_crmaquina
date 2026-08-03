@@ -27,8 +27,18 @@ const TONE_STATUS = {
 export default function ComprasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { ofertas, empresas, getProduto, getEmpresa, getUsuario, getDivisaoIdDeProduto, divisoes, usuarioLogado, notificarLogistica } =
-    useData()
+  const {
+    ofertas,
+    empresas,
+    getProduto,
+    getEmpresa,
+    getUsuario,
+    getDivisaoIdDeProduto,
+    divisoes,
+    usuarioLogado,
+    notificarLogistica,
+    dadosAyamo,
+  } = useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalStatusAberto, setModalStatusAberto] = useState(false)
@@ -51,6 +61,7 @@ export default function ComprasDetalhe() {
   const produto = getProduto(atual.produtoId)
   const fornecedor = getEmpresa(atual.fornecedorId)
   const divisao = divisoes.items.find((d) => d.id === getDivisaoIdDeProduto(atual.produtoId))
+  const entidadeAyamo = dadosAyamo.items.find((e) => e.id === atual.ayamoEntidadeId)
 
   function excluirOferta() {
     if (!window.confirm(`Excluir a oferta ${atual.codigoBase} e todas as suas ${versoes.length} revisão(ões)? Essa ação não pode ser desfeita.`)) return
@@ -176,6 +187,50 @@ export default function ComprasDetalhe() {
           </div>
         </dl>
       </div>
+
+      <SecaoRecolhivel titulo="Informações completas" aberturaInicial>
+        <dl className="mb-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+          <div>
+            <dt className="text-ayamo-text-mut">Incoterm</dt>
+            <dd className="font-medium text-ayamo-text">{atual.incoterm || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Número do contrato</dt>
+            <dd className="font-medium text-ayamo-text">{atual.numeroContrato || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Porto de origem</dt>
+            <dd className="font-medium text-ayamo-text">{atual.portoOrigem || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Site de fabricação</dt>
+            <dd className="font-medium text-ayamo-text">{atual.mfgSite || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Embarque</dt>
+            <dd className="font-medium text-ayamo-text">
+              {atual.embarqueDe || '—'} → {atual.embarqueAte || '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Prazo de pagamento</dt>
+            <dd className="font-medium text-ayamo-text">{atual.prazoPagamento || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Oferta válida até</dt>
+            <dd className="font-medium text-ayamo-text">{atual.validadeAte || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Entidade Ayamo compradora</dt>
+            <dd className="font-medium text-ayamo-text">{entidadeAyamo?.razaoSocial || '—'}</dd>
+          </div>
+        </dl>
+
+        <div>
+          <dt className="text-sm text-ayamo-text-mut">Observação</dt>
+          <dd className="mt-1 text-sm text-ayamo-text">{atual.observacao || '—'}</dd>
+        </div>
+      </SecaoRecolhivel>
 
       {atual.incoterm === 'FOB' && (atual.tipoRegistro ?? 'Position') === 'Position' && (
         <div className="mb-6 flex items-center justify-between rounded border border-ayamo-warning/25 bg-ayamo-warning/10 p-4">
