@@ -12,6 +12,7 @@ import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
+import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarData } from '../utils/formato.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
@@ -44,6 +45,7 @@ export default function VendasDetalhe() {
     registrarUsoCreditoCliente,
     avisarConcorrenciaEstoque,
     usuarioLogado,
+    dadosAyamo,
   } = useData()
 
   const [perfil, setPerfil] = useState('Vendedor')
@@ -72,6 +74,8 @@ export default function VendasDetalhe() {
   const faltaEstoque = Math.max(0, itemPrincipal.quantidade - (ofertaVinculada?.quantidade ?? 0))
   const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
+  const entidadeAyamo = dadosAyamo.items.find((e) => e.id === proposta.ayamoEntidadeId)
+  const cliente = getEmpresa(proposta.clienteId)
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
@@ -207,6 +211,45 @@ export default function VendasDetalhe() {
           ))}
         </div>
       </div>
+
+      <SecaoRecolhivel titulo="Informações completas" aberturaInicial>
+        <dl className="mb-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
+          <div>
+            <dt className="text-ayamo-text-mut">Incoterm</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.incoterm || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Número do contrato</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.numeroContrato || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Porto de destino</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.portoDestino || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">País de destino final</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.destinoFinal || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Embarque</dt>
+            <dd className="font-medium text-ayamo-text">
+              {proposta.embarqueDe || '—'} → {proposta.embarqueAte || '—'}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Prazo de pagamento</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.prazoPagamento || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Consignatário</dt>
+            <dd className="font-medium text-ayamo-text">{proposta.consignatarioNome || cliente?.nome || '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-ayamo-text-mut">Entidade Ayamo vendedora</dt>
+            <dd className="font-medium text-ayamo-text">{entidadeAyamo?.razaoSocial || '—'}</dd>
+          </div>
+        </dl>
+      </SecaoRecolhivel>
 
       <h2 className="mb-3 text-base font-semibold text-ayamo-text">Itens</h2>
       <TabelaItensProposta proposta={proposta} perfil={perfil} getProduto={getProduto} />
