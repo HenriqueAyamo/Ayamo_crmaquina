@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
-import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
+import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
 import { lerLinhasExcel } from '../../utils/importarExcel.js'
 import { formatarPreco } from '../../utils/formato.js'
 import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
@@ -49,11 +49,6 @@ const CAMPOS_MAPEAVEIS = [
   { chave: 'comentarios', label: 'Comentários', obrigatorio: false },
 ]
 
-function nomeProdutoDaColuna(bruto) {
-  // "Product - Packing" às vezes vem como "Fish Meal 60% - Bulk" — separa só o nome do produto.
-  return String(bruto ?? '').split(' - ')[0].trim()
-}
-
 function primeiroNumero(bruto) {
   const texto = String(bruto ?? '').replace(',', '.')
   const match = texto.match(/[\d.]+/)
@@ -93,23 +88,11 @@ export default function ImportarPlanilha({ onImportado }) {
   const [erroIA, setErroIA] = useState(null)
 
   function acharProduto(nomeColuna) {
-    const nome = nomeProdutoDaColuna(nomeColuna)
-    const exato = produtos.items.find((p) => p.nome.toLowerCase() === nome.toLowerCase() || p.apelido.toLowerCase() === nome.toLowerCase())
-    if (exato) return exato
-    // Compara por nome completo E por apelido/sigla (ex.: "Chicken MDM") — a oferta às vezes vem só com a sigla.
-    const porNome = encontrarMelhorCorrespondencia(nome, produtos.items, (p) => p.nome, 0.6)
-    const porApelido = encontrarMelhorCorrespondencia(nome, produtos.items, (p) => p.apelido, 0.6)
-    const melhor = [porNome, porApelido].filter(Boolean).sort((a, b) => b.pontuacao - a.pontuacao)[0]
-    return melhor?.item ?? null
+    return acharProdutoPorNome(nomeColuna, produtos.items)
   }
 
   function acharFornecedor(nome) {
-    const alvo = String(nome ?? '').trim()
-    const fornecedoresAtivos = empresas.items.filter((e) => e.tipo === 'Fornecedor')
-    const exato = fornecedoresAtivos.find((e) => e.nome.toLowerCase() === alvo.toLowerCase())
-    if (exato) return exato
-    const aproximado = encontrarMelhorCorrespondencia(alvo, fornecedoresAtivos, (e) => e.nome, 0.6)
-    return aproximado?.item ?? null
+    return acharFornecedorPorNome(nome, empresas.items.filter((e) => e.tipo === 'Fornecedor'))
   }
 
   function acharTrader(nome) {

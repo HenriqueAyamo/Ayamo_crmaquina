@@ -9,6 +9,8 @@ import SelectBusca from '../../components/SelectBusca.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
+import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
+import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
 
 function proximoCodigo(ofertas) {
   const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', ''))).filter((n) => !Number.isNaN(n))
@@ -40,15 +42,24 @@ function valoresIniciais() {
 }
 
 export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada, inicial }) {
-  const { ofertas, dadosAyamo, usuarioLogado } = useData()
+  const { ofertas, produtos, empresas, dadosAyamo, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
   const [erros, setErros] = useState({})
+  const [iaAberto, setIaAberto] = useState(false)
+  const [textoIA, setTextoIA] = useState('')
+  const [carregandoIA, setCarregandoIA] = useState(false)
+  const [erroIA, setErroIA] = useState(null)
+  const [avisoIA, setAvisoIA] = useState(null)
   const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
   useEffect(() => {
     if (open) {
       setForm({ ...valoresIniciais(), ayamoEntidadeId: entidadesAtivas[0]?.id ?? '', ...inicial })
       setErros({})
+      setIaAberto(false)
+      setTextoIA('')
+      setErroIA(null)
+      setAvisoIA(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
@@ -57,6 +68,57 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
     setForm(valoresIniciais())
     setErros({})
     onClose()
+  }
+
+  async function extrairComIA(imagemArquivo) {
+    setCarregandoIA(true)
+    setErroIA(null)
+    setAvisoIA(null)
+    try {
+      const imagemBase64 = imagemArquivo ? await arquivoParaBase64(imagemArquivo) : undefined
+      const { ofertas: ofertasExtraidas } = await extrairOfertaIA({
+        texto: textoIA || undefined,
+        imagemBase64,
+        mimeType: imagemArquivo?.type,
+        tipo: 'Nova Oferta (IA)',
+        usuario: usuarioLogado.nome,
+      })
+      if (ofertasExtraidas.length === 0) {
+        setErroIA('A IA não identificou nenhuma oferta nesse conteúdo.')
+        return
+      }
+      const [oferta, ...resto] = ofertasExtraidas
+      const produtoEncontrado = acharProdutoPorNome(oferta.produto, produtos.items)
+      const fornecedorEncontrado = acharFornecedorPorNome(oferta.fornecedor, empresas.items.filter((e) => e.tipo === 'Fornecedor'))
+
+      setForm((atual) => ({
+        ...atual,
+        produtoId: produtoEncontrado ? String(produtoEncontrado.id) : atual.produtoId,
+        fornecedorId: fornecedorEncontrado ? String(fornecedorEncontrado.id) : atual.fornecedorId,
+        valor: oferta.preco != null ? String(oferta.preco) : atual.valor,
+        moeda: oferta.moeda || atual.moeda,
+        quantidade: oferta.quantidade != null ? String(oferta.quantidade) : atual.quantidade,
+        incoterm: oferta.incoterm || atual.incoterm,
+        numeroContrato: oferta.ref ? String(oferta.ref) : atual.numeroContrato,
+        prazoPagamento: oferta.prazoPagamento || atual.prazoPagamento,
+        embarqueDe: oferta.embarqueDe || atual.embarqueDe,
+        embarqueAte: oferta.embarqueAte || atual.embarqueAte,
+        validadeAte: oferta.validadeOferta || atual.validadeAte,
+        observacao: oferta.comentarios || atual.observacao,
+      }))
+
+      const avisos = []
+      if (!produtoEncontrado) avisos.push(`produto "${oferta.produto}" não reconhecido — selecione manualmente`)
+      if (!fornecedorEncontrado) avisos.push(`fornecedor "${oferta.fornecedor}" não reconhecido — selecione manualmente`)
+      if (resto.length > 0) avisos.push(`${resto.length} outra(s) oferta(s) detectada(s) no texto foram ignoradas — esse formulário só cria uma por vez`)
+      setAvisoIA(avisos.length > 0 ? avisos.join('; ') + '.' : 'Campos preenchidos pela IA — revise antes de salvar.')
+      setIaAberto(false)
+      setTextoIA('')
+    } catch (erro) {
+      setErroIA(erro.message)
+    } finally {
+      setCarregandoIA(false)
+    }
   }
 
   function salvar(e) {
@@ -104,13 +166,59 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="oferta-form" />}
     >
       <form id="oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <button
-          type="button"
-          disabled
-          className="flex w-fit items-center rounded border border-dashed border-ayamo-border px-3 py-1.5 text-xs text-ayamo-text-mut opacity-60"
-        >
-          Importar de imagem (IA) — em breve
-        </button>
+        <div>
+          <button
+            type="button"
+            onClick={() => setIaAberto((atual) => !atual)}
+            className="flex w-fit items-center rounded border border-dashed border-ayamo-primary/50 px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-primary/5"
+          >
+            {iaAberto ? 'Fechar' : 'Importar de texto ou imagem (IA)'}
+          </button>
+
+          {iaAberto && (
+            <div className="mt-2 flex flex-col gap-3 rounded border border-dashed border-ayamo-primary/40 bg-ayamo-primary/5 p-3">
+              <p className="text-xs text-ayamo-text-mut">
+                Cole o texto de uma oferta recebida ou envie uma foto — a IA preenche os campos abaixo pra você revisar
+                antes de salvar. Nada é criado até você clicar em Salvar.
+              </p>
+              <textarea
+                className={inputClass}
+                rows={3}
+                placeholder="Cole aqui o texto recebido do fornecedor/trader..."
+                value={textoIA}
+                onChange={(e) => setTextoIA(e.target.value)}
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="cursor-pointer rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg">
+                  Selecionar imagem
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const arquivo = e.target.files[0]
+                      e.target.value = ''
+                      if (arquivo) extrairComIA(arquivo)
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  disabled={!textoIA.trim() || carregandoIA}
+                  onClick={() => extrairComIA(null)}
+                  className="rounded bg-ayamo-primary px-4 py-2 text-xs font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {carregandoIA ? 'Extraindo...' : 'Extrair texto com IA'}
+                </button>
+              </div>
+              {erroIA && <p className="text-xs text-ayamo-danger">{erroIA}</p>}
+            </div>
+          )}
+
+          {avisoIA && !iaAberto && (
+            <p className={`mt-2 text-xs ${avisoIA.includes('não reconhecido') ? 'text-ayamo-warning' : 'text-ayamo-success'}`}>{avisoIA}</p>
+          )}
+        </div>
 
         <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
           <div className="flex gap-2">
