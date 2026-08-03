@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
-import { lerLinhasExcel, valorPorAlias } from '../../utils/importarExcel.js'
+import { lerLinhasExcel } from '../../utils/importarExcel.js'
 import { formatarPreco } from '../../utils/formato.js'
 import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
 import UploadPlanilha from '../../components/UploadPlanilha.jsx'
 import PreviewImportacao from '../../components/PreviewImportacao.jsx'
+import MapeamentoColunas from '../../components/MapeamentoColunas.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 
@@ -29,6 +30,24 @@ const ALIASES = {
   trader: ['purchase trader', 'trader', 'comprador'],
   comentarios: ['comments', 'comentarios', 'comentários', 'business', 'market'],
 }
+
+const CAMPOS_MAPEAVEIS = [
+  { chave: 'produto', label: 'Produto', obrigatorio: true },
+  { chave: 'fornecedor', label: 'Fornecedor', obrigatorio: true },
+  { chave: 'preco', label: 'Preço', obrigatorio: true },
+  { chave: 'quantidade', label: 'Quantidade', obrigatorio: true },
+  { chave: 'moeda', label: 'Moeda', obrigatorio: false },
+  { chave: 'incoterm', label: 'Incoterm', obrigatorio: false },
+  { chave: 'ref', label: 'Referência', obrigatorio: false },
+  { chave: 'brand', label: 'Marca', obrigatorio: false },
+  { chave: 'embarque', label: 'Período de embarque', obrigatorio: false },
+  { chave: 'destino', label: 'Destino', obrigatorio: false },
+  { chave: 'validade', label: 'Validade da oferta', obrigatorio: false },
+  { chave: 'prazoPagamento', label: 'Prazo de pagamento', obrigatorio: false },
+  { chave: 'data', label: 'Data da oferta', obrigatorio: false },
+  { chave: 'trader', label: 'Trader / Comprador', obrigatorio: false },
+  { chave: 'comentarios', label: 'Comentários', obrigatorio: false },
+]
 
 function nomeProdutoDaColuna(bruto) {
   // "Product - Packing" às vezes vem como "Fish Meal 60% - Bulk" — separa só o nome do produto.
@@ -66,6 +85,9 @@ export default function ImportarPlanilha({ onImportado }) {
   const { ofertas, produtos, empresas, usuarios, usuarioLogado } = useData()
   const [preview, setPreview] = useState(null)
   const [resumoFinal, setResumoFinal] = useState(null)
+  const [linhasBrutas, setLinhasBrutas] = useState(null)
+  const [colunasDetectadas, setColunasDetectadas] = useState([])
+  const [mapeamento, setMapeamento] = useState({})
   const [textoIA, setTextoIA] = useState('')
   const [carregandoIA, setCarregandoIA] = useState(false)
   const [erroIA, setErroIA] = useState(null)
@@ -168,28 +190,48 @@ export default function ImportarPlanilha({ onImportado }) {
     }
   }
 
-  function analisarLinhasExcel(linhas) {
-    const linhasPreview = linhas.map((linha, index) =>
-      montarLinhaOferta(index + 2, {
-        ref: valorPorAlias(linha, ALIASES, 'ref'),
-        produtoNome: valorPorAlias(linha, ALIASES, 'produto'),
-        fornecedorNome: valorPorAlias(linha, ALIASES, 'fornecedor'),
-        brand: valorPorAlias(linha, ALIASES, 'brand'),
-        moeda: valorPorAlias(linha, ALIASES, 'moeda'),
-        valor: valorPorAlias(linha, ALIASES, 'preco'),
-        quantidade: valorPorAlias(linha, ALIASES, 'quantidade'),
-        incoterm: valorPorAlias(linha, ALIASES, 'incoterm'),
-        ...(({ de, ate }) => ({ embarqueDe: de, embarqueAte: ate }))(separarPeriodo(valorPorAlias(linha, ALIASES, 'embarque'))),
-        destino: valorPorAlias(linha, ALIASES, 'destino'),
-        validade: valorPorAlias(linha, ALIASES, 'validade'),
-        prazoPagamento: valorPorAlias(linha, ALIASES, 'prazoPagamento'),
-        traderNome: valorPorAlias(linha, ALIASES, 'trader'),
-        comentarios: valorPorAlias(linha, ALIASES, 'comentarios'),
-        data: valorPorAlias(linha, ALIASES, 'data'),
-      }),
-    )
-
+  function iniciarMapeamento(linhas) {
     setResumoFinal(null)
+    if (linhas.length === 0) {
+      setResumoFinal({ total: 0, importadas: 0, erros: ['A planilha não tem nenhuma linha de dados.'] })
+      return
+    }
+    const colunas = Object.keys(linhas[0])
+    const sugestao = {}
+    CAMPOS_MAPEAVEIS.forEach(({ chave }) => {
+      const aliasesCampo = ALIASES[chave] ?? []
+      sugestao[chave] = colunas.find((c) => aliasesCampo.includes(c.trim().toLowerCase())) ?? ''
+    })
+    setColunasDetectadas(colunas)
+    setMapeamento(sugestao)
+    setLinhasBrutas(linhas)
+  }
+
+  function aplicarMapeamento() {
+    const linhasPreview = linhasBrutas.map((linha, index) => {
+      const valorDaColuna = (chave) => (mapeamento[chave] ? linha[mapeamento[chave]] : undefined)
+      const { de: embarqueDe, ate: embarqueAte } = separarPeriodo(valorDaColuna('embarque'))
+      return montarLinhaOferta(index + 2, {
+        ref: valorDaColuna('ref'),
+        produtoNome: valorDaColuna('produto'),
+        fornecedorNome: valorDaColuna('fornecedor'),
+        brand: valorDaColuna('brand'),
+        moeda: valorDaColuna('moeda'),
+        valor: valorDaColuna('preco'),
+        quantidade: valorDaColuna('quantidade'),
+        incoterm: valorDaColuna('incoterm'),
+        embarqueDe,
+        embarqueAte,
+        destino: valorDaColuna('destino'),
+        validade: valorDaColuna('validade'),
+        prazoPagamento: valorDaColuna('prazoPagamento'),
+        traderNome: valorDaColuna('trader'),
+        comentarios: valorDaColuna('comentarios'),
+        data: valorDaColuna('data'),
+      })
+    })
+
+    setLinhasBrutas(null)
     setPreview(linhasPreview)
   }
 
@@ -269,16 +311,28 @@ export default function ImportarPlanilha({ onImportado }) {
   return (
     <div className="flex flex-col gap-3">
       <UploadPlanilha
-        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(analisarLinhasExcel)}
+        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(iniciarMapeamento)}
         hint={
           <>
-            Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
-            Fornecedor podem bater por nome parecido, não precisa ser idêntico.
+            Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Se a sua
+            planilha usar outros nomes de coluna, tudo bem — o próximo passo deixa você confirmar o mapeamento.
           </>
         }
         mensagemResumo={resumoFinal && `${resumoFinal.importadas} de ${resumoFinal.total} linha(s) importadas com sucesso.`}
         erros={resumoFinal?.erros}
       />
+
+      {linhasBrutas && (
+        <MapeamentoColunas
+          campos={CAMPOS_MAPEAVEIS}
+          colunasDetectadas={colunasDetectadas}
+          mapeamento={mapeamento}
+          onMudarCampo={(chave, coluna) => setMapeamento((atual) => ({ ...atual, [chave]: coluna }))}
+          totalLinhas={linhasBrutas.length}
+          onCancelar={() => setLinhasBrutas(null)}
+          onContinuar={aplicarMapeamento}
+        />
+      )}
 
       <SecaoRecolhivel titulo="Importar com IA (texto ou foto)" aberturaInicial={false}>
         <div className="flex flex-col gap-3 rounded border border-dashed border-ayamo-primary/40 bg-ayamo-primary/5 p-4">
