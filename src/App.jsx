@@ -12,6 +12,7 @@ const Vendas = lazy(() => import('./pages/Vendas.jsx'))
 const VendasDetalhe = lazy(() => import('./pages/VendasDetalhe.jsx'))
 const DocumentoProforma = lazy(() => import('./pages/vendas/DocumentoProforma.jsx'))
 const Demandas = lazy(() => import('./pages/Demandas.jsx'))
+const Pendencias = lazy(() => import('./pages/Pendencias.jsx'))
 const PurchaseDashboard = lazy(() => import('./pages/PurchaseDashboard.jsx'))
 const Claims = lazy(() => import('./pages/Claims.jsx'))
 const Qualifications = lazy(() => import('./pages/Qualifications.jsx'))
@@ -44,6 +45,7 @@ export default function App() {
               <Route path="/vendas" element={<Vendas />} />
               <Route path="/vendas/:id" element={<VendasDetalhe />} />
               <Route path="/demandas" element={<Demandas />} />
+              <Route path="/pendencias" element={<Pendencias />} />
               <Route path="/compras/painel" element={<PurchaseDashboard />} />
               <Route path="/claims" element={<Claims />} />
               <Route path="/qualificacoes" element={<Qualifications />} />

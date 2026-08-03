@@ -17,13 +17,17 @@ import {
   UserCircle,
   BookOpen,
   Sparkles,
+  AlertCircle,
 } from 'lucide-react'
 import LogoMark from '../components/LogoMark.jsx'
 
 const NAV_GROUPS = [
   {
     label: null,
-    items: [{ to: '/', label: 'Início', icon: Home, end: true }],
+    items: [
+      { to: '/', label: 'Início', icon: Home, end: true },
+      { to: '/pendencias', label: 'Pendências', icon: AlertCircle },
+    ],
   },
   {
     label: 'Trading',

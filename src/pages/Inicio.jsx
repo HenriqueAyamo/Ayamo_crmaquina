@@ -110,18 +110,25 @@ export default function Inicio() {
         <CartaoNumerico label="Documentos emitidos no mês" valor={documentosNoMes} />
       </div>
 
-      <div className="mb-3 flex items-center gap-2">
-        <AlertCircle size={16} className="text-ayamo-accent" />
-        <h2 className="text-base font-semibold text-ayamo-text">
-          Minhas pendências <span className="font-normal text-ayamo-text-mut">— visão de {usuarioLogado.nome} ({usuarioLogado.perfil})</span>
-        </h2>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle size={16} className="text-ayamo-accent" />
+          <h2 className="text-base font-semibold text-ayamo-text">
+            Minhas pendências <span className="font-normal text-ayamo-text-mut">— visão de {usuarioLogado.nome} ({usuarioLogado.perfil})</span>
+          </h2>
+        </div>
+        {pendencias.length > 0 && (
+          <button type="button" onClick={() => navigate('/pendencias')} className="text-sm text-ayamo-primary hover:underline">
+            Ver todas ({pendencias.length})
+          </button>
+        )}
       </div>
 
       {pendencias.length === 0 ? (
         <EmptyState title="Nada pendente para este usuário" description="Troque o usuário logado no topo da tela para ver outra visão." />
       ) : (
         <ul className="mb-8 flex flex-col gap-2">
-          {pendencias.map((p) => (
+          {pendencias.slice(0, 5).map((p) => (
             <li key={`${p.tipo}-${p.id}-${p.data}`}>
               <button
                 type="button"
