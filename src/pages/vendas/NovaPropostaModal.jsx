@@ -8,6 +8,7 @@ import PassoDadosProforma from './PassoDadosProforma.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { useAutoSaveRascunho } from '../../hooks/useAutoSaveRascunho.js'
 import { obterOfertasAtuais } from '../../utils/ofertasAtuais.js'
+import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 
 const CHAVE_RASCUNHO = 'ayamo_crm_v1_rascunho_novaProposta'
 
@@ -41,6 +42,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   const [dadosProforma, setDadosProforma] = useState(valoresIniciaisProforma())
   const [margemMinima, setMargemMinima] = useState('10')
   const [margemMinimaTipo, setMargemMinimaTipo] = useState('percentual')
+  const [mixContainer, setMixContainer] = useState(false)
   const [mostrarRestaurar, setMostrarRestaurar] = useState(false)
 
   const autoSaveAtivo = !ofertaFixa && !clienteFixo
@@ -70,9 +72,9 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   useEffect(() => {
     if (!autoSaveAtivo || !open || mostrarRestaurar) return
     if (clientesIds.length === 0 && passo === 1) return
-    salvarRascunho({ passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo })
+    salvarRascunho({ passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo, mixContainer })
     // eslint-disable-next-line react-hooks/exhaustive-deps -- salvarRascunho é estável o suficiente; evita loop por identidade de função
-  }, [autoSaveAtivo, open, mostrarRestaurar, passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo])
+  }, [autoSaveAtivo, open, mostrarRestaurar, passo, clientesIds, selecao, dadosProforma, margemMinima, margemMinimaTipo, mixContainer])
 
   function restaurarRascunho() {
     const dados = rascunho?.dados
@@ -83,6 +85,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       setDadosProforma(dados.dadosProforma ?? valoresIniciaisProforma())
       setMargemMinima(dados.margemMinima ?? '10')
       setMargemMinimaTipo(dados.margemMinimaTipo ?? 'percentual')
+      setMixContainer(dados.mixContainer ?? false)
     }
     setMostrarRestaurar(false)
   }
@@ -116,6 +119,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
     setDadosProforma(valoresIniciaisProforma())
     setMargemMinima('10')
     setMargemMinimaTipo('percentual')
+    setMixContainer(false)
     onClose()
   }
 
@@ -183,6 +187,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         status: 'Rascunho',
         dataEnvio: hoje,
         grupoEnvioId,
+        mixContainer,
         margemMinima: Number(margemMinima) || 0,
         margemMinimaTipo,
         itens: itensCliente,
@@ -354,6 +359,13 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
               vai precisar repor o estoque, e o sistema avisa o vendedor da outra proposta se essa oferta esgotar.
             </p>
           )}
+          {Object.keys(selecao).length > 1 && !ofertaFixa && (
+            <label className="flex items-center gap-2 rounded border border-ayamo-border bg-ayamo-surface px-3 py-2 text-sm text-ayamo-text">
+              <input type="checkbox" checked={mixContainer} onChange={(e) => setMixContainer(e.target.checked)} />
+              Mix container — estes produtos serão embarcados juntos, compartilhando os mesmos contêineres
+            </label>
+          )}
+
           {ofertasDisponiveis.map((oferta) => (
             <LinhaOfertaCliente
               key={oferta.id}
@@ -363,9 +375,29 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
               dados={selecao[oferta.id]}
               onToggle={alternarOferta}
               travada={Boolean(ofertaFixa)}
+              mixContainer={mixContainer}
               onAtualizar={(clienteId, campo, valor) => atualizarSelecaoCliente(oferta.id, clienteId, campo, valor)}
             />
           ))}
+
+          {mixContainer && clientesSelecionados.length > 0 && (
+            <div className="rounded border border-ayamo-accent/40 bg-ayamo-accent/10 p-3 text-sm">
+              <p className="mb-1 font-medium text-ayamo-text">Contêineres compartilhados (mix container)</p>
+              {clientesSelecionados.map((cliente) => {
+                const totalTon = Object.values(selecao).reduce(
+                  (soma, dados) => soma + Number(dados.porCliente[cliente.id]?.quantidade || 0),
+                  0,
+                )
+                const containersEquivalentes = Math.ceil(totalTon / TONELADAS_POR_CONTAINER)
+                return (
+                  <p key={cliente.id} className="text-ayamo-text-mut">
+                    {cliente.nome}: {totalTon.toLocaleString('pt-BR')} ton ≈ {containersEquivalentes} contêiner
+                    {containersEquivalentes === 1 ? '' : 'es'} de {TONELADAS_POR_CONTAINER}t
+                  </p>
+                )
+              })}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Margem mínima aceitável" hint="Piso usado para colorir a margem em Vendas — não é mais fixo em 3%.">

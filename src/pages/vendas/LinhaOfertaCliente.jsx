@@ -5,7 +5,7 @@ import { MOEDAS } from '../../data/unidades.js'
 import { converterParaUSD, converterDeUSD } from '../../data/cambio.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 
-export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada }) {
+export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSelecionados, dados, onToggle, onAtualizar, travada, mixContainer }) {
   const marcada = travada || Boolean(dados)
   const totalAlocado = dados
     ? clientesSelecionados.reduce((soma, c) => soma + Number(dados.porCliente[c.id]?.quantidade || 0), 0)
@@ -47,13 +47,19 @@ export default function LinhaOfertaCliente({ oferta, produtoNome, clientesSeleci
             return (
               <div key={cliente.id} className="grid grid-cols-[1fr_repeat(5,120px)] items-center gap-2">
                 <span className="text-sm text-ayamo-text">{cliente.nome}</span>
-                <CampoNumerico
-                  value={porCliente.numeroContainers ?? ''}
-                  onChange={(valor) => {
-                    onAtualizar(cliente.id, 'numeroContainers', valor)
-                    if (valor !== '') onAtualizar(cliente.id, 'quantidade', String(Number(valor) * TONELADAS_POR_CONTAINER))
-                  }}
-                />
+                {mixContainer ? (
+                  <span className="text-xs text-ayamo-text-mut" title="Contêineres compartilhados entre os produtos deste mix — veja o resumo abaixo">
+                    Compartilhado
+                  </span>
+                ) : (
+                  <CampoNumerico
+                    value={porCliente.numeroContainers ?? ''}
+                    onChange={(valor) => {
+                      onAtualizar(cliente.id, 'numeroContainers', valor)
+                      if (valor !== '') onAtualizar(cliente.id, 'quantidade', String(Number(valor) * TONELADAS_POR_CONTAINER))
+                    }}
+                  />
+                )}
                 <CampoNumerico
                   value={porCliente.quantidade}
                   onChange={(valor) => onAtualizar(cliente.id, 'quantidade', valor)}

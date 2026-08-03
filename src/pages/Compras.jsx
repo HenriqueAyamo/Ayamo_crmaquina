@@ -11,6 +11,7 @@ import SeloValidade from '../components/SeloValidade.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
+import ModalNovaOfertaAgrupada from './compras/ModalNovaOfertaAgrupada.jsx'
 import HistoricoPreco from './compras/HistoricoPreco.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { exportarOfertasExcel } from '../utils/exportarOfertas.js'
@@ -37,6 +38,7 @@ export default function Compras() {
   const [statusFiltro, setStatusFiltro] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [modalAberto, setModalAberto] = useState(false)
+  const [modalAgrupadaAberto, setModalAgrupadaAberto] = useState(false)
   const [importarAberto, setImportarAberto] = useState(false)
   const [aba, setAba] = useState('ofertas')
 
@@ -83,6 +85,13 @@ export default function Compras() {
         </div>
         {aba === 'ofertas' && (
           <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setModalAgrupadaAberto(true)}
+              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
+            >
+              Oferta mix container
+            </button>
             <button
               type="button"
               onClick={() => setImportarAberto((atual) => !atual)}
@@ -248,6 +257,14 @@ export default function Compras() {
         produtosAtivos={produtosAtivos}
         fornecedores={fornecedores}
         onCriada={(nova) => navigate(`/compras/${nova.codigoBase}`)}
+      />
+
+      <ModalNovaOfertaAgrupada
+        open={modalAgrupadaAberto}
+        onClose={() => setModalAgrupadaAberto(false)}
+        produtosAtivos={produtosAtivos}
+        fornecedores={fornecedores}
+        onCriada={(novas) => navigate(`/compras/${novas[0].codigoBase}`)}
       />
     </div>
   )

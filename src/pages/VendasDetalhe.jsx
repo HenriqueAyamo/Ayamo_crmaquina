@@ -18,6 +18,7 @@ import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarData, formatarPreco } from '../utils/formato.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
 import { diasSemResposta, mensagemCobrancaProposta } from '../utils/mensagensWhatsApp.js'
+import { TONELADAS_POR_CONTAINER } from '../data/toneladasPorContainer.js'
 
 const TONE_STATUS = {
   Rascunho: 'neutral',
@@ -310,7 +311,22 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
         </dl>
       </SecaoRecolhivel>
 
-      <h2 className="mb-3 text-base font-semibold text-ayamo-text">Itens</h2>
+      <div className="mb-3 flex items-center gap-2">
+        <h2 className="text-base font-semibold text-ayamo-text">Itens</h2>
+        {proposta.mixContainer && (
+          <span className="rounded-full border border-ayamo-accent/40 bg-ayamo-accent/10 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-ayamo-accent">
+            Mix container
+          </span>
+        )}
+      </div>
+      {proposta.mixContainer && (
+        <p className="mb-3 text-xs text-ayamo-text-mut">
+          Produtos embarcados juntos, contêineres compartilhados — total:{' '}
+          {proposta.itens.reduce((soma, i) => soma + i.quantidade, 0).toLocaleString('pt-BR')} ton ≈{' '}
+          {Math.ceil(proposta.itens.reduce((soma, i) => soma + i.quantidade, 0) / TONELADAS_POR_CONTAINER)} contêiner(es) de{' '}
+          {TONELADAS_POR_CONTAINER}t.
+        </p>
+      )}
       <TabelaItensProposta proposta={proposta} perfil={perfil} getProduto={getProduto} />
       {perfil === 'Vendedor' && nota && <p className="mb-6 text-xs text-ayamo-text-mut">{nota}</p>}
       {perfil !== 'Vendedor' && <div className="mb-6" />}

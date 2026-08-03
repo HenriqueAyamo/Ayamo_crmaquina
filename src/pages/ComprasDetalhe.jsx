@@ -17,6 +17,7 @@ import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
+import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 
 const TONE_STATUS = {
   Disponível: 'success',
@@ -66,6 +67,9 @@ export default function ComprasDetalhe() {
   const divisao = divisoes.items.find((d) => d.id === getDivisaoIdDeProduto(atual.produtoId))
   const entidadeAyamo = dadosAyamo.items.find((e) => e.id === atual.ayamoEntidadeId)
   const contatosFornecedor = contatos.items.filter((c) => c.empresaId === atual.fornecedorId)
+  const ofertasIrmas = atual.grupoContainerId
+    ? obterOfertasAtuais(ofertas.items).filter((o) => o.grupoContainerId === atual.grupoContainerId && o.codigoBase !== atual.codigoBase)
+    : []
 
   function mensagemNegociacaoFornecedor() {
     return `Olá! Sobre a negociação de ${produto?.nome ?? ''} (${atual.codigo}):
@@ -213,6 +217,25 @@ Poderia confirmar se segue tudo certo ou se há alguma atualização?`
         </dl>
       </div>
 
+      {ofertasIrmas.length > 0 && (
+        <div className="mb-6 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-4 py-3 text-sm text-ayamo-text">
+          Parte de um pedido mix container ({ofertasIrmas.length + 1} produtos, {atual.tipoContainer || 'contêiner'}).
+          Outras ofertas do mesmo pedido:{' '}
+          {ofertasIrmas.map((o, i) => (
+            <span key={o.id}>
+              {i > 0 && ', '}
+              <button
+                type="button"
+                onClick={() => navigate(`/compras/${o.codigoBase}`)}
+                className="font-medium text-ayamo-primary hover:underline"
+              >
+                {o.codigo} ({getProduto(o.produtoId)?.nome})
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       <SecaoRecolhivel titulo="Informações completas" aberturaInicial>
         <dl className="mb-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
@@ -249,6 +272,12 @@ Poderia confirmar se segue tudo certo ou se há alguma atualização?`
             <dt className="text-ayamo-text-mut">Entidade Ayamo compradora</dt>
             <dd className="font-medium text-ayamo-text">{entidadeAyamo?.razaoSocial || '—'}</dd>
           </div>
+          {atual.tipoContainer && (
+            <div>
+              <dt className="text-ayamo-text-mut">Tipo de contêiner</dt>
+              <dd className="font-medium text-ayamo-text">{atual.tipoContainer}</dd>
+            </div>
+          )}
         </dl>
 
         <div>
