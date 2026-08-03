@@ -9,6 +9,7 @@ import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
+import ModalEnviarWhatsApp from '../components/ModalEnviarWhatsApp.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
@@ -30,6 +31,7 @@ export default function ComprasDetalhe() {
   const {
     ofertas,
     empresas,
+    contatos,
     getProduto,
     getEmpresa,
     getUsuario,
@@ -44,6 +46,7 @@ export default function ComprasDetalhe() {
   const [modalStatusAberto, setModalStatusAberto] = useState(false)
   const [modalVendaAberto, setModalVendaAberto] = useState(false)
   const [modalEnviarAberto, setModalEnviarAberto] = useState(false)
+  const [modalWhatsappAberto, setModalWhatsappAberto] = useState(false)
   const podeNegociar = ['Comprador', 'Administrador'].includes(usuarioLogado.perfil)
   const podeVender = ['Vendedor', 'Administrador'].includes(usuarioLogado.perfil)
   const podeExcluir = podeExcluirRegistros(usuarioLogado.perfil)
@@ -62,6 +65,20 @@ export default function ComprasDetalhe() {
   const fornecedor = getEmpresa(atual.fornecedorId)
   const divisao = divisoes.items.find((d) => d.id === getDivisaoIdDeProduto(atual.produtoId))
   const entidadeAyamo = dadosAyamo.items.find((e) => e.id === atual.ayamoEntidadeId)
+  const contatosFornecedor = contatos.items.filter((c) => c.empresaId === atual.fornecedorId)
+
+  function mensagemNegociacaoFornecedor() {
+    return `Olá! Sobre a negociação de ${produto?.nome ?? ''} (${atual.codigo}):
+
+- Preço atual: ${formatarPreco(atual.precoCusto.valor, atual.precoCusto.moeda, atual.precoCusto.unidade)}
+- Quantidade: ${atual.quantidade == null ? 'a definir' : `${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade}`}${atual.numeroContainers ? ` (${atual.numeroContainers} contêiner${atual.numeroContainers > 1 ? 'es' : ''})` : ''}
+- Incoterm: ${atual.incoterm || '—'}
+- Embarque: ${atual.embarqueDe || 'a definir'} até ${atual.embarqueAte || 'a definir'}
+- Prazo de pagamento: ${atual.prazoPagamento || '—'}
+- Validade da oferta: ${atual.validadeAte || '—'}
+
+Poderia confirmar se segue tudo certo ou se há alguma atualização?`
+  }
 
   function excluirOferta() {
     if (!window.confirm(`Excluir a oferta ${atual.codigoBase} e todas as suas ${versoes.length} revisão(ões)? Essa ação não pode ser desfeita.`)) return
@@ -133,6 +150,13 @@ export default function ComprasDetalhe() {
                   className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
                 >
                   Registrar contato com fornecedor
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalWhatsappAberto(true)}
+                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-success hover:bg-ayamo-bg"
+                >
+                  Enviar via WhatsApp
                 </button>
                 <button
                   type="button"
@@ -321,6 +345,13 @@ export default function ComprasDetalhe() {
         produto={produto}
         fornecedor={fornecedor}
         clientes={clientes}
+      />
+      <ModalEnviarWhatsApp
+        open={modalWhatsappAberto}
+        onClose={() => setModalWhatsappAberto(false)}
+        titulo={`Enviar via WhatsApp — ${fornecedor?.nome ?? ''}`}
+        contatos={contatosFornecedor}
+        mensagemInicial={mensagemNegociacaoFornecedor()}
       />
     </div>
   )

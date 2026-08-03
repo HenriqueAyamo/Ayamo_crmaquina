@@ -10,11 +10,12 @@ import TabelaItensProposta from './vendas/TabelaItensProposta.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
+import ModalEnviarWhatsApp from '../components/ModalEnviarWhatsApp.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
-import { formatarData } from '../utils/formato.js'
+import { formatarData, formatarPreco } from '../utils/formato.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
 
 const TONE_STATUS = {
@@ -36,6 +37,7 @@ export default function VendasDetalhe() {
     ofertas,
     produtos,
     empresas,
+    contatos,
     getEmpresa,
     getUsuario,
     getProduto,
@@ -52,6 +54,7 @@ export default function VendasDetalhe() {
   const [modalFechamentoAberto, setModalFechamentoAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalCompraAberto, setModalCompraAberto] = useState(false)
+  const [modalWhatsappAberto, setModalWhatsappAberto] = useState(false)
   const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
@@ -76,6 +79,21 @@ export default function VendasDetalhe() {
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
   const entidadeAyamo = dadosAyamo.items.find((e) => e.id === proposta.ayamoEntidadeId)
   const cliente = getEmpresa(proposta.clienteId)
+  const contatosCliente = contatos.items.filter((c) => c.empresaId === proposta.clienteId)
+
+  function mensagemPropostaCliente() {
+    const produtoNome = getProduto(itemPrincipal.produtoId)?.nome ?? ''
+    return `Olá! Sobre a proposta ${proposta.numero} (${produtoNome}):
+
+- Quantidade: ${itemPrincipal.quantidade.toLocaleString('pt-BR')} ${itemPrincipal.unidade}${itemPrincipal.numeroContainers ? ` (${itemPrincipal.numeroContainers} contêiner${itemPrincipal.numeroContainers > 1 ? 'es' : ''})` : ''}
+- Preço: ${formatarPreco(itemPrincipal.precoVenda.valor, itemPrincipal.precoVenda.moeda, itemPrincipal.precoVenda.unidade)}
+- Incoterm: ${proposta.incoterm || '—'}
+- Embarque: ${proposta.embarqueDe || 'a definir'} até ${proposta.embarqueAte || 'a definir'}
+- Prazo de pagamento: ${proposta.prazoPagamento || '—'}
+- Status atual: ${proposta.status}
+
+Aguardamos seu retorno para seguirmos com o fechamento.`
+  }
 
   function registrarRodada(tipo, dados) {
     const rodada = proposta.historicoNegociacao.length + 1
@@ -174,6 +192,13 @@ export default function VendasDetalhe() {
           </div>
           <div className="flex items-center gap-3">
             <StatusBadge label={proposta.status} tone={TONE_STATUS[proposta.status] ?? 'neutral'} />
+            <button
+              type="button"
+              onClick={() => setModalWhatsappAberto(true)}
+              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-success hover:bg-ayamo-bg"
+            >
+              Enviar via WhatsApp
+            </button>
             <button
               type="button"
               onClick={() => navigate(`/vendas/${proposta.numero}/proforma`)}
@@ -348,6 +373,14 @@ export default function VendasDetalhe() {
           onCriada={(nova) => navigate(`/compras/${nova.codigoBase}`)}
         />
       )}
+
+      <ModalEnviarWhatsApp
+        open={modalWhatsappAberto}
+        onClose={() => setModalWhatsappAberto(false)}
+        titulo={`Enviar via WhatsApp — ${cliente?.nome ?? ''}`}
+        contatos={contatosCliente}
+        mensagemInicial={mensagemPropostaCliente()}
+      />
     </div>
   )
 }
