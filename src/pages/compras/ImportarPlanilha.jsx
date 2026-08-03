@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
 import { lerLinhasExcel, valorPorAlias } from '../../utils/importarExcel.js'
+import { formatarPreco } from '../../utils/formato.js'
 import UploadPlanilha from '../../components/UploadPlanilha.jsx'
+import PreviewImportacao from '../../components/PreviewImportacao.jsx'
 
 const COLUNAS_ACEITAS =
   'Ref., Product - Packing (ou Produto), Supplier (ou Fornecedor), Brand, Currency, Price, Volume FCL (ou Quantidade), Incoterm, Shipment Period, Destination, Offer Validity, Payment Term, Offer date, Purchase Trader, Comments'
@@ -59,14 +61,18 @@ function paraDataISO(bruto) {
 
 export default function ImportarPlanilha({ onImportado }) {
   const { ofertas, produtos, empresas, usuarios, usuarioLogado } = useData()
-  const [resumo, setResumo] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [resumoFinal, setResumoFinal] = useState(null)
 
   function acharProduto(nomeColuna) {
     const nome = nomeProdutoDaColuna(nomeColuna)
     const exato = produtos.items.find((p) => p.nome.toLowerCase() === nome.toLowerCase() || p.apelido.toLowerCase() === nome.toLowerCase())
     if (exato) return exato
-    const aproximado = encontrarMelhorCorrespondencia(nome, produtos.items, (p) => p.nome, 0.6)
-    return aproximado?.item ?? null
+    // Compara por nome completo E por apelido/sigla (ex.: "Chicken MDM") — a oferta às vezes vem só com a sigla.
+    const porNome = encontrarMelhorCorrespondencia(nome, produtos.items, (p) => p.nome, 0.6)
+    const porApelido = encontrarMelhorCorrespondencia(nome, produtos.items, (p) => p.apelido, 0.6)
+    const melhor = [porNome, porApelido].filter(Boolean).sort((a, b) => b.pontuacao - a.pontuacao)[0]
+    return melhor?.item ?? null
   }
 
   function acharFornecedor(nome) {
@@ -84,13 +90,10 @@ export default function ImportarPlanilha({ onImportado }) {
     return usuarios.items.find((u) => u.nome.toLowerCase().includes(alvo) || alvo.includes(u.nome.toLowerCase())) ?? usuarioLogado
   }
 
-  function processarLinhas(linhas) {
-    const jaImportadas = ofertas.items.filter((o) => o.codigo.startsWith('OF-IMP-')).length
-    let importadas = 0
-    const erros = []
+  function analisarLinhas(linhas) {
     const hoje = new Date().toISOString().slice(0, 10)
 
-    linhas.forEach((linha, index) => {
+    const linhasPreview = linhas.map((linha, index) => {
       const numeroLinha = index + 2
       const colunaProduto = valorPorAlias(linha, ALIASES, 'produto')
       const produto = acharProduto(colunaProduto)
@@ -102,20 +105,20 @@ export default function ImportarPlanilha({ onImportado }) {
         .toUpperCase()
 
       if (!produto) {
-        erros.push(`Linha ${numeroLinha}: produto "${colunaProduto ?? ''}" não encontrado (nem por nome parecido) no cadastro`)
-        return
+        return { numeroLinha, status: 'erro', mensagem: `Produto "${colunaProduto ?? ''}" não encontrado (nem por nome parecido) no cadastro` }
       }
       if (!fornecedor) {
-        erros.push(`Linha ${numeroLinha}: fornecedor "${valorPorAlias(linha, ALIASES, 'fornecedor') ?? ''}" não encontrado`)
-        return
+        return {
+          numeroLinha,
+          status: 'erro',
+          mensagem: `Fornecedor "${valorPorAlias(linha, ALIASES, 'fornecedor') ?? ''}" não encontrado`,
+        }
       }
       if (!valor || Number.isNaN(valor)) {
-        erros.push(`Linha ${numeroLinha}: preço inválido`)
-        return
+        return { numeroLinha, status: 'erro', mensagem: 'Preço inválido' }
       }
       if (!quantidade || Number.isNaN(quantidade)) {
-        erros.push(`Linha ${numeroLinha}: quantidade inválida`)
-        return
+        return { numeroLinha, status: 'erro', mensagem: 'Quantidade inválida' }
       }
 
       const { de: embarqueDe, ate: embarqueAte } = separarPeriodo(valorPorAlias(linha, ALIASES, 'embarque'))
@@ -131,12 +134,7 @@ export default function ImportarPlanilha({ onImportado }) {
         .filter(Boolean)
         .join(' — ')
 
-      const codigo = `OF-IMP-${jaImportadas + importadas + 1}`
-      importadas += 1
-      ofertas.criar({
-        codigo,
-        codigoBase: codigo,
-        versao: 0,
+      const dadosCriacao = {
         tipoRegistro: 'Position',
         produtoId: produto.id,
         fornecedorId: fornecedor.id,
@@ -155,24 +153,66 @@ export default function ImportarPlanilha({ onImportado }) {
         validadeAte: valorPorAlias(linha, ALIASES, 'validade') ?? '',
         prazoPagamento: valorPorAlias(linha, ALIASES, 'prazoPagamento') ?? '',
         historicoNegociacao: [],
-      })
+      }
+
+      return {
+        numeroLinha,
+        status: 'ok',
+        titulo: `${produto.nome} — ${fornecedor.nome}`,
+        detalhe: `${formatarPreco(valor, moeda || 'USD', 'ton')} · ${quantidade.toLocaleString('pt-BR')} ton · Trader: ${trader.nome}`,
+        dadosCriacao,
+      }
     })
 
-    setResumo({ total: linhas.length, importadas, erros })
+    setResumoFinal(null)
+    setPreview(linhasPreview)
+  }
+
+  function confirmarImportacao() {
+    const jaImportadas = ofertas.items.filter((o) => o.codigo.startsWith('OF-IMP-')).length
+    let importadas = 0
+    const erros = []
+
+    preview.forEach((linha) => {
+      if (linha.status !== 'ok') {
+        erros.push(`Linha ${linha.numeroLinha}: ${linha.mensagem}`)
+        return
+      }
+      const codigo = `OF-IMP-${jaImportadas + importadas + 1}`
+      importadas += 1
+      ofertas.criar({ codigo, codigoBase: codigo, versao: 0, ...linha.dadosCriacao })
+    })
+
+    setResumoFinal({ total: preview.length, importadas, erros })
+    setPreview(null)
     onImportado?.()
   }
 
+  const validas = preview?.filter((l) => l.status === 'ok').length ?? 0
+
   return (
-    <UploadPlanilha
-      onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(processarLinhas)}
-      hint={
-        <>
-          Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
-          Fornecedor podem bater por nome parecido, não precisa ser idêntico.
-        </>
-      }
-      mensagemResumo={resumo && `${resumo.importadas} de ${resumo.total} linha(s) importadas com sucesso.`}
-      erros={resumo?.erros}
-    />
+    <div>
+      <UploadPlanilha
+        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(analisarLinhas)}
+        hint={
+          <>
+            Cabeçalhos aceitos (o modelo real de compras funciona direto): <strong>{COLUNAS_ACEITAS}</strong>. Produto e
+            Fornecedor podem bater por nome parecido, não precisa ser idêntico.
+          </>
+        }
+        mensagemResumo={resumoFinal && `${resumoFinal.importadas} de ${resumoFinal.total} linha(s) importadas com sucesso.`}
+        erros={resumoFinal?.erros}
+      />
+
+      {preview && (
+        <PreviewImportacao
+          linhas={preview}
+          validas={validas}
+          onConfirmar={confirmarImportacao}
+          onCancelar={() => setPreview(null)}
+          labelConfirmar="Confirmar importação"
+        />
+      )}
+    </div>
   )
 }

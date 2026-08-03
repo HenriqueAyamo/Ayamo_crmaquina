@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import { encontrarMelhorCorrespondencia } from '../../utils/produtoTexto.js'
 import { lerLinhasExcel, valorPorAlias } from '../../utils/importarExcel.js'
 import UploadPlanilha from '../../components/UploadPlanilha.jsx'
+import PreviewImportacao from '../../components/PreviewImportacao.jsx'
 
 const ALIASES = {
   nome: ['nome', 'fornecedor', 'supplier', 'producer', 'empresa', 'company'],
@@ -24,7 +25,8 @@ const ALIASES = {
 
 export default function ImportarPlanilhaEmpresas({ onImportado }) {
   const { empresas, usuarios, contatos } = useData()
-  const [resumo, setResumo] = useState(null)
+  const [preview, setPreview] = useState(null)
+  const [resumoFinal, setResumoFinal] = useState(null)
 
   function acharEmpresa(nome) {
     const exato = empresas.items.find((e) => e.nome.trim().toLowerCase() === nome.toLowerCase())
@@ -41,20 +43,12 @@ export default function ImportarPlanilhaEmpresas({ onImportado }) {
     return aproximado?.item ?? null
   }
 
-  function processarLinhas(linhas) {
-    let criadas = 0
-    let atualizadas = 0
-    let responsaveisVinculados = 0
-    let responsaveisNaoEncontrados = 0
-    let contatosCriados = 0
-    const erros = []
-
-    linhas.forEach((linha, index) => {
+  function analisarLinhas(linhas) {
+    const linhasPreview = linhas.map((linha, index) => {
       const numeroLinha = index + 2
       const nome = String(valorPorAlias(linha, ALIASES, 'nome') ?? '').trim()
       if (!nome) {
-        erros.push(`Linha ${numeroLinha}: nome/fornecedor em branco`)
-        return
+        return { numeroLinha, status: 'erro', mensagem: 'Nome/fornecedor em branco' }
       }
 
       const produtoNome = valorPorAlias(linha, ALIASES, 'produto')
@@ -67,19 +61,55 @@ export default function ImportarPlanilhaEmpresas({ onImportado }) {
         : null
 
       const responsavelNome = String(valorPorAlias(linha, ALIASES, 'responsavel') ?? '').trim()
-      let responsavelId = null
-      if (responsavelNome) {
-        const responsavel = acharResponsavel(responsavelNome)
-        if (responsavel) {
-          responsavelId = responsavel.id
-          responsaveisVinculados += 1
-        } else {
-          responsaveisNaoEncontrados += 1
-        }
-      }
+      const responsavel = responsavelNome ? acharResponsavel(responsavelNome) : null
+
+      const contatoNome = String(valorPorAlias(linha, ALIASES, 'contato') ?? '').trim()
+      const contatoNovo = contatoNome
+        ? {
+            nome: contatoNome,
+            cargo: String(valorPorAlias(linha, ALIASES, 'contatoCargo') ?? '').trim(),
+            telefone: String(valorPorAlias(linha, ALIASES, 'telefone') ?? '').trim(),
+            email: String(valorPorAlias(linha, ALIASES, 'email') ?? '').trim(),
+          }
+        : null
 
       const existente = acharEmpresa(nome)
+      const detalhes = []
+      detalhes.push(existente ? 'Atualiza empresa existente' : 'Nova empresa')
+      if (existente?.pais || valorPorAlias(linha, ALIASES, 'pais')) detalhes.push(String(existente?.pais || valorPorAlias(linha, ALIASES, 'pais')))
+      if (responsavelNome) detalhes.push(responsavel ? `Responsável: ${responsavel.nome}` : `Responsável "${responsavelNome}" não reconhecido`)
+      if (novoProduto) detalhes.push(`+ produto: ${novoProduto.nome}`)
+      if (contatoNovo) detalhes.push(`+ contato: ${contatoNovo.nome}`)
+
+      return {
+        numeroLinha,
+        status: 'ok',
+        titulo: nome,
+        detalhe: detalhes.join(' · '),
+        dadosAcao: { nome, existente, novoProduto, responsavelId: responsavel?.id ?? null, contatoNovo, linha },
+      }
+    })
+
+    setResumoFinal(null)
+    setPreview(linhasPreview)
+  }
+
+  function confirmarImportacao() {
+    let criadas = 0
+    let atualizadas = 0
+    let responsaveisVinculados = 0
+    let contatosCriados = 0
+    const erros = []
+
+    preview.forEach((linhaPreview) => {
+      if (linhaPreview.status !== 'ok') {
+        erros.push(`Linha ${linhaPreview.numeroLinha}: ${linhaPreview.mensagem}`)
+        return
+      }
+      const { nome, existente, novoProduto, responsavelId, contatoNovo, linha } = linhaPreview.dadosAcao
       let empresaId
+
+      if (responsavelId) responsaveisVinculados += 1
 
       if (existente) {
         const dados = {
@@ -119,45 +149,51 @@ export default function ImportarPlanilhaEmpresas({ onImportado }) {
         criadas += 1
       }
 
-      const contatoNome = String(valorPorAlias(linha, ALIASES, 'contato') ?? '').trim()
-      if (contatoNome) {
+      if (contatoNovo) {
         const jaExiste = contatos.items.some(
-          (c) => c.empresaId === empresaId && c.nome.trim().toLowerCase() === contatoNome.toLowerCase(),
+          (c) => c.empresaId === empresaId && c.nome.trim().toLowerCase() === contatoNovo.nome.toLowerCase(),
         )
         if (!jaExiste) {
-          contatos.criar({
-            nome: contatoNome,
-            cargo: String(valorPorAlias(linha, ALIASES, 'contatoCargo') ?? '').trim(),
-            telefone: String(valorPorAlias(linha, ALIASES, 'telefone') ?? '').trim(),
-            email: String(valorPorAlias(linha, ALIASES, 'email') ?? '').trim(),
-            empresaId,
-            categoriasIds: [],
-          })
+          contatos.criar({ ...contatoNovo, empresaId, categoriasIds: [] })
           contatosCriados += 1
         }
       }
     })
 
-    setResumo({ total: linhas.length, criadas, atualizadas, responsaveisVinculados, responsaveisNaoEncontrados, contatosCriados, erros })
+    setResumoFinal({ total: preview.length, criadas, atualizadas, responsaveisVinculados, contatosCriados, erros })
+    setPreview(null)
     onImportado?.()
   }
 
+  const validas = preview?.filter((l) => l.status === 'ok').length ?? 0
+
   return (
-    <UploadPlanilha
-      onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(processarLinhas)}
-      hint="Cabeçalhos aceitos (PT ou EN): Nome/Supplier, País/Country, Endereço, CNPJ, SIF, Marca/Brand, Moeda/Currency,
-        Produto/Product, Volume Mensal/Volume, Unidade/Unit, Responsável/Account Manager (nome do usuário Ayamo — bate por
-        nome igual ou parecido), Contato/Contact Name, Cargo do contato, Telefone, E-mail. Empresa existente é encontrada
-        por nome igual ou parecido e atualizada só nos campos em branco; um produto novo é adicionado à lista de
-        capacidade; um contato novo é adicionado à empresa."
-      mensagemResumo={
-        resumo &&
-        `${resumo.criadas} criada(s), ${resumo.atualizadas} atualizada(s) de ${resumo.total} linha(s).` +
-          (resumo.responsaveisVinculados > 0 ? ` ${resumo.responsaveisVinculados} responsável(is) vinculado(s).` : '') +
-          (resumo.responsaveisNaoEncontrados > 0 ? ` ${resumo.responsaveisNaoEncontrados} responsável(is) não reconhecido(s).` : '') +
-          (resumo.contatosCriados > 0 ? ` ${resumo.contatosCriados} contato(s) adicionado(s).` : '')
-      }
-      erros={resumo?.erros}
-    />
+    <div>
+      <UploadPlanilha
+        onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(analisarLinhas)}
+        hint="Cabeçalhos aceitos (PT ou EN): Nome/Supplier, País/Country, Endereço, CNPJ, SIF, Marca/Brand, Moeda/Currency,
+          Produto/Product, Volume Mensal/Volume, Unidade/Unit, Responsável/Account Manager (nome do usuário Ayamo — bate por
+          nome igual ou parecido), Contato/Contact Name, Cargo do contato, Telefone, E-mail. Empresa existente é encontrada
+          por nome igual ou parecido e atualizada só nos campos em branco; um produto novo é adicionado à lista de
+          capacidade; um contato novo é adicionado à empresa."
+        mensagemResumo={
+          resumoFinal &&
+          `${resumoFinal.criadas} criada(s), ${resumoFinal.atualizadas} atualizada(s) de ${resumoFinal.total} linha(s).` +
+            (resumoFinal.responsaveisVinculados > 0 ? ` ${resumoFinal.responsaveisVinculados} responsável(is) vinculado(s).` : '') +
+            (resumoFinal.contatosCriados > 0 ? ` ${resumoFinal.contatosCriados} contato(s) adicionado(s).` : '')
+        }
+        erros={resumoFinal?.erros}
+      />
+
+      {preview && (
+        <PreviewImportacao
+          linhas={preview}
+          validas={validas}
+          onConfirmar={confirmarImportacao}
+          onCancelar={() => setPreview(null)}
+          labelConfirmar="Confirmar importação"
+        />
+      )}
+    </div>
   )
 }
