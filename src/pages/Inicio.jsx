@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, ShoppingCart, TrendingUp, FileText, AlertTriangle, ClipboardList, Ship } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
 import PopupNovidadesDemandas from '../components/PopupNovidadesDemandas.jsx'
@@ -140,7 +140,7 @@ export default function Inicio() {
       )}
 
       <h2 className="mb-3 text-base font-semibold text-ayamo-text">Últimas movimentações</h2>
-      <DataTable
+      <CardList
         rowKey={(item) => `${item.data}-${item.descricao}`}
         data={movimentacoes}
         onRowClick={(item) => navigate(linkDaMovimentacao(item))}

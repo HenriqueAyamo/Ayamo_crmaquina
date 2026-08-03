@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../../DataContext.jsx'
-import DataTable from '../../components/DataTable.jsx'
+import CardList from '../../components/CardList.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { formatarPreco, formatarValor, formatarData, formatarPercentual } from '../../utils/formato.js'
 
@@ -32,7 +32,7 @@ export default function HistoricoNegocios({ empresa }) {
     return (
       <div className="mb-6">
         <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de ofertas</h2>
-        <DataTable
+        <CardList
           rowKey="id"
           data={ofertasDoFornecedor}
           emptyLabel="Nenhuma oferta registrada para este fornecedor"
@@ -74,7 +74,7 @@ export default function HistoricoNegocios({ empresa }) {
     return (
       <div className="mb-6">
         <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de propostas</h2>
-        <DataTable
+        <CardList
           rowKey="id"
           data={propostasDoCliente}
           emptyLabel="Nenhuma proposta registrada para este cliente"

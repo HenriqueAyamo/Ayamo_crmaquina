@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 
 export default function Contatos() {
@@ -44,7 +44,7 @@ export default function Contatos() {
         </Field>
       </FilterBar>
 
-      <DataTable
+      <CardList
         rowKey="id"
         data={contatosFiltrados}
         onRowClick={(item) => navigate(`/empresas/${item.empresaId}`)}

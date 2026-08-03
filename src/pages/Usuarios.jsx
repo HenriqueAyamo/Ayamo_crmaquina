@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Modal from '../components/Modal.jsx'
 import ModalFooterAcoes from '../components/ModalFooterAcoes.jsx'
@@ -136,7 +136,7 @@ export default function Usuarios() {
         </div>
       )}
 
-      <DataTable
+      <CardList
         rowKey="id"
         data={usuarios.items}
         columns={[

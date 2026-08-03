@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import BarraRanking from '../components/BarraRanking.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
@@ -83,7 +83,7 @@ export default function Claims() {
         </Field>
       </FilterBar>
 
-      <DataTable
+      <CardList
         rowKey="id"
         storageKey="claims"
         data={claimsFiltrados}

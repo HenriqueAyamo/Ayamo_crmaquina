@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useData } from '../../DataContext.jsx'
 import { converterParaUSD } from '../../data/cambio.js'
 import FilterBar from '../../components/FilterBar.jsx'
-import DataTable from '../../components/DataTable.jsx'
+import CardList from '../../components/CardList.jsx'
 import GraficoLinha from '../../components/GraficoLinha.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import { formatarPreco, formatarData } from '../../utils/formato.js'
@@ -113,7 +113,7 @@ export default function HistoricoPreco() {
         </div>
       )}
 
-      <DataTable
+      <CardList
         rowKey="id"
         data={revisoes}
         emptyLabel="Nenhuma revisão de preço registrada"

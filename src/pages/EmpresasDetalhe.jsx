@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalEditarEmpresa from './empresas/ModalEditarEmpresa.jsx'
@@ -227,7 +227,7 @@ export default function EmpresasDetalhe() {
         </button>
       </div>
 
-      <DataTable
+      <CardList
         rowKey="id"
         data={contatosDaEmpresa}
         emptyLabel="Nenhum contato cadastrado para esta empresa"

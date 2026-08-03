@@ -1,12 +1,12 @@
 import { MOEDAS, UNIDADES_PESO, UNIDADES_EMBALAGEM } from '../../data/unidades.js'
-import DataTable from '../../components/DataTable.jsx'
+import CardList from '../../components/CardList.jsx'
 
 export default function AbaMoedasUnidades() {
   return (
     <div className="flex flex-col gap-6">
       <section>
         <h2 className="mb-2 text-sm font-semibold text-ayamo-text">Moedas</h2>
-        <DataTable
+        <CardList
           rowKey="codigo"
           columns={[
             { key: 'codigo', header: 'Código' },
@@ -19,7 +19,7 @@ export default function AbaMoedasUnidades() {
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-ayamo-text">Unidades de peso</h2>
-        <DataTable
+        <CardList
           rowKey="codigo"
           columns={[
             { key: 'codigo', header: 'Código' },
@@ -31,7 +31,7 @@ export default function AbaMoedasUnidades() {
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-ayamo-text">Unidades de embalagem</h2>
-        <DataTable
+        <CardList
           rowKey="codigo"
           columns={[
             { key: 'codigo', header: 'Código' },

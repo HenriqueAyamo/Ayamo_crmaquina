@@ -4,7 +4,7 @@ import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import KpiCard from '../components/KpiCard.jsx'
 import BarraRanking from '../components/BarraRanking.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { obterUsoIA } from '../utils/iaImport.js'
@@ -72,7 +72,7 @@ export default function UsoIA() {
           )}
 
           <h2 className="mb-3 text-base font-semibold text-ayamo-text">Histórico de requisições (últimas 200)</h2>
-          <DataTable
+          <CardList
             rowKey={(item) => `${item.criado_em}-${item.tipo}`}
             data={dados.historico}
             emptyLabel="Nenhuma requisição de IA registrada ainda"

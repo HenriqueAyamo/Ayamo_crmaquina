@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
-import DataTable from '../../components/DataTable.jsx'
+import CardList from '../../components/CardList.jsx'
 import Modal from '../../components/Modal.jsx'
 import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
@@ -94,7 +94,7 @@ export default function CrudTab({ collection, itemLabel, columns, fields }) {
         </button>
       </div>
 
-      <DataTable columns={colunasComAcoes} data={collection.items} rowKey="id" />
+      <CardList columns={colunasComAcoes} data={collection.items} rowKey="id" />
 
       <Modal
         open={modalAberto}

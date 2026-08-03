@@ -4,7 +4,7 @@ import { Download, Eye } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Modal from '../components/Modal.jsx'
 import ModalFooterAcoes from '../components/ModalFooterAcoes.jsx'
@@ -229,7 +229,7 @@ export default function Empresas() {
         </div>
       )}
 
-      <DataTable
+      <CardList
         rowKey="id"
         onRowClick={(item) => navigate(`/empresas/${item.id}`)}
         data={empresasFiltradas}

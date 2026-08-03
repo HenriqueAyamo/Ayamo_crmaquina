@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import BarraRanking from '../components/BarraRanking.jsx'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
@@ -76,7 +76,7 @@ export default function Qualifications() {
         </div>
       )}
 
-      <DataTable
+      <CardList
         rowKey="id"
         storageKey="qualificacoes-globais"
         stickyFirstColumn

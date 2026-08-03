@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
@@ -84,7 +84,7 @@ export default function Vendas() {
         </Field>
       </FilterBar>
 
-      <DataTable
+      <CardList
         rowKey="id"
         storageKey="vendas"
         stickyFirstColumn

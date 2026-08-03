@@ -4,7 +4,7 @@ import { Download } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
-import DataTable from '../components/DataTable.jsx'
+import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import BarraEstoque from '../components/BarraEstoque.jsx'
 import SeloValidade from '../components/SeloValidade.jsx'
@@ -167,7 +167,7 @@ export default function Compras() {
             </Field>
           </FilterBar>
 
-          <DataTable
+          <CardList
             rowKey="id"
             storageKey="compras"
             stickyFirstColumn
