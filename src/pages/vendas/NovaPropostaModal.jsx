@@ -156,6 +156,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
   function criarProposta() {
     const base = baseProximoNumero(propostas.items)
     const hoje = new Date().toISOString().slice(0, 10)
+    const grupoEnvioId = clientesSelecionados.length > 1 ? `GRP-${Date.now()}` : null
 
     const numerosCriados = clientesSelecionados.map((cliente, index) => {
       const itensCliente = Object.entries(selecao)
@@ -181,6 +182,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         vendedorId: usuarioLogado.id,
         status: 'Rascunho',
         dataEnvio: hoje,
+        grupoEnvioId,
         margemMinima: Number(margemMinima) || 0,
         margemMinimaTipo,
         itens: itensCliente,

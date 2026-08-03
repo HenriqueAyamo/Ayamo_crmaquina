@@ -80,6 +80,9 @@ export default function VendasDetalhe() {
   const entidadeAyamo = dadosAyamo.items.find((e) => e.id === proposta.ayamoEntidadeId)
   const cliente = getEmpresa(proposta.clienteId)
   const contatosCliente = contatos.items.filter((c) => c.empresaId === proposta.clienteId)
+  const propostasIrmas = proposta.grupoEnvioId
+    ? propostas.items.filter((p) => p.grupoEnvioId === proposta.grupoEnvioId && p.id !== proposta.id)
+    : []
 
   function mensagemPropostaCliente() {
     const produtoNome = getProduto(itemPrincipal.produtoId)?.nome ?? ''
@@ -236,6 +239,24 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
           ))}
         </div>
       </div>
+
+      {propostasIrmas.length > 0 && (
+        <div className="mb-6 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-4 py-3 text-sm text-ayamo-text">
+          Parte de um envio em grupo ({propostasIrmas.length + 1} clientes). Outras propostas do mesmo envio:{' '}
+          {propostasIrmas.map((p, i) => (
+            <span key={p.id}>
+              {i > 0 && ', '}
+              <button
+                type="button"
+                onClick={() => navigate(`/vendas/${p.numero}`)}
+                className="font-medium text-ayamo-primary hover:underline"
+              >
+                {p.numero} ({getEmpresa(p.clienteId)?.nome})
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <SecaoRecolhivel titulo="Informações completas" aberturaInicial>
         <dl className="mb-4 grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
