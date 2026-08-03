@@ -83,14 +83,20 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         nomeArquivo: arquivo?.name,
         tipo: 'Nova Oferta (IA)',
         usuario: usuarioLogado.nome,
+        produtosCatalogo: produtos.items.map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido })),
+        fornecedoresCatalogo: empresas.items.filter((e) => e.tipo === 'Fornecedor').map((e) => ({ id: e.id, nome: e.nome })),
       })
       if (ofertasExtraidas.length === 0) {
         setErroIA('A IA não identificou nenhuma oferta nesse conteúdo.')
         return
       }
       const [oferta, ...resto] = ofertasExtraidas
-      const produtoEncontrado = acharProdutoPorNome(oferta.produto, produtos.items)
-      const fornecedorEncontrado = acharFornecedorPorNome(oferta.fornecedor, empresas.items.filter((e) => e.tipo === 'Fornecedor'))
+      const produtoEncontrado =
+        (oferta.produtoIdCatalogo != null ? produtos.items.find((p) => p.id === oferta.produtoIdCatalogo) : null) ??
+        acharProdutoPorNome(oferta.produto, produtos.items)
+      const fornecedorEncontrado =
+        (oferta.fornecedorIdCatalogo != null ? empresas.items.find((e) => e.id === oferta.fornecedorIdCatalogo) : null) ??
+        acharFornecedorPorNome(oferta.fornecedor, empresas.items.filter((e) => e.tipo === 'Fornecedor'))
 
       setForm((atual) => ({
         ...atual,

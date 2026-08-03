@@ -18,7 +18,9 @@ const SCHEMA_OFERTA = {
   properties: {
     ref: { type: ['string', 'null'] },
     produto: { type: ['string', 'null'] },
+    produtoIdCatalogo: { type: ['integer', 'null'], description: 'id da lista de produtos do catálogo, se algum corresponder claramente' },
     fornecedor: { type: ['string', 'null'] },
+    fornecedorIdCatalogo: { type: ['integer', 'null'], description: 'id da lista de fornecedores do catálogo, se algum corresponder claramente' },
     brand: { type: ['string', 'null'] },
     moeda: { type: ['string', 'null'] },
     preco: { type: ['number', 'null'] },
@@ -34,8 +36,9 @@ const SCHEMA_OFERTA = {
     comentarios: { type: ['string', 'null'] },
   },
   required: [
-    'ref', 'produto', 'fornecedor', 'brand', 'moeda', 'preco', 'quantidade', 'incoterm',
-    'embarqueDe', 'embarqueAte', 'destino', 'sif', 'validadeOferta', 'prazoPagamento', 'trader', 'comentarios',
+    'ref', 'produto', 'produtoIdCatalogo', 'fornecedor', 'fornecedorIdCatalogo', 'brand', 'moeda', 'preco',
+    'quantidade', 'incoterm', 'embarqueDe', 'embarqueAte', 'destino', 'sif', 'validadeOferta', 'prazoPagamento',
+    'trader', 'comentarios',
   ],
   additionalProperties: false,
 }
@@ -61,7 +64,19 @@ Regras:
 - validadeOferta: só preencha se a oferta tiver uma data explícita de validade — não converta
   referências relativas tipo "até sexta" em data, deixe null.
 - Se um dado não puder ser inferido com confiança, retorne null nesse campo — nunca invente.
-- trader e fornecedor: use exatamente o nome como aparece na oferta, sem abreviar.`
+- trader e fornecedor: use exatamente o nome como aparece na oferta, sem abreviar.
+- Você vai receber, junto da mensagem, uma lista de produtos e uma lista de fornecedores já
+  cadastrados no sistema (id + nome). Se o produto/fornecedor da oferta corresponder claramente a
+  um item dessas listas — mesmo que escrito diferente, abreviado, em outro idioma, ou com sufixo
+  societário diferente (ex.: "Frimesa Cooperativa Central" = "Frimesa", "peito de frango congelado"
+  = "Frozen Chicken Leg Quarters") — preencha produtoIdCatalogo/fornecedorIdCatalogo com o id
+  correspondente. Se não tiver certeza razoável, deixe null — nunca chute um id.`
+
+function montarPromptCatalogo(produtos, fornecedores) {
+  const listaProdutos = (produtos ?? []).map((p) => `${p.id}: ${p.nome}${p.apelido ? ` (${p.apelido})` : ''}`).join('\n')
+  const listaFornecedores = (fornecedores ?? []).map((f) => `${f.id}: ${f.nome}`).join('\n')
+  return `Produtos cadastrados (id: nome):\n${listaProdutos}\n\nFornecedores cadastrados (id: nome):\n${listaFornecedores}`
+}
 
 function cabecalhosCors(origin) {
   const permitida = ORIGENS_PERMITIDAS.includes(origin)
@@ -103,12 +118,13 @@ async function handleExtrair(request, env, origin) {
     return json({ erro: 'Corpo da requisição inválido.' }, 400, origin)
   }
 
-  const { texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario } = corpo
+  const { texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario, produtosCatalogo, fornecedoresCatalogo } = corpo
   if (!texto && !arquivoBase64) {
     return json({ erro: 'Envie "texto" ou "arquivoBase64".' }, 400, origin)
   }
 
   const conteudoUsuario = []
+  conteudoUsuario.push({ type: 'input_text', text: montarPromptCatalogo(produtosCatalogo, fornecedoresCatalogo) })
   if (arquivoBase64) {
     conteudoUsuario.push({ type: 'input_text', text: texto || 'Extraia as ofertas presentes neste arquivo.' })
     if (mimeType === 'application/pdf') {

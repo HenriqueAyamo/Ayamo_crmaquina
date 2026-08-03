@@ -9,11 +9,11 @@ async function chamarWorker(caminho, opcoes) {
   return dados
 }
 
-export function extrairOfertaIA({ texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario }) {
+export function extrairOfertaIA({ texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario, produtosCatalogo, fornecedoresCatalogo }) {
   return chamarWorker('/api/ia/extrair', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario }),
+    body: JSON.stringify({ texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario, produtosCatalogo, fornecedoresCatalogo }),
   })
 }
 

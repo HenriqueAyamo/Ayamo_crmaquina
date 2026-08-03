@@ -105,8 +105,14 @@ export default function ImportarPlanilha({ onImportado }) {
   // a linha de preview — é o ponto em comum entre os dois jeitos de importar.
   function montarLinhaOferta(numeroLinha, bruto) {
     const hoje = new Date().toISOString().slice(0, 10)
-    const produto = acharProduto(bruto.produtoNome)
-    const fornecedor = acharFornecedor(bruto.fornecedorNome)
+    // Se a IA já sugeriu um id do catálogo (com base no nome, mesmo que escrito diferente/outro
+    // idioma), usa direto — só cai pro matching por texto se ela não tiver certeza.
+    const produto =
+      (bruto.produtoIdCatalogo != null ? produtos.items.find((p) => p.id === bruto.produtoIdCatalogo) : null) ??
+      acharProduto(bruto.produtoNome)
+    const fornecedor =
+      (bruto.fornecedorIdCatalogo != null ? empresas.items.find((e) => e.id === bruto.fornecedorIdCatalogo) : null) ??
+      acharFornecedor(bruto.fornecedorNome)
     const valor = primeiroNumero(bruto.valor)
     const quantidade = primeiroNumero(bruto.quantidade)
     const moeda = String(bruto.moeda ?? '').trim().toUpperCase()
@@ -223,7 +229,9 @@ export default function ImportarPlanilha({ onImportado }) {
       montarLinhaOferta(index + 2, {
         ref: o.ref,
         produtoNome: o.produto,
+        produtoIdCatalogo: o.produtoIdCatalogo,
         fornecedorNome: o.fornecedor,
+        fornecedorIdCatalogo: o.fornecedorIdCatalogo,
         brand: o.brand,
         moeda: o.moeda,
         valor: o.preco,
@@ -268,6 +276,8 @@ export default function ImportarPlanilha({ onImportado }) {
         nomeArquivo: arquivo?.name,
         tipo: 'Importação de Compras (IA)',
         usuario: usuarioLogado.nome,
+        produtosCatalogo: produtos.items.map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido })),
+        fornecedoresCatalogo: empresas.items.filter((e) => e.tipo === 'Fornecedor').map((e) => ({ id: e.id, nome: e.nome })),
       })
       if (ofertasExtraidas.length === 0) {
         setErroIA('A IA não identificou nenhuma oferta nesse conteúdo.')
