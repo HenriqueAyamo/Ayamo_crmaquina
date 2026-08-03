@@ -48,7 +48,8 @@ const SCHEMA = {
 }
 
 const SYSTEM_PROMPT = `Você transforma qualquer oferta de proteína animal (frango, suíno, bovino ou peixe) recebida em
-formato livre (texto de WhatsApp, e-mail, foto de planilha, foto de lista de preço) numa lista estruturada de ofertas.
+formato livre (texto de WhatsApp, e-mail, foto de planilha, foto de lista de preço, PDF de contrato ou proforma)
+numa lista estruturada de ofertas.
 
 Regras:
 - Cada oferta identificada no material vira um item da lista "ofertas".
@@ -102,15 +103,23 @@ async function handleExtrair(request, env, origin) {
     return json({ erro: 'Corpo da requisição inválido.' }, 400, origin)
   }
 
-  const { texto, imagemBase64, mimeType, tipo, usuario } = corpo
-  if (!texto && !imagemBase64) {
-    return json({ erro: 'Envie "texto" ou "imagemBase64".' }, 400, origin)
+  const { texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario } = corpo
+  if (!texto && !arquivoBase64) {
+    return json({ erro: 'Envie "texto" ou "arquivoBase64".' }, 400, origin)
   }
 
   const conteudoUsuario = []
-  if (imagemBase64) {
-    conteudoUsuario.push({ type: 'input_text', text: texto || 'Extraia as ofertas presentes nesta imagem.' })
-    conteudoUsuario.push({ type: 'input_image', image_url: `data:${mimeType || 'image/png'};base64,${imagemBase64}` })
+  if (arquivoBase64) {
+    conteudoUsuario.push({ type: 'input_text', text: texto || 'Extraia as ofertas presentes neste arquivo.' })
+    if (mimeType === 'application/pdf') {
+      conteudoUsuario.push({
+        type: 'input_file',
+        filename: nomeArquivo || 'documento.pdf',
+        file_data: `data:application/pdf;base64,${arquivoBase64}`,
+      })
+    } else {
+      conteudoUsuario.push({ type: 'input_image', image_url: `data:${mimeType || 'image/png'};base64,${arquivoBase64}` })
+    }
   } else {
     conteudoUsuario.push({ type: 'input_text', text: texto })
   }

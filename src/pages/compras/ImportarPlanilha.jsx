@@ -244,15 +244,28 @@ export default function ImportarPlanilha({ onImportado }) {
     setPreview(linhasPreview)
   }
 
-  async function extrairComIA(imagemArquivo) {
+  function ehExcel(arquivo) {
+    return /\.(xlsx|xls)$/i.test(arquivo.name)
+  }
+
+  async function selecionarArquivoIA(arquivo) {
+    if (ehExcel(arquivo)) {
+      lerLinhasExcel(arquivo).then(iniciarMapeamento)
+      return
+    }
+    extrairComIA(arquivo)
+  }
+
+  async function extrairComIA(arquivo) {
     setCarregandoIA(true)
     setErroIA(null)
     try {
-      const imagemBase64 = imagemArquivo ? await arquivoParaBase64(imagemArquivo) : undefined
+      const arquivoBase64 = arquivo ? await arquivoParaBase64(arquivo) : undefined
       const { ofertas: ofertasExtraidas } = await extrairOfertaIA({
         texto: textoIA || undefined,
-        imagemBase64,
-        mimeType: imagemArquivo?.type,
+        arquivoBase64,
+        mimeType: arquivo?.type,
+        nomeArquivo: arquivo?.name,
         tipo: 'Importação de Compras (IA)',
         usuario: usuarioLogado.nome,
       })
@@ -317,13 +330,14 @@ export default function ImportarPlanilha({ onImportado }) {
         />
       )}
 
-      <SecaoRecolhivel titulo="Importar com IA (texto ou foto)" aberturaInicial={false}>
+      <SecaoRecolhivel titulo="Importar com IA (texto, foto, PDF ou planilha)" aberturaInicial={false}>
         <div className="flex flex-col gap-3 rounded border border-dashed border-ayamo-primary/40 bg-ayamo-primary/5 p-4">
           <p className="text-xs text-ayamo-text-mut">
-            Cole o texto de uma oferta recebida (WhatsApp, e-mail) OU envie uma foto/print — a IA identifica os campos
-            automaticamente. Nada é gravado até você conferir e confirmar, igual na importação por planilha.
+            Cole o texto de uma oferta recebida (WhatsApp, e-mail), envie uma foto/print/PDF (contrato, PO, proforma)
+            OU uma planilha — o sistema identifica sozinho o que fazer com cada tipo. Nada é gravado até você
+            conferir e confirmar.
           </p>
-          <Field label="Texto da oferta (opcional se enviar imagem)">
+          <Field label="Texto da oferta (opcional se enviar arquivo)">
             <textarea
               className={inputClass}
               rows={4}
@@ -334,15 +348,15 @@ export default function ImportarPlanilha({ onImportado }) {
           </Field>
           <div className="flex flex-wrap items-center gap-3">
             <label className="cursor-pointer rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg">
-              Selecionar imagem
+              Selecionar imagem, PDF ou planilha
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,application/pdf,.pdf,.xlsx,.xls"
                 className="hidden"
                 onChange={(e) => {
                   const arquivo = e.target.files[0]
                   e.target.value = ''
-                  if (arquivo) extrairComIA(arquivo)
+                  if (arquivo) selecionarArquivoIA(arquivo)
                 }}
               />
             </label>

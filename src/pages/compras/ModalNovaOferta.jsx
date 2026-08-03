@@ -70,16 +70,17 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
     onClose()
   }
 
-  async function extrairComIA(imagemArquivo) {
+  async function extrairComIA(arquivo) {
     setCarregandoIA(true)
     setErroIA(null)
     setAvisoIA(null)
     try {
-      const imagemBase64 = imagemArquivo ? await arquivoParaBase64(imagemArquivo) : undefined
+      const arquivoBase64 = arquivo ? await arquivoParaBase64(arquivo) : undefined
       const { ofertas: ofertasExtraidas } = await extrairOfertaIA({
         texto: textoIA || undefined,
-        imagemBase64,
-        mimeType: imagemArquivo?.type,
+        arquivoBase64,
+        mimeType: arquivo?.type,
+        nomeArquivo: arquivo?.name,
         tipo: 'Nova Oferta (IA)',
         usuario: usuarioLogado.nome,
       })
@@ -172,14 +173,14 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             onClick={() => setIaAberto((atual) => !atual)}
             className="flex w-fit items-center rounded border border-dashed border-ayamo-primary/50 px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-primary/5"
           >
-            {iaAberto ? 'Fechar' : 'Importar de texto ou imagem (IA)'}
+            {iaAberto ? 'Fechar' : 'Importar de texto, imagem ou PDF (IA)'}
           </button>
 
           {iaAberto && (
             <div className="mt-2 flex flex-col gap-3 rounded border border-dashed border-ayamo-primary/40 bg-ayamo-primary/5 p-3">
               <p className="text-xs text-ayamo-text-mut">
-                Cole o texto de uma oferta recebida ou envie uma foto — a IA preenche os campos abaixo pra você revisar
-                antes de salvar. Nada é criado até você clicar em Salvar.
+                Cole o texto de uma oferta recebida ou envie uma foto/PDF (contrato, PO, proforma) — a IA preenche os
+                campos abaixo pra você revisar antes de salvar. Nada é criado até você clicar em Salvar.
               </p>
               <textarea
                 className={inputClass}
@@ -190,10 +191,10 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
               />
               <div className="flex flex-wrap items-center gap-3">
                 <label className="cursor-pointer rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg">
-                  Selecionar imagem
+                  Selecionar imagem ou PDF
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,application/pdf,.pdf"
                     className="hidden"
                     onChange={(e) => {
                       const arquivo = e.target.files[0]
