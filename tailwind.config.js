@@ -6,6 +6,16 @@ export default {
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
+      borderRadius: {
+        DEFAULT: '0.625rem',
+        sm: '0.375rem',
+        md: '0.5rem',
+      },
+      boxShadow: {
+        card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 6px -2px rgb(15 23 42 / 0.06)',
+        'card-hover': '0 4px 14px -4px rgb(15 23 42 / 0.12), 0 2px 6px -2px rgb(15 23 42 / 0.06)',
+        pop: '0 12px 32px -8px rgb(15 23 42 / 0.18), 0 4px 10px -4px rgb(15 23 42 / 0.08)',
+      },
       colors: {
         ayamo: {
           primary: 'var(--ayamo-primary)',
@@ -35,3 +45,4 @@ export default {
   },
   plugins: [],
 }
+

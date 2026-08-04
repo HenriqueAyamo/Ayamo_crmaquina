@@ -28,7 +28,7 @@ export default function CardList({ columns, data, rowKey, onRowClick, emptyLabel
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
       {data.map((row) => {
         const chave = getKey(row)
         const expandido = linhaExpandida && expandidos.has(chave)
@@ -37,7 +37,7 @@ export default function CardList({ columns, data, rowKey, onRowClick, emptyLabel
           <div
             key={chave}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`rounded border border-ayamo-border bg-ayamo-surface p-4 ${onRowClick ? 'cursor-pointer hover:border-ayamo-primary/40' : ''}`}
+            className={`rounded border border-ayamo-border bg-ayamo-surface p-4 ${onRowClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-ayamo-primary/30 hover:shadow-card-hover' : ''}`}
           >
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="text-sm font-semibold text-ayamo-text">

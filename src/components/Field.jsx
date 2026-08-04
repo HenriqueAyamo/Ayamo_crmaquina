@@ -13,4 +13,4 @@ export default function Field({ label, required, hint, error, children }) {
 }
 
 export const inputClass =
-  'w-full rounded border border-ayamo-border bg-ayamo-surface px-3 py-2 text-sm text-ayamo-text outline-none focus:border-ayamo-primary'
+  'w-full rounded border border-ayamo-border bg-ayamo-surface px-3 py-2 text-sm text-ayamo-text outline-none transition-colors hover:border-ayamo-text-mut/40 focus:border-ayamo-primary'

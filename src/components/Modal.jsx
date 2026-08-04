@@ -21,13 +21,13 @@ export default function Modal({ open, onClose, title, children, footer, width = 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
       <div
-        className={`flex max-h-[90vh] w-full flex-col rounded-lg bg-ayamo-surface shadow-xl ${WIDTH_CLASSES[width]}`}
+        className={`flex max-h-[90vh] w-full flex-col rounded-lg bg-ayamo-surface shadow-pop animate-[modal-in_0.16s_ease-out] ${WIDTH_CLASSES[width]}`}
       >
         <div className="flex items-center justify-between border-b border-ayamo-border px-5 py-4">
           <h2 className="text-base font-semibold text-ayamo-text">{title}</h2>

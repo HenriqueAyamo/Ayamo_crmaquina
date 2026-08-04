@@ -7,7 +7,7 @@ export default function ModalFooterAcoes({ onCancelar, formId, labelCancelar = '
       <button
         type="button"
         onClick={onCancelar}
-        className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
+        className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text transition-colors hover:bg-ayamo-bg"
       >
         {labelCancelar}
       </button>
@@ -15,7 +15,7 @@ export default function ModalFooterAcoes({ onCancelar, formId, labelCancelar = '
         type="submit"
         form={formId}
         disabled={disabled}
-        className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+        className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-all hover:-translate-y-px hover:shadow-card-hover hover:opacity-95 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
       >
         {labelSalvar}
       </button>

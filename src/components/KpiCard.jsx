@@ -8,16 +8,16 @@ const TONE_CLASSES = {
 
 export default function KpiCard({ label, value, icon: Icon, tone = 'primary' }) {
   return (
-    <div className="rounded border border-ayamo-border bg-ayamo-surface p-4">
-      <div className="flex items-center gap-3">
+    <div className="rounded border border-ayamo-border bg-ayamo-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-card-hover">
+      <div className="flex items-center gap-3.5">
         {Icon && (
-          <span className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${TONE_CLASSES[tone] ?? TONE_CLASSES.primary}`}>
+          <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${TONE_CLASSES[tone] ?? TONE_CLASSES.primary}`}>
             <Icon size={18} />
           </span>
         )}
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-ayamo-text-mut">{label}</div>
-          <div className="text-xl font-semibold text-ayamo-text">{value}</div>
+        <div className="min-w-0">
+          <div className="truncate text-xs font-semibold uppercase tracking-wide text-ayamo-text-mut">{label}</div>
+          <div className="text-xl font-semibold tracking-tight text-ayamo-text">{value}</div>
         </div>
       </div>
     </div>
