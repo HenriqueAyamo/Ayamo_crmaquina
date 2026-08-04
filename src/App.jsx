@@ -1,6 +1,9 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { DataProvider } from './DataContext.jsx'
+import { I18nProvider } from './i18n/I18nContext.jsx'
+import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
+import PortaoAuth from './auth/PortaoAuth.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Shell from './layout/Shell.jsx'
 
@@ -13,6 +16,7 @@ const VendasDetalhe = lazy(() => import('./pages/VendasDetalhe.jsx'))
 const DocumentoProforma = lazy(() => import('./pages/vendas/DocumentoProforma.jsx'))
 const Demandas = lazy(() => import('./pages/Demandas.jsx'))
 const Pendencias = lazy(() => import('./pages/Pendencias.jsx'))
+const FollowUps = lazy(() => import('./pages/FollowUps.jsx'))
 const PurchaseDashboard = lazy(() => import('./pages/PurchaseDashboard.jsx'))
 const Claims = lazy(() => import('./pages/Claims.jsx'))
 const Qualifications = lazy(() => import('./pages/Qualifications.jsx'))
@@ -32,40 +36,56 @@ function CarregandoPagina() {
   return <div className="p-8 text-sm text-ayamo-text-mut">Carregando...</div>
 }
 
+// Só monta o CRM depois que a sessão foi confirmada — o DataProvider precisa
+// saber quem é o usuário para calcular pendências e permissões.
+function CRM() {
+  const { usuario } = useAuth()
+  return (
+    <DataProvider usuarioAutenticado={usuario}>
+          <Suspense fallback={<CarregandoPagina />}>
+            <Routes>
+              <Route element={<Shell />}>
+                <Route path="/" element={<Inicio />} />
+                <Route path="/compras" element={<Compras />} />
+                <Route path="/compras/:id" element={<ComprasDetalhe />} />
+                <Route path="/vendas" element={<Vendas />} />
+                <Route path="/vendas/:id" element={<VendasDetalhe />} />
+                <Route path="/demandas" element={<Demandas />} />
+                <Route path="/pendencias" element={<Pendencias />} />
+                <Route path="/follow-ups" element={<FollowUps />} />
+                <Route path="/compras/painel" element={<PurchaseDashboard />} />
+                <Route path="/claims" element={<Claims />} />
+                <Route path="/qualificacoes" element={<Qualifications />} />
+                <Route path="/freight" element={<Freight />} />
+                <Route path="/vendas-ranking" element={<SalesRanking />} />
+                <Route path="/empresas" element={<Empresas />} />
+                <Route path="/empresas/:id" element={<EmpresasDetalhe />} />
+                <Route path="/contatos" element={<Contatos />} />
+                <Route path="/cadastros" element={<CadastrosGerais />} />
+                <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/documentos" element={<Documentos />} />
+                <Route path="/configuracoes" element={<Settings />} />
+                <Route path="/training" element={<Training />} />
+                <Route path="/uso-ia" element={<UsoIA />} />
+              </Route>
+              <Route path="/compras/:id/po" element={<DocumentoPO />} />
+              <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
+            </Routes>
+          </Suspense>
+    </DataProvider>
+  )
+}
+
 export default function App() {
   return (
     <ErrorBoundary>
-      <DataProvider>
-        <Suspense fallback={<CarregandoPagina />}>
-          <Routes>
-            <Route element={<Shell />}>
-              <Route path="/" element={<Inicio />} />
-              <Route path="/compras" element={<Compras />} />
-              <Route path="/compras/:id" element={<ComprasDetalhe />} />
-              <Route path="/vendas" element={<Vendas />} />
-              <Route path="/vendas/:id" element={<VendasDetalhe />} />
-              <Route path="/demandas" element={<Demandas />} />
-              <Route path="/pendencias" element={<Pendencias />} />
-              <Route path="/compras/painel" element={<PurchaseDashboard />} />
-              <Route path="/claims" element={<Claims />} />
-              <Route path="/qualificacoes" element={<Qualifications />} />
-              <Route path="/freight" element={<Freight />} />
-              <Route path="/vendas-ranking" element={<SalesRanking />} />
-              <Route path="/empresas" element={<Empresas />} />
-              <Route path="/empresas/:id" element={<EmpresasDetalhe />} />
-              <Route path="/contatos" element={<Contatos />} />
-              <Route path="/cadastros" element={<CadastrosGerais />} />
-              <Route path="/usuarios" element={<Usuarios />} />
-              <Route path="/documentos" element={<Documentos />} />
-              <Route path="/configuracoes" element={<Settings />} />
-              <Route path="/training" element={<Training />} />
-              <Route path="/uso-ia" element={<UsoIA />} />
-            </Route>
-            <Route path="/compras/:id/po" element={<DocumentoPO />} />
-            <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
-          </Routes>
-        </Suspense>
-      </DataProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <PortaoAuth>
+            <CRM />
+          </PortaoAuth>
+        </AuthProvider>
+      </I18nProvider>
     </ErrorBoundary>
   )
 }

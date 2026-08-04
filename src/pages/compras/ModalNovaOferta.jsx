@@ -84,7 +84,6 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         mimeType: arquivo?.type,
         nomeArquivo: arquivo?.name,
         tipo: 'Nova Oferta (IA)',
-        usuario: usuarioLogado.nome,
         produtosCatalogo: produtos.items.map((p) => ({ id: p.id, nome: p.nome, apelido: p.apelido })),
         fornecedoresCatalogo: empresas.items.filter((e) => e.tipo === 'Fornecedor').map((e) => ({ id: e.id, nome: e.nome })),
       })

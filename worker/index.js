@@ -1,12 +1,29 @@
-// Backend minimo do CRM: hoje so serve duas coisas de IA (extracao de oferta e consulta de uso),
-// alem de continuar servindo os arquivos estaticos do build (Vite) pra quem acessar direto por aqui.
+// Backend do CRM: autenticação por sessão, rotas de IA (extração de oferta e consulta de uso)
+// e os arquivos estáticos do build (Vite).
 // A chave da OpenAI fica só aqui (secret do Worker), nunca no bundle do frontend.
 
-const ORIGENS_PERMITIDAS = [
-  'https://henriqueayamo.github.io',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-]
+import {
+  abrirSessao,
+  auditar,
+  conferirSenha,
+  cookieDeSessao,
+  criarHashSenha,
+  dentroDoLimite,
+  estaBloqueado,
+  forcaDaSenha,
+  lerCookieSessao,
+  limparFalhasLogin,
+  limparSessoesExpiradas,
+  registrarFalhaLogin,
+  revogarSessao,
+  revogarTodasSessoes,
+  temPerfil,
+  usuarioDaRequisicao,
+} from './auth.js'
+
+// Origens liberadas para chamar a API de outro host. Em produção o front é
+// servido pelo próprio Worker, então a lista cobre só o desenvolvimento local.
+const ORIGENS_PERMITIDAS = ['http://localhost:5173', 'http://127.0.0.1:5173']
 
 // Preco por 1M tokens -- atualizar aqui se a OpenAI mudar o preco do modelo.
 const PRECOS_MODELO = {
@@ -79,21 +96,186 @@ function montarPromptCatalogo(produtos, fornecedores) {
   return `Produtos cadastrados (id: nome):\n${listaProdutos}\n\nFornecedores cadastrados (id: nome):\n${listaFornecedores}`
 }
 
+// ---------------------------------------------------------------------------
+// HTTP
+// ---------------------------------------------------------------------------
+
 function cabecalhosCors(origin) {
-  const permitida = ORIGENS_PERMITIDAS.includes(origin)
+  if (!origin || !ORIGENS_PERMITIDAS.includes(origin)) return {}
   return {
-    'Access-Control-Allow-Origin': permitida ? origin : ORIGENS_PERMITIDAS[0],
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Credentials': 'true',
+    Vary: 'Origin',
   }
 }
 
-function json(dados, status, origin) {
+// CSP restrita: sem CDN, sem eval, sem iframe de terceiros. 'unsafe-inline' em
+// style-peso porque o Tailwind injeta estilos inline em runtime.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com",
+  "img-src 'self' data: https:",
+  "connect-src 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "object-src 'none'",
+].join('; ')
+
+const CABECALHOS_SEGURANCA = {
+  'Content-Security-Policy': CSP,
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'DENY',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+}
+
+function json(dados, status, origin, extras = {}) {
   return new Response(JSON.stringify(dados), {
     status,
-    headers: { 'Content-Type': 'application/json', ...cabecalhosCors(origin) },
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+      ...cabecalhosCors(origin),
+      ...CABECALHOS_SEGURANCA,
+      ...extras,
+    },
   })
 }
+
+function ip(request) {
+  return request.headers.get('CF-Connecting-IP') ?? 'desconhecido'
+}
+
+// ---------------------------------------------------------------------------
+// Autenticação
+// ---------------------------------------------------------------------------
+
+async function handleLogin(request, env, origin) {
+  // Limite por IP: trava força bruta antes de encostar no banco de usuários.
+  if (!(await dentroDoLimite(env.DB, `login:${ip(request)}`, { max: 10, janelaMs: 15 * 60 * 1000 }))) {
+    await auditar(env.DB, { acao: 'login.rate_limit', ip: ip(request), sucesso: false })
+    return json({ erro: 'Muitas tentativas. Tente novamente em alguns minutos.' }, 429, origin)
+  }
+
+  let corpo
+  try {
+    corpo = await request.json()
+  } catch {
+    return json({ erro: 'Corpo da requisição inválido.' }, 400, origin)
+  }
+
+  const email = String(corpo.email ?? '').trim().toLowerCase()
+  const senha = String(corpo.senha ?? '')
+  if (!email || !senha) return json({ erro: 'Informe e-mail e senha.' }, 400, origin)
+
+  const usuario = await env.DB.prepare('SELECT * FROM usuarios WHERE email = ?').bind(email).first()
+
+  // Mensagem única para e-mail inexistente e senha errada: não entregamos a
+  // quem está tentando invadir a informação de que o e-mail existe.
+  const generico = { erro: 'E-mail ou senha inválidos.' }
+
+  if (!usuario) {
+    await auditar(env.DB, { email, acao: 'login.falha', detalhe: 'usuário inexistente', ip: ip(request), sucesso: false })
+    return json(generico, 401, origin)
+  }
+
+  if (usuario.situacao !== 'Ativo') {
+    await auditar(env.DB, { usuarioId: usuario.id, email, acao: 'login.falha', detalhe: 'usuário inativo', ip: ip(request), sucesso: false })
+    return json(generico, 401, origin)
+  }
+
+  if (estaBloqueado(usuario)) {
+    await auditar(env.DB, { usuarioId: usuario.id, email, acao: 'login.bloqueado', ip: ip(request), sucesso: false })
+    return json({ erro: 'Conta temporariamente bloqueada por excesso de tentativas. Tente de novo em 15 minutos.' }, 423, origin)
+  }
+
+  if (!(await conferirSenha(senha, usuario))) {
+    const { bloqueado } = await registrarFalhaLogin(env.DB, usuario)
+    await auditar(env.DB, { usuarioId: usuario.id, email, acao: 'login.falha', detalhe: 'senha incorreta', ip: ip(request), sucesso: false })
+    if (bloqueado) {
+      return json({ erro: 'Conta bloqueada por 15 minutos após 5 tentativas incorretas.' }, 423, origin)
+    }
+    return json(generico, 401, origin)
+  }
+
+  await limparFalhasLogin(env.DB, usuario.id)
+  const token = await abrirSessao(env.DB, usuario, request)
+  await auditar(env.DB, { usuarioId: usuario.id, email, acao: 'login.sucesso', ip: ip(request) })
+
+  return json(
+    {
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        perfil: usuario.perfil,
+        precisaTrocarSenha: Boolean(usuario.precisa_trocar_senha),
+      },
+    },
+    200,
+    origin,
+    { 'Set-Cookie': cookieDeSessao(token) },
+  )
+}
+
+async function handleLogout(request, env, origin) {
+  const token = lerCookieSessao(request)
+  const usuario = await usuarioDaRequisicao(env.DB, request)
+  await revogarSessao(env.DB, token)
+  if (usuario) await auditar(env.DB, { usuarioId: usuario.id, email: usuario.email, acao: 'logout', ip: ip(request) })
+  return json({ ok: true }, 200, origin, { 'Set-Cookie': cookieDeSessao('', { apagar: true }) })
+}
+
+async function handleMe(request, env, origin) {
+  const usuario = await usuarioDaRequisicao(env.DB, request)
+  if (!usuario) return json({ erro: 'Não autenticado.' }, 401, origin)
+  return json({ usuario }, 200, origin)
+}
+
+async function handleTrocarSenha(request, env, origin, usuario) {
+  let corpo
+  try {
+    corpo = await request.json()
+  } catch {
+    return json({ erro: 'Corpo da requisição inválido.' }, 400, origin)
+  }
+
+  const atual = String(corpo.senhaAtual ?? '')
+  const nova = String(corpo.novaSenha ?? '')
+
+  const problema = forcaDaSenha(nova)
+  if (problema) return json({ erro: problema }, 400, origin)
+
+  const linha = await env.DB.prepare('SELECT * FROM usuarios WHERE id = ?').bind(usuario.id).first()
+  if (!(await conferirSenha(atual, linha))) {
+    await auditar(env.DB, { usuarioId: usuario.id, email: usuario.email, acao: 'senha.troca_falha', ip: ip(request), sucesso: false })
+    return json({ erro: 'Senha atual incorreta.' }, 401, origin)
+  }
+
+  const { hash, salt, iteracoes } = await criarHashSenha(nova)
+  await env.DB.prepare(
+    'UPDATE usuarios SET senha_hash = ?, senha_salt = ?, iteracoes = ?, precisa_trocar_senha = 0, atualizado_em = ? WHERE id = ?',
+  )
+    .bind(hash, salt, iteracoes, new Date().toISOString(), usuario.id)
+    .run()
+
+  // Troca de senha derruba as outras sessões: se alguém tinha roubado o cookie, perde o acesso.
+  await revogarTodasSessoes(env.DB, usuario.id)
+  const token = await abrirSessao(env.DB, { id: usuario.id }, request)
+  await auditar(env.DB, { usuarioId: usuario.id, email: usuario.email, acao: 'senha.trocada', ip: ip(request) })
+
+  return json({ ok: true }, 200, origin, { 'Set-Cookie': cookieDeSessao(token) })
+}
+
+// ---------------------------------------------------------------------------
+// IA
+// ---------------------------------------------------------------------------
 
 function calcularCustoUSD(modelo, tokensInput, tokensOutput) {
   const preco = PRECOS_MODELO[modelo] ?? PRECOS_MODELO['gpt-5.4-nano']
@@ -110,7 +292,13 @@ async function registrarUso(db, { tipo, usuario, modelo, tokensInput, tokensOutp
     .run()
 }
 
-async function handleExtrair(request, env, origin) {
+async function handleExtrair(request, env, origin, usuario) {
+  // A extração custa dinheiro por chamada — limite por usuário, não por IP.
+  if (!(await dentroDoLimite(env.DB, `ia:${usuario.id}`, { max: 60, janelaMs: 60 * 60 * 1000 }))) {
+    await auditar(env.DB, { usuarioId: usuario.id, email: usuario.email, acao: 'ia.rate_limit', ip: ip(request), sucesso: false })
+    return json({ erro: 'Limite de extrações por hora atingido. Tente novamente mais tarde.' }, 429, origin)
+  }
+
   const modelo = 'gpt-5.4-nano'
   let corpo
   try {
@@ -119,9 +307,17 @@ async function handleExtrair(request, env, origin) {
     return json({ erro: 'Corpo da requisição inválido.' }, 400, origin)
   }
 
-  const { texto, arquivoBase64, mimeType, nomeArquivo, tipo, usuario, produtosCatalogo, fornecedoresCatalogo } = corpo
+  const { texto, arquivoBase64, mimeType, nomeArquivo, tipo, produtosCatalogo, fornecedoresCatalogo } = corpo
   if (!texto && !arquivoBase64) {
     return json({ erro: 'Envie "texto" ou "arquivoBase64".' }, 400, origin)
+  }
+
+  // Teto de tamanho: sem isso, um upload gigante vira custo de token ilimitado.
+  if (arquivoBase64 && arquivoBase64.length > 8 * 1024 * 1024) {
+    return json({ erro: 'Arquivo muito grande (máximo ~6 MB).' }, 413, origin)
+  }
+  if (texto && texto.length > 100_000) {
+    return json({ erro: 'Texto muito longo.' }, 413, origin)
   }
 
   const conteudoUsuario = []
@@ -141,6 +337,9 @@ async function handleExtrair(request, env, origin) {
     conteudoUsuario.push({ type: 'input_text', text: texto })
   }
 
+  // O nome vem da sessão, não do corpo: antes o cliente podia se identificar como quisesse.
+  const nomeUsuario = usuario.nome
+
   let respostaOpenAI
   try {
     respostaOpenAI = await fetch('https://api.openai.com/v1/responses', {
@@ -156,15 +355,16 @@ async function handleExtrair(request, env, origin) {
       }),
     })
   } catch (erroFetch) {
-    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario, modelo, tokensInput: 0, tokensOutput: 0, custoUSD: 0, sucesso: false, erro: String(erroFetch) })
+    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario: nomeUsuario, modelo, tokensInput: 0, tokensOutput: 0, custoUSD: 0, sucesso: false, erro: String(erroFetch) })
     return json({ erro: 'Falha ao contatar a OpenAI.' }, 502, origin)
   }
 
   const dados = await respostaOpenAI.json()
 
   if (dados.error) {
-    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario, modelo, tokensInput: 0, tokensOutput: 0, custoUSD: 0, sucesso: false, erro: dados.error.message })
-    return json({ erro: dados.error.message }, 500, origin)
+    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario: nomeUsuario, modelo, tokensInput: 0, tokensOutput: 0, custoUSD: 0, sucesso: false, erro: dados.error.message })
+    // Não devolvemos a mensagem crua da OpenAI: ela pode conter detalhe da conta/chave.
+    return json({ erro: 'A IA não conseguiu processar este conteúdo.' }, 502, origin)
   }
 
   const textoResposta = dados.output?.find((o) => o.type === 'message')?.content?.find((c) => c.type === 'output_text')?.text
@@ -173,19 +373,19 @@ async function handleExtrair(request, env, origin) {
   const custoUSD = calcularCustoUSD(modelo, tokensInput, tokensOutput)
 
   if (!textoResposta) {
-    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: false, erro: 'Resposta sem texto.' })
-    return json({ erro: 'A IA não retornou um resultado utilizável.' }, 500, origin)
+    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario: nomeUsuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: false, erro: 'Resposta sem texto.' })
+    return json({ erro: 'A IA não retornou um resultado utilizável.' }, 502, origin)
   }
 
   let ofertas
   try {
     ofertas = JSON.parse(textoResposta).ofertas
   } catch {
-    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: false, erro: 'JSON inválido na resposta.' })
-    return json({ erro: 'A IA retornou um formato inesperado.' }, 500, origin)
+    await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario: nomeUsuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: false, erro: 'JSON inválido na resposta.' })
+    return json({ erro: 'A IA retornou um formato inesperado.' }, 502, origin)
   }
 
-  await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: true })
+  await registrarUso(env.DB, { tipo: tipo || 'desconhecido', usuario: nomeUsuario, modelo, tokensInput, tokensOutput, custoUSD, sucesso: true })
 
   return json({ ofertas, tokensInput, tokensOutput, custoUSD }, 200, origin)
 }
@@ -218,22 +418,62 @@ async function handleUso(request, env, origin) {
   return json({ resumoMes, historico: historico.results, porDia: porDia.results }, 200, origin)
 }
 
+// ---------------------------------------------------------------------------
+// Roteamento
+// ---------------------------------------------------------------------------
+
 export default {
-  async fetch(request, env, _ctx) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url)
-    const origin = request.headers.get('Origin') ?? ORIGENS_PERMITIDAS[0]
+    const origin = request.headers.get('Origin')
 
     if (request.method === 'OPTIONS') {
-      return new Response(null, { headers: cabecalhosCors(origin) })
+      return new Response(null, { headers: { ...cabecalhosCors(origin), ...CABECALHOS_SEGURANCA } })
     }
 
-    if (url.pathname === '/api/ia/extrair' && request.method === 'POST') {
-      return handleExtrair(request, env, origin)
-    }
-    if (url.pathname === '/api/ia/uso' && request.method === 'GET') {
-      return handleUso(request, env, origin)
+    if (url.pathname.startsWith('/api/')) {
+      // Rotas abertas: só o login.
+      if (url.pathname === '/api/auth/login' && request.method === 'POST') {
+        return handleLogin(request, env, origin)
+      }
+      if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
+        return handleLogout(request, env, origin)
+      }
+      if (url.pathname === '/api/auth/me' && request.method === 'GET') {
+        return handleMe(request, env, origin)
+      }
+
+      // Daqui pra baixo, exige sessão válida.
+      const usuario = await usuarioDaRequisicao(env.DB, request)
+      if (!usuario) return json({ erro: 'Não autenticado.' }, 401, origin)
+
+      if (url.pathname === '/api/auth/senha' && request.method === 'POST') {
+        return handleTrocarSenha(request, env, origin, usuario)
+      }
+
+      if (url.pathname === '/api/ia/extrair' && request.method === 'POST') {
+        if (!temPerfil(usuario, ['Comprador', 'Vendedor', 'Administrador'])) {
+          return json({ erro: 'Seu perfil não pode usar a extração por IA.' }, 403, origin)
+        }
+        return handleExtrair(request, env, origin, usuario)
+      }
+
+      if (url.pathname === '/api/ia/uso' && request.method === 'GET') {
+        if (!temPerfil(usuario, ['Administrador'])) {
+          return json({ erro: 'Apenas Administradores podem ver o uso de IA.' }, 403, origin)
+        }
+        // Limpeza oportunista das sessões vencidas, fora do caminho da resposta.
+        ctx.waitUntil(limparSessoesExpiradas(env.DB))
+        return handleUso(request, env, origin)
+      }
+
+      return json({ erro: 'Rota não encontrada.' }, 404, origin)
     }
 
-    return env.ASSETS.fetch(request)
+    // Estáticos do build, com os mesmos cabeçalhos de segurança.
+    const resposta = await env.ASSETS.fetch(request)
+    const headers = new Headers(resposta.headers)
+    for (const [chave, valor] of Object.entries(CABECALHOS_SEGURANCA)) headers.set(chave, valor)
+    return new Response(resposta.body, { status: resposta.status, statusText: resposta.statusText, headers })
   },
 }

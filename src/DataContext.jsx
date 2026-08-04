@@ -13,6 +13,7 @@ import { demandas as demandasMock } from './data/demandas.js'
 import { claims as claimsMock } from './data/claims.js'
 import { inspecoes as inspecoesMock } from './data/inspecoes.js'
 import { fretes as fretesMock } from './data/fretes.js'
+import { interacoes as interacoesMock } from './data/interacoes.js'
 import { dadosAyamo as dadosAyamoMock } from './data/dadosAyamo.js'
 import { converterParaUSD, converterDeUSD, calcularResumoProposta } from './data/cambio.js'
 import { calcularPendencias } from './utils/pendencias.js'
@@ -99,7 +100,7 @@ function useCollection(chave, seed) {
   )
 }
 
-export function DataProvider({ children }) {
+export function DataProvider({ children, usuarioAutenticado }) {
   const divisoes = useCollection('divisoes', divisoesMock)
   const familias = useCollection('familias', familiasMock)
   const produtos = useCollection('produtos', produtosMock)
@@ -115,18 +116,24 @@ export function DataProvider({ children }) {
   const claims = useCollection('claims', claimsMock)
   const inspecoes = useCollection('inspecoes', inspecoesMock)
   const fretes = useCollection('fretes', fretesMock)
+  const interacoes = useCollection('interacoes', interacoesMock)
 
-  const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
-    const salvo = carregarStorage('usuarioLogadoId', null)
-    return salvo ?? usuariosMock[0]?.id ?? 1
-  })
-
-  const setUsuarioLogadoId = useCallback((id) => {
-    setUsuarioLogadoIdState(id)
-    salvarStorage('usuarioLogadoId', id)
-  }, [])
-
-  const usuarioLogado = usuarios.items.find((u) => u.id === usuarioLogadoId) ?? usuarios.items[0]
+  // Quem está logado vem da sessão do servidor, não de uma escolha no cliente.
+  // O cadastro local complementa com o que a sessão não carrega (responsabilidades
+  // por divisão, diretor aprovador), casando pelo e-mail. O perfil que vale é
+  // sempre o do servidor — mudar o cadastro local não concede permissão.
+  const usuarioLogado = useMemo(() => {
+    const doCadastro = usuarios.items.find((u) => u.email?.toLowerCase() === usuarioAutenticado.email?.toLowerCase())
+    return {
+      ...(doCadastro ?? {}),
+      id: doCadastro?.id ?? usuarioAutenticado.id,
+      nome: usuarioAutenticado.nome,
+      email: usuarioAutenticado.email,
+      perfil: usuarioAutenticado.perfil,
+      situacao: 'Ativo',
+      responsabilidades: doCadastro?.responsabilidades ?? [],
+    }
+  }, [usuarios.items, usuarioAutenticado])
 
   const getFamilia = useCallback((familiaId) => familias.items.find((f) => f.id === familiaId), [familias.items])
 
@@ -183,8 +190,9 @@ export function DataProvider({ children }) {
   )
 
   const getPendencias = useCallback(
-    (usuario) => calcularPendencias(usuario, { ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto }),
-    [ofertas, propostas, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
+    (usuario) =>
+      calcularPendencias(usuario, { ofertas, propostas, interacoes, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto }),
+    [ofertas, propostas, interacoes, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
   )
 
   const resetarTodosDados = useCallback(() => {
@@ -207,12 +215,12 @@ export function DataProvider({ children }) {
       propostas,
       documentos,
       usuarioLogado,
-      setUsuarioLogadoId,
       dadosAyamo,
       demandas,
       claims,
       fretes,
       inspecoes,
+      interacoes,
       getFamilia,
       getProduto,
       getDivisao,
@@ -243,12 +251,12 @@ export function DataProvider({ children }) {
       propostas,
       documentos,
       usuarioLogado,
-      setUsuarioLogadoId,
       dadosAyamo,
       demandas,
       claims,
       fretes,
       inspecoes,
+      interacoes,
       getFamilia,
       getProduto,
       getDivisao,

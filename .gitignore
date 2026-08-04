@@ -11,11 +11,16 @@ node_modules
 dist
 dist-ssr
 *.local
+.wrangler
 
 # Chaves de API e segredos -- nunca commitar
 .env
 .env.*
 !.env.example
+
+# SQL gerado por scripts/criar-usuario.mjs -- carrega hash de senha
+admin.sql
+usuario*.sql
 
 # Planilhas e modelos de documento com dados reais da empresa (nunca commitar em repo publico)
 *.xls
