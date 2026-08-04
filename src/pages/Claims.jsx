@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -14,6 +15,7 @@ const TONE_STATUS = { 'Não iniciado': 'neutral', 'Em andamento': 'warning', Res
 
 export default function Claims() {
   const { claims, empresas, produtos, getProduto, getEmpresa } = useData()
+  const { t } = useI18n()
 
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
@@ -59,7 +61,12 @@ export default function Claims() {
 
   return (
     <div>
-      <PageHeader title="Claims" subtitle="Reclamações comerciais e de qualidade por fornecedor" actionLabel="Novo claim" onAction={abrirNovo} />
+      <PageHeader
+        title={t('claims.titulo')}
+        subtitle={t('claims.subtitulo')}
+        actionLabel={t('claims.novo')}
+        onAction={abrirNovo}
+      />
 
       {topImpacto.length > 0 && (
         <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
@@ -69,12 +76,12 @@ export default function Claims() {
       )}
 
       <FilterBar>
-        <Field label="Buscar">
-          <input className={inputClass} placeholder="Produto ou fornecedor" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <Field label={t('comum.buscar')}>
+          <input className={inputClass} placeholder={t('claims.buscaPlaceholder')} value={busca} onChange={(e) => setBusca(e.target.value)} />
         </Field>
-        <Field label="Status">
+        <Field label={t('comum.status')}>
           <select className={inputClass} value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             <option value="Não iniciado">Não iniciado</option>
             <option value="Em andamento">Em andamento</option>
             <option value="Resolvido">Resolvido</option>
@@ -88,35 +95,35 @@ export default function Claims() {
         storageKey="claims"
         data={claimsFiltrados}
         onRowClick={(item) => abrirEdicao(item)}
-        emptyLabel="Nenhum claim registrado"
+        emptyLabel={t('claims.vazio')}
         columns={[
           {
             key: 'fornecedor',
-            header: 'Fornecedor',
+            header: t('comum.fornecedor'),
             toggleable: false,
             render: (item) => getEmpresa(item.fornecedorId)?.nome ?? '—',
             sortValue: (item) => getEmpresa(item.fornecedorId)?.nome ?? '',
           },
           {
             key: 'produto',
-            header: 'Produto',
+            header: t('comum.produto'),
             render: (item) => getProduto(item.produtoId)?.nome ?? '—',
             sortValue: (item) => getProduto(item.produtoId)?.nome ?? '',
           },
-          { key: 'descricao', header: 'Descrição', render: (item) => <span className="whitespace-normal">{item.descricao}</span> },
+          { key: 'descricao', header: t('comum.descricao'), render: (item) => <span className="whitespace-normal">{item.descricao}</span> },
           {
             key: 'impacto',
-            header: 'Impacto financeiro',
+            header: t('claims.impacto'),
             render: (item) => (item.impacto ? formatarValor(item.impacto.valor, item.impacto.moeda) : '—'),
             sortValue: (item) => item.impacto?.valor ?? 0,
           },
           {
             key: 'status',
-            header: 'Status',
+            header: t('comum.status'),
             toggleable: false,
             render: (item) => <StatusBadge label={item.status} tone={TONE_STATUS[item.status] ?? 'neutral'} />,
           },
-          { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+          { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
         ]}
       />
 

@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
+import Botao from '../../components/Botao.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import SeletorContatos from '../../components/SeletorContatos.jsx'
 import { INCOTERMS } from '../../data/unidades.js'
 import { formatarValor } from '../../utils/formato.js'
 
@@ -19,16 +22,49 @@ function valoresIniciais(oferta) {
 }
 
 export default function ModalEnviarOferta({ open, onClose, oferta, produto, fornecedor, clientes }) {
+  const { contatos: contatosCadastro, getEmpresa } = useData()
   const [form, setForm] = useState(valoresIniciais(oferta))
   const [assunto, setAssunto] = useState('')
   const [mensagem, setMensagem] = useState('')
+  const [selecionados, setSelecionados] = useState([])
 
   useEffect(() => {
     if (open) {
       setForm(valoresIniciais(oferta))
+      setSelecionados([])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só reinicializa quando o modal abre, não a cada render do pai
   }, [open])
+
+  // Contatos de todos os clientes ativos — a oferta normalmente vai pra vários de uma vez.
+  const idsClientes = useMemo(() => new Set(clientes.map((c) => c.id)), [clientes])
+  const contatosClientes = useMemo(
+    () =>
+      contatosCadastro.items
+        .filter((c) => idsClientes.has(c.empresaId))
+        .map((c) => ({ ...c, empresaNome: getEmpresa(c.empresaId)?.nome ?? '' })),
+    [contatosCadastro.items, idsClientes, getEmpresa],
+  )
+
+  const selecionadosObj = contatosClientes.filter((c) => selecionados.includes(c.id))
+
+  const numerosSelecionados = useMemo(() => {
+    const manuais = form.whatsapps
+      .split(/[,;]/)
+      .map((n) => n.replace(/\D/g, ''))
+      .filter(Boolean)
+    const dosContatos = selecionadosObj.map((c) => c.telefone.replace(/\D/g, '')).filter(Boolean)
+    return [...new Set([...dosContatos, ...manuais])]
+  }, [selecionadosObj, form.whatsapps])
+
+  const emailsSelecionados = useMemo(() => {
+    const manuais = form.emails
+      .split(/[,;]/)
+      .map((e) => e.trim())
+      .filter(Boolean)
+    const dosContatos = selecionadosObj.map((c) => c.email).filter(Boolean)
+    return [...new Set([...dosContatos, ...manuais])]
+  }, [selecionadosObj, form.emails])
 
   const precoFinal = oferta.precoCusto.valor + Number(form.margem || 0)
 
@@ -65,21 +101,15 @@ Best regards,`)
   }
 
   function enviarPorEmail() {
-    const destinatarios = form.emails
-      .split(/[,;]/)
-      .map((e) => e.trim())
-      .filter(Boolean)
-      .join(',')
-    const url = `mailto:${destinatarios}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(mensagem)}`
+    // Vai tudo em cópia oculta: os clientes não podem ver para quem mais a oferta foi enviada.
+    const url = `mailto:?bcc=${encodeURIComponent(emailsSelecionados.join(','))}&subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(mensagem)}`
     window.location.href = url
   }
 
   function enviarPorWhatsapp() {
-    const numeros = form.whatsapps
-      .split(/[,;]/)
-      .map((n) => n.replace(/\D/g, ''))
-      .filter(Boolean)
-    numeros.forEach((numero) => window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank'))
+    numerosSelecionados.forEach((numero) =>
+      window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank', 'noopener,noreferrer'),
+    )
   }
 
   return (
@@ -90,29 +120,15 @@ Best regards,`)
       width="lg"
       footer={
         <>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-ayamo-border px-4 py-2 text-sm font-medium text-ayamo-text hover:bg-ayamo-bg"
-          >
+          <Botao variante="secundario" onClick={onClose}>
             Fechar
-          </button>
-          <button
-            type="button"
-            onClick={enviarPorWhatsapp}
-            disabled={!form.whatsapps}
-            className="rounded border border-ayamo-primary px-4 py-2 text-sm font-medium text-ayamo-primary hover:bg-ayamo-bg disabled:opacity-40"
-          >
-            Enviar por WhatsApp
-          </button>
-          <button
-            type="button"
-            onClick={enviarPorEmail}
-            disabled={!form.emails}
-            className="rounded bg-ayamo-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-40"
-          >
-            Enviar por e-mail
-          </button>
+          </Botao>
+          <Botao variante="contorno" onClick={enviarPorWhatsapp} disabled={numerosSelecionados.length === 0}>
+            WhatsApp ({numerosSelecionados.length})
+          </Botao>
+          <Botao variante="primario" onClick={enviarPorEmail} disabled={emailsSelecionados.length === 0}>
+            E-mail ({emailsSelecionados.length})
+          </Botao>
         </>
       }
     >
@@ -158,10 +174,21 @@ Best regards,`)
           <Field label="Preço final ao cliente" hint="Custo + margem, calculado">
             <input className={`${inputClass} bg-ayamo-bg`} disabled value={formatarValor(precoFinal, oferta.precoCusto.moeda)} />
           </Field>
-          <Field label="E-mail(s) do cliente" hint="Separados por vírgula">
+          <Field
+            label="Destinatários cadastrados"
+            hint="Marque quantos quiser — o envio é em lote, uma aba de WhatsApp por contato e um único e-mail em Cco"
+          >
+            <SeletorContatos
+              contatos={contatosClientes}
+              selecionados={selecionados}
+              onChange={setSelecionados}
+              vazioLabel="Nenhum contato de cliente cadastrado — use os campos abaixo"
+            />
+          </Field>
+          <Field label="Outros e-mails" hint="Separados por vírgula">
             <input className={inputClass} value={form.emails} onChange={(e) => setForm({ ...form, emails: e.target.value })} />
           </Field>
-          <Field label="WhatsApp (opcional)" hint="Separados por vírgula, com DDI">
+          <Field label="Outros WhatsApp" hint="Separados por vírgula, com DDI">
             <input className={inputClass} value={form.whatsapps} onChange={(e) => setForm({ ...form, whatsapps: e.target.value })} />
           </Field>
         </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -8,6 +9,7 @@ import Field, { inputClass } from '../components/Field.jsx'
 
 export default function Contatos() {
   const { contatos, empresas, categoriasContato } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [busca, setBusca] = useState('')
 
@@ -31,13 +33,13 @@ export default function Contatos() {
 
   return (
     <div>
-      <PageHeader title="Contatos" subtitle="Consulta consolidada de todos os contatos das empresas" />
+      <PageHeader title={t('contatos.titulo')} subtitle={t('contatos.subtitulo')} />
 
       <FilterBar>
-        <Field label="Buscar">
+        <Field label={t('comum.buscar')}>
           <input
             className={inputClass}
-            placeholder="Nome do contato ou da empresa"
+            placeholder={t('contatos.buscaPlaceholder')}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
@@ -49,19 +51,19 @@ export default function Contatos() {
         data={contatosFiltrados}
         onRowClick={(item) => navigate(`/empresas/${item.empresaId}`)}
         columns={[
-          { key: 'nome', header: 'Nome' },
+          { key: 'nome', header: t('contatos.nome') },
           {
             key: 'empresa',
-            header: 'Empresa',
+            header: t('nav.empresas'),
             render: (item) => nomeEmpresa(item.empresaId),
             sortValue: (item) => nomeEmpresa(item.empresaId),
           },
-          { key: 'cargo', header: 'Cargo' },
-          { key: 'telefone', header: 'Telefone' },
-          { key: 'email', header: 'E-mail' },
+          { key: 'cargo', header: t('contatos.cargo') },
+          { key: 'telefone', header: t('contatos.telefone') },
+          { key: 'email', header: t('contatos.email') },
           {
             key: 'categorias',
-            header: 'Categorias',
+            header: t('contatos.categorias'),
             render: (item) => nomesCategorias(item.categoriasIds),
             sortValue: (item) => nomesCategorias(item.categoriasIds),
           },

@@ -2,6 +2,7 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Download, Eye } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -52,6 +53,7 @@ function valoresIniciais() {
 
 export default function Empresas() {
   const { empresas, usuarios, contatos, getUsuario } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -128,7 +130,7 @@ export default function Empresas() {
 
   return (
     <div>
-      <PageHeader title="Empresas" actionLabel="Nova empresa" onAction={abrirNova} />
+      <PageHeader title={t('empresas.titulo')} actionLabel={t('empresas.nova')} onAction={abrirNova} />
 
       {tipoFiltro === 'Fornecedor' && <SupplierDashboard fornecedores={fornecedores} contatos={contatos.items} />}
 
@@ -159,24 +161,24 @@ export default function Empresas() {
       )}
 
       <FilterBar>
-        <Field label="Buscar">
+        <Field label={t('comum.buscar')}>
           <input
             className={inputClass}
-            placeholder="Nome da empresa"
+            placeholder={t('empresas.buscaPlaceholder')}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
         </Field>
-        <Field label="Tipo">
+        <Field label={t('comum.tipo')}>
           <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             <option value="Fornecedor">Fornecedor</option>
             <option value="Cliente">Cliente</option>
           </select>
         </Field>
-        <Field label="Situação">
+        <Field label={t('empresas.situacao')}>
           <select className={inputClass} value={situacaoFiltro} onChange={(e) => setSituacaoFiltro(e.target.value)}>
-            <option value="">Todas</option>
+            <option value="">{t('comum.todas')}</option>
             <option value="Ativo">Ativo</option>
             <option value="Inativo">Inativo</option>
             <option value="Bloqueado">Bloqueado</option>
@@ -258,29 +260,29 @@ export default function Empresas() {
           )
         }}
         columns={[
-          { key: 'nome', header: 'Nome' },
-          { key: 'pais', header: 'País' },
+          { key: 'nome', header: t('contatos.nome') },
+          { key: 'pais', header: t('empresas.pais') },
           {
             key: 'responsavel',
-            header: 'Responsável Ayamo',
+            header: t('empresas.responsavelAyamo'),
             render: (item) => getUsuario(item.responsavelAyamoId)?.nome ?? '—',
             sortValue: (item) => getUsuario(item.responsavelAyamoId)?.nome ?? '',
           },
-          { key: 'moedaPadrao', header: 'Moeda padrão' },
+          { key: 'moedaPadrao', header: t('empresas.moedaPadrao') },
           {
             key: 'qualificacoes',
-            header: 'Qualificações',
+            header: t('empresas.qualificacoes'),
             render: (item) => {
               if (item.tipo !== 'Fornecedor') return '—'
               const { emAndamentoOuAprovado, total } = contarAprovacoes(item.qualificacoesPaises)
               return `${emAndamentoOuAprovado}/${total}`
             },
           },
-          { key: 'limiteCredito', header: 'Limite de crédito', render: (item) => formatarValor(item.limiteCredito, item.moedaPadrao) },
-          { key: 'creditoUtilizado', header: 'Crédito utilizado', render: (item) => formatarValor(item.creditoUtilizado, item.moedaPadrao) },
+          { key: 'limiteCredito', header: t('empresas.limiteCredito'), render: (item) => formatarValor(item.limiteCredito, item.moedaPadrao) },
+          { key: 'creditoUtilizado', header: t('empresas.creditoUtilizado'), render: (item) => formatarValor(item.creditoUtilizado, item.moedaPadrao) },
           {
             key: 'situacao',
-            header: 'Situação',
+            header: t('empresas.situacao'),
             render: (item) => <StatusBadge label={item.situacao} tone={TONE_SITUACAO[item.situacao] ?? 'neutral'} />,
           },
           {
@@ -295,7 +297,7 @@ export default function Empresas() {
                   setDetalheAberto(item)
                 }}
                 className="text-ayamo-text-mut hover:text-ayamo-primary"
-                title="Ver detalhes"
+                title={t('empresas.verDetalhes')}
               >
                 <Eye size={15} />
               </button>

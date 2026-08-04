@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -34,6 +35,7 @@ function formatarMargemAtual(avaliacao) {
 
 export default function Vendas() {
   const { propostas, empresas, usuarios, getEmpresa, getUsuario, getProduto, calcularResumoProposta } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -56,15 +58,20 @@ export default function Vendas() {
 
   return (
     <div>
-      <PageHeader title="Vendas" actionLabel="Nova proposta" onAction={() => setModalAberto(true)} />
+      <PageHeader title={t('vendas.titulo')} actionLabel={t('vendas.novaProposta')} onAction={() => setModalAberto(true)} />
 
       <FilterBar>
-        <Field label="Cliente">
-          <input className={inputClass} placeholder="Nome do cliente" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <Field label={t('comum.cliente')}>
+          <input
+            className={inputClass}
+            placeholder={t('vendas.nomeClientePlaceholder')}
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+          />
         </Field>
-        <Field label="Vendedor">
+        <Field label={t('comum.vendedor')}>
           <select className={inputClass} value={vendedorFiltro} onChange={(e) => setVendedorFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             {vendedores.map((v) => (
               <option key={v.id} value={v.id}>
                 {v.nome}
@@ -72,9 +79,9 @@ export default function Vendas() {
             ))}
           </select>
         </Field>
-        <Field label="Status">
+        <Field label={t('comum.status')}>
           <select className={inputClass} value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             {Object.keys(TONE_STATUS).map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -91,35 +98,35 @@ export default function Vendas() {
         data={propostasFiltradas}
         onRowClick={(item) => navigate(`/vendas/${item.numero}`)}
         columns={[
-          { key: 'numero', header: 'Número' },
+          { key: 'numero', header: t('vendas.numero') },
           {
             key: 'cliente',
-            header: 'Cliente',
+            header: t('comum.cliente'),
             render: (item) => <PopoverContato empresaId={item.clienteId}>{getEmpresa(item.clienteId)?.nome ?? '—'}</PopoverContato>,
             sortValue: (item) => getEmpresa(item.clienteId)?.nome ?? '',
           },
           {
             key: 'vendedor',
-            header: 'Vendedor',
+            header: t('comum.vendedor'),
             render: (item) => getUsuario(item.vendedorId)?.nome ?? '—',
             sortValue: (item) => getUsuario(item.vendedorId)?.nome ?? '',
           },
           {
             key: 'produto',
-            header: 'Produto',
+            header: t('comum.produto'),
             render: (item) => nomesProdutos(item, getProduto),
             sortValue: (item) => nomesProdutos(item, getProduto),
           },
-          { key: 'itens', header: 'Itens', render: (item) => item.itens.length, sortValue: (item) => item.itens.length },
+          { key: 'itens', header: t('vendas.itens'), render: (item) => item.itens.length, sortValue: (item) => item.itens.length },
           {
             key: 'valorTotal',
-            header: 'Valor total',
+            header: t('vendas.valorTotal'),
             render: (item) => formatarValor(calcularResumoProposta(item).vendaUSD, 'USD'),
             sortValue: (item) => calcularResumoProposta(item).vendaUSD,
           },
           {
             key: 'margem',
-            header: 'Margem',
+            header: t('vendas.margem'),
             render: (item) => {
               const avaliacao = avaliarMargem(calcularResumoProposta(item), item)
               return <span className={`font-medium ${CLASSE_TONE[avaliacao.tone]}`}>{formatarMargemAtual(avaliacao)}</span>
@@ -128,10 +135,10 @@ export default function Vendas() {
           },
           {
             key: 'status',
-            header: 'Status',
+            header: t('comum.status'),
             render: (item) => <StatusBadge label={item.status} tone={TONE_STATUS[item.status] ?? 'neutral'} />,
           },
-          { key: 'dataEnvio', header: 'Data de envio', render: (item) => formatarData(item.dataEnvio) },
+          { key: 'dataEnvio', header: t('vendas.dataEnvio'), render: (item) => formatarData(item.dataEnvio) },
         ]}
       />
 

@@ -1,6 +1,7 @@
 import { useMemo, useState, lazy, Suspense } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -18,6 +19,7 @@ const ImportarPlanilhaFretes = lazy(() => import('./freight/ImportarPlanilhaFret
 
 export default function Freight() {
   const { fretes, usuarioLogado } = useData()
+  const { t } = useI18n()
   const podeExcluir = podeExcluirRegistros(usuarioLogado.perfil)
 
   const [busca, setBusca] = useState('')
@@ -74,7 +76,12 @@ export default function Freight() {
 
   return (
     <div>
-      <PageHeader title="Freight" subtitle="Tabela de fretes por rota e transportadora" actionLabel="Novo frete" onAction={abrirNovo} />
+      <PageHeader
+        title={t('freight.titulo')}
+        subtitle={t('freight.subtitulo')}
+        actionLabel={t('freight.novo')}
+        onAction={abrirNovo}
+      />
 
       <div className="mb-4 flex justify-end">
         <button
@@ -102,17 +109,17 @@ export default function Freight() {
       )}
 
       <FilterBar>
-        <Field label="Buscar">
+        <Field label={t('comum.buscar')}>
           <input
             className={inputClass}
-            placeholder="POL, POD ou armador"
+            placeholder={t('freight.buscaPlaceholder')}
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
           />
         </Field>
-        <Field label="Tipo de contêiner">
+        <Field label={t('freight.tipoContainer')}>
           <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             {tiposContainer.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -126,17 +133,17 @@ export default function Freight() {
         rowKey="id"
         data={fretesFiltrados}
         onRowClick={(item) => abrirEdicao(item)}
-        emptyLabel="Nenhum frete registrado"
+        emptyLabel={t('freight.vazio')}
         columns={[
           {
             key: 'rota',
-            header: 'Rota',
+            header: t('freight.rota'),
             render: (item) => `${item.pol || '—'} → ${item.pod || '—'}`,
           },
-          { key: 'anoTrimestre', header: 'Período', render: (item) => `${item.ano || '—'} ${item.trimestre || ''}` },
+          { key: 'anoTrimestre', header: t('freight.periodo'), render: (item) => `${item.ano || '—'} ${item.trimestre || ''}` },
           { key: 'mercado', header: 'Market', render: (item) => item.mercado || '—' },
           { key: 'transportadora', header: 'Shipping Line / Agent', render: (item) => item.transportadora || '—' },
-          { key: 'tipoContainer', header: 'Contêiner', render: (item) => item.tipoContainer || '—' },
+          { key: 'tipoContainer', header: t('freight.container'), render: (item) => item.tipoContainer || '—' },
           { key: 'commodity', header: 'Commodity', render: (item) => item.commodity || '—' },
           {
             key: 'total',
@@ -144,8 +151,8 @@ export default function Freight() {
             render: (item) => formatarValor(totalFreight(item), 'USD'),
             sortValue: (item) => totalFreight(item),
           },
-          { key: 'validade', header: 'Vigência até', render: (item) => <SeloValidade validadeAte={item.vigenciaAte} /> },
-          { key: 'data', header: 'Registrado em', render: (item) => formatarData(item.data) },
+          { key: 'validade', header: t('freight.vigenciaAte'), render: (item) => <SeloValidade validadeAte={item.vigenciaAte} /> },
+          { key: 'data', header: t('freight.registradoEm'), render: (item) => formatarData(item.data) },
           {
             key: '_acoes',
             header: '',

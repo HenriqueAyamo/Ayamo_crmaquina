@@ -2,11 +2,13 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle, ShoppingCart, TrendingUp, FileText, AlertTriangle, ClipboardList, Ship } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import CardList from '../components/CardList.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
 import PopupNovidadesDemandas from '../components/PopupNovidadesDemandas.jsx'
 import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
+import { linkDaPendencia } from '../utils/pendencias.js'
 
 const ICONE_TIPO = {
   Compras: { icon: ShoppingCart, cor: 'text-ayamo-primary' },
@@ -17,11 +19,24 @@ const ICONE_TIPO = {
   Freight: { icon: Ship, cor: 'text-ayamo-teal' },
 }
 
-function CartaoNumerico({ label, valor }) {
+function CartaoNumerico({ label, valor, icone: Icone, tom = 'primary' }) {
+  const TONS = {
+    primary: 'bg-ayamo-primary/10 text-ayamo-primary',
+    success: 'bg-ayamo-success/10 text-ayamo-success',
+    accent: 'bg-ayamo-accent/20 text-ayamo-warning',
+    neutral: 'bg-ayamo-text-mut/10 text-ayamo-text-mut',
+  }
   return (
-    <div className="rounded border border-ayamo-border bg-ayamo-surface p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-ayamo-text">{valor}</p>
+    <div className="rounded-lg border border-ayamo-border bg-ayamo-surface p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-medium uppercase leading-snug tracking-wide text-ayamo-text-mut">{label}</p>
+        {Icone && (
+          <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md ${TONS[tom]}`}>
+            <Icone size={16} />
+          </span>
+        )}
+      </div>
+      <p className="mt-3 text-3xl font-semibold tracking-tight text-ayamo-text">{valor}</p>
     </div>
   )
 }
@@ -37,6 +52,7 @@ function linkDaMovimentacao(item) {
 
 export default function Inicio() {
   const { ofertas, propostas, documentos, claims, demandas, fretes, getProduto, getEmpresa, usuarioLogado, getPendencias } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const ofertasAtivas = obterOfertasAtuais(ofertas.items).filter((o) => o.status === 'Disponível' || o.status === 'Em revisão').length
@@ -101,38 +117,41 @@ export default function Inicio() {
   return (
     <div>
       <PopupNovidadesDemandas />
-      <h1 className="mb-5 text-xl font-semibold text-ayamo-text">Início</h1>
+      <h1 className="mb-5 text-2xl font-semibold tracking-tight text-ayamo-text">{t('inicio.titulo')}</h1>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <CartaoNumerico label="Ofertas ativas" valor={ofertasAtivas} />
-        <CartaoNumerico label="Propostas em negociação" valor={propostasEmNegociacao} />
-        <CartaoNumerico label="Aguardando aprovação de margem" valor={propostasAguardandoAprovacao} />
-        <CartaoNumerico label="Documentos emitidos no mês" valor={documentosNoMes} />
+        <CartaoNumerico label={t('inicio.ofertasAtivas')} valor={ofertasAtivas} icone={ShoppingCart} tom="primary" />
+        <CartaoNumerico label={t('inicio.propostasNegociacao')} valor={propostasEmNegociacao} icone={TrendingUp} tom="success" />
+        <CartaoNumerico label={t('inicio.aguardandoMargem')} valor={propostasAguardandoAprovacao} icone={AlertCircle} tom="accent" />
+        <CartaoNumerico label={t('inicio.documentosMes')} valor={documentosNoMes} icone={FileText} tom="neutral" />
       </div>
 
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <AlertCircle size={16} className="text-ayamo-accent" />
           <h2 className="text-base font-semibold text-ayamo-text">
-            Minhas pendências <span className="font-normal text-ayamo-text-mut">— visão de {usuarioLogado.nome} ({usuarioLogado.perfil})</span>
+            {t('inicio.minhasPendencias')}{' '}
+            <span className="font-normal text-ayamo-text-mut">
+              {t('inicio.visaoDe', { nome: usuarioLogado.nome, perfil: usuarioLogado.perfil })}
+            </span>
           </h2>
         </div>
         {pendencias.length > 0 && (
           <button type="button" onClick={() => navigate('/pendencias')} className="text-sm text-ayamo-primary hover:underline">
-            Ver todas ({pendencias.length})
+            {t('inicio.verTodas', { n: pendencias.length })}
           </button>
         )}
       </div>
 
       {pendencias.length === 0 ? (
-        <EmptyState title="Nada pendente para este usuário" description="Troque o usuário logado no topo da tela para ver outra visão." />
+        <EmptyState title={t('inicio.semPendencias')} description={t('inicio.semPendenciasDica')} />
       ) : (
         <ul className="mb-8 flex flex-col gap-2">
           {pendencias.slice(0, 5).map((p) => (
             <li key={`${p.tipo}-${p.id}-${p.data}`}>
               <button
                 type="button"
-                onClick={() => navigate(p.tipo === 'oferta' ? `/compras/${p.id}` : `/vendas/${p.id}`)}
+                onClick={() => navigate(linkDaPendencia(p))}
                 className="flex w-full items-center justify-between rounded border border-ayamo-border bg-ayamo-surface px-4 py-3 text-left text-sm hover:bg-ayamo-bg"
               >
                 <span>
@@ -146,16 +165,16 @@ export default function Inicio() {
         </ul>
       )}
 
-      <h2 className="mb-3 text-base font-semibold text-ayamo-text">Últimas movimentações</h2>
+      <h2 className="mb-3 text-base font-semibold text-ayamo-text">{t('inicio.ultimasMovimentacoes')}</h2>
       <CardList
         rowKey={(item) => `${item.data}-${item.descricao}`}
         data={movimentacoes}
         onRowClick={(item) => navigate(linkDaMovimentacao(item))}
         columns={[
-          { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+          { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
           {
             key: 'tipo',
-            header: 'Tipo',
+            header: t('comum.tipo'),
             render: (item) => {
               const info = ICONE_TIPO[item.tipo]
               const Icon = info?.icon
@@ -167,7 +186,7 @@ export default function Inicio() {
               )
             },
           },
-          { key: 'descricao', header: 'Descrição' },
+          { key: 'descricao', header: t('comum.descricao') },
         ]}
       />
     </div>

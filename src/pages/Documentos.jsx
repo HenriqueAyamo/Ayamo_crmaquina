@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -11,6 +12,7 @@ const TONE_ENVIO = { Enviado: 'success', 'Não enviado': 'neutral' }
 
 export default function Documentos() {
   const { documentos } = useData()
+  const { t } = useI18n()
   const [tipoFiltro, setTipoFiltro] = useState('')
 
   const documentosFiltrados = useMemo(() => {
@@ -21,12 +23,12 @@ export default function Documentos() {
 
   return (
     <div>
-      <PageHeader title="Documentos" subtitle="POs e Proforma Invoices emitidos" />
+      <PageHeader title={t('documentos.titulo')} subtitle={t('documentos.subtitulo')} />
 
       <FilterBar>
-        <Field label="Tipo">
+        <Field label={t('comum.tipo')}>
           <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             <option value="PO">PO</option>
             <option value="Proforma Invoice">Proforma Invoice</option>
           </select>
@@ -36,18 +38,18 @@ export default function Documentos() {
       <CardList
         rowKey="id"
         data={documentosFiltrados}
-        emptyLabel="Nenhum documento emitido ainda"
+        emptyLabel={t('documentos.vazio')}
         columns={[
-          { key: 'tipo', header: 'Tipo' },
-          { key: 'numero', header: 'Número' },
-          { key: 'propostaNumero', header: 'Proposta de origem' },
-          { key: 'clienteNome', header: 'Destinatário' },
-          { key: 'valor', header: 'Valor', render: (item) => formatarValor(item.valor, item.moeda) },
-          { key: 'moeda', header: 'Moeda' },
-          { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+          { key: 'tipo', header: t('comum.tipo') },
+          { key: 'numero', header: t('vendas.numero') },
+          { key: 'propostaNumero', header: t('documentos.propostaOrigem') },
+          { key: 'clienteNome', header: t('documentos.destinatario') },
+          { key: 'valor', header: t('documentos.valor'), render: (item) => formatarValor(item.valor, item.moeda) },
+          { key: 'moeda', header: t('documentos.moeda') },
+          { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
           {
             key: 'statusEnvio',
-            header: 'Status de envio',
+            header: t('documentos.statusEnvio'),
             render: (item) => <StatusBadge label={item.statusEnvio} tone={TONE_ENVIO[item.statusEnvio] ?? 'neutral'} />,
           },
           {

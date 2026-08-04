@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Sparkles, Hash, DollarSign, AlertTriangle } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import KpiCard from '../components/KpiCard.jsx'
 import BarraRanking from '../components/BarraRanking.jsx'
@@ -22,6 +23,7 @@ function formatarDataHora(iso) {
 
 export default function UsoIA() {
   const { usuarioLogado } = useData()
+  const { t } = useI18n()
   const [dados, setDados] = useState(null)
   const [erro, setErro] = useState(null)
   const [carregando, setCarregando] = useState(true)
@@ -37,12 +39,12 @@ export default function UsoIA() {
   }, [podeVer])
 
   if (!podeVer) {
-    return <EmptyState title="Acesso restrito" description="Só Administradores podem ver o uso de IA." />
+    return <EmptyState title={t('usoIA.restrito')} description={t('usoIA.restritoDica')} />
   }
 
   return (
     <div>
-      <PageHeader title="Uso de IA" subtitle="Requisições, custo estimado e histórico de importações assistidas por IA" />
+      <PageHeader title={t('usoIA.titulo')} subtitle={t('usoIA.subtitulo')} />
 
       {carregando && <p className="text-sm text-ayamo-text-mut">Carregando...</p>}
       {erro && <p className="rounded border border-ayamo-danger bg-ayamo-danger/10 px-4 py-3 text-sm text-ayamo-danger">{erro}</p>}
@@ -50,15 +52,15 @@ export default function UsoIA() {
       {dados && (
         <>
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <KpiCard label="Requisições no mês" value={dados.resumoMes.requisicoes} icon={Hash} tone="primary" />
-            <KpiCard label="Custo estimado no mês" value={formatarUSD(dados.resumoMes.custoUSD)} icon={DollarSign} tone="success" />
+            <KpiCard label={t('usoIA.requisicoesMes')} value={dados.resumoMes.requisicoes} icon={Hash} tone="primary" />
+            <KpiCard label={t('usoIA.custoMes')} value={formatarUSD(dados.resumoMes.custoUSD)} icon={DollarSign} tone="success" />
             <KpiCard
-              label="Tokens usados"
+              label={t('usoIA.tokens')}
               value={(dados.resumoMes.tokensInput + dados.resumoMes.tokensOutput).toLocaleString('pt-BR')}
               icon={Sparkles}
               tone="teal"
             />
-            <KpiCard label="Erros no mês" value={dados.resumoMes.erros} icon={AlertTriangle} tone={dados.resumoMes.erros > 0 ? 'danger' : 'primary'} />
+            <KpiCard label={t('usoIA.errosMes')} value={dados.resumoMes.erros} icon={AlertTriangle} tone={dados.resumoMes.erros > 0 ? 'danger' : 'primary'} />
           </div>
 
           {dados.porDia.length > 0 && (
@@ -75,20 +77,20 @@ export default function UsoIA() {
           <CardList
             rowKey={(item) => `${item.criado_em}-${item.tipo}`}
             data={dados.historico}
-            emptyLabel="Nenhuma requisição de IA registrada ainda"
+            emptyLabel={t('usoIA.vazio')}
             columns={[
-              { key: 'criado_em', header: 'Data/hora', render: (item) => formatarDataHora(item.criado_em) },
-              { key: 'tipo', header: 'Tipo' },
-              { key: 'usuario', header: 'Usuário', render: (item) => item.usuario || '—' },
-              { key: 'modelo', header: 'Modelo' },
+              { key: 'criado_em', header: t('usoIA.dataHora'), render: (item) => formatarDataHora(item.criado_em) },
+              { key: 'tipo', header: t('comum.tipo') },
+              { key: 'usuario', header: t('usoIA.usuario'), render: (item) => item.usuario || '—' },
+              { key: 'modelo', header: t('usoIA.modelo') },
               { key: 'tokens', header: 'Tokens', render: (item) => `${item.tokens_input} in / ${item.tokens_output} out` },
-              { key: 'custo', header: 'Custo', render: (item) => formatarUSD(item.custo_usd) },
+              { key: 'custo', header: t('usoIA.custo'), render: (item) => formatarUSD(item.custo_usd) },
               {
                 key: 'status',
-                header: 'Status',
+                header: t('comum.status'),
                 render: (item) =>
                   item.sucesso ? (
-                    <StatusBadge label="Sucesso" tone="success" />
+                    <StatusBadge label={t('usoIA.sucesso')} tone="success" />
                   ) : (
                     <StatusBadge label={item.erro ? `Erro: ${item.erro}` : 'Erro'} tone="danger" />
                   ),

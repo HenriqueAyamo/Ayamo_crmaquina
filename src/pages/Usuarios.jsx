@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { Plus, Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
@@ -20,6 +21,7 @@ function valoresIniciais() {
 
 export default function Usuarios() {
   const { usuarios, divisoes, getDivisao, usuarioLogado } = useData()
+  const { t } = useI18n()
   const [modalAberto, setModalAberto] = useState(false)
   const [editando, setEditando] = useState(null)
   const [form, setForm] = useState(valoresIniciais())
@@ -113,7 +115,12 @@ export default function Usuarios() {
 
   return (
     <div>
-      <PageHeader title="Usuários" subtitle="Colaboradores da Ayamo e hierarquia de aprovação" actionLabel="Novo usuário" onAction={abrirNovo} />
+      <PageHeader
+        title={t('usuarios.titulo')}
+        subtitle={t('usuarios.subtitulo')}
+        actionLabel={t('usuarios.novo')}
+        onAction={abrirNovo}
+      />
 
       <div className="mb-4 flex justify-end">
         <DisabledActionTooltip desabilitado={!podeImportar} motivo={MOTIVOS.gerenciarUsuarios}>
@@ -140,11 +147,11 @@ export default function Usuarios() {
         rowKey="id"
         data={usuarios.items}
         columns={[
-          { key: 'nome', header: 'Nome' },
-          { key: 'email', header: 'E-mail' },
+          { key: 'nome', header: t('contatos.nome') },
+          { key: 'email', header: t('contatos.email') },
           {
             key: 'perfil',
-            header: 'Perfil',
+            header: t('usuarios.perfil'),
             render: (item) => (
               <select
                 className="rounded border border-ayamo-border bg-ayamo-surface px-2 py-1 text-xs text-ayamo-text outline-none focus:border-ayamo-primary"
@@ -160,10 +167,10 @@ export default function Usuarios() {
               </select>
             ),
           },
-          { key: 'responsabilidades', header: 'Responsabilidades', render: (item) => resumoResponsabilidades(item.responsabilidades) },
+          { key: 'responsabilidades', header: t('usuarios.responsabilidades'), render: (item) => resumoResponsabilidades(item.responsabilidades) },
           {
             key: 'situacao',
-            header: 'Situação',
+            header: t('empresas.situacao'),
             render: (item) => <StatusBadge label={item.situacao} tone={item.situacao === 'Ativo' ? 'success' : 'neutral'} />,
           },
           {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -11,6 +12,7 @@ import HistoricoNegocios from './empresas/HistoricoNegocios.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
+import SecaoInteracoes from '../components/SecaoInteracoes.jsx'
 import { formatarValor, formatarData } from '../utils/formato.js'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { ultimaInteracaoEmpresa, toneUltimaInteracao } from '../utils/ultimaInteracao.js'
@@ -22,6 +24,7 @@ export default function EmpresasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { empresas, contatos, categoriasContato, produtos, ofertas, propostas, getUsuario } = useData()
+  const { t } = useI18n()
 
   const empresa = empresas.items.find((e) => e.id === Number(id))
 
@@ -32,7 +35,7 @@ export default function EmpresasDetalhe() {
   const [modalVendaAberto, setModalVendaAberto] = useState(false)
 
   if (!empresa) {
-    return <EmptyState title="Empresa não encontrada" />
+    return <EmptyState title={t('empresas.naoEncontrada')} />
   }
 
   const ultimaInteracao = ultimaInteracaoEmpresa(empresa, { ofertas, propostas })
@@ -122,7 +125,7 @@ export default function EmpresasDetalhe() {
 
         <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
-            <dt className="text-ayamo-text-mut">Responsável Ayamo</dt>
+            <dt className="text-ayamo-text-mut">{t('empresas.responsavelAyamo')}</dt>
             <dd className="font-medium text-ayamo-text">{getUsuario(empresa.responsavelAyamoId)?.nome ?? '—'}</dd>
           </div>
           <div>
@@ -139,19 +142,19 @@ export default function EmpresasDetalhe() {
             </dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Moeda padrão</dt>
+            <dt className="text-ayamo-text-mut">{t('empresas.moedaPadrao')}</dt>
             <dd className="font-medium text-ayamo-text">{empresa.moedaPadrao}</dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Limite de crédito</dt>
+            <dt className="text-ayamo-text-mut">{t('empresas.limiteCredito')}</dt>
             <dd className="font-medium text-ayamo-text">{formatarValor(empresa.limiteCredito, empresa.moedaPadrao)}</dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Crédito utilizado</dt>
+            <dt className="text-ayamo-text-mut">{t('empresas.creditoUtilizado')}</dt>
             <dd className="font-medium text-ayamo-text">{formatarValor(empresa.creditoUtilizado, empresa.moedaPadrao)}</dd>
           </div>
           <div className="col-span-2">
-            <dt className="text-ayamo-text-mut">Endereço</dt>
+            <dt className="text-ayamo-text-mut">{t('empresas.endereco')}</dt>
             <dd className="font-medium text-ayamo-text">{empresa.endereco || '—'}</dd>
           </div>
           <div>
@@ -214,10 +217,12 @@ export default function EmpresasDetalhe() {
         </SecaoRecolhivel>
       )}
 
+      <SecaoInteracoes empresaId={empresa.id} />
+
       <HistoricoNegocios empresa={empresa} />
 
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-base font-semibold text-ayamo-text">Contatos</h2>
+        <h2 className="text-base font-semibold text-ayamo-text">{t('empresas.contatos')}</h2>
         <button
           type="button"
           onClick={abrirNovoContato}
@@ -232,13 +237,13 @@ export default function EmpresasDetalhe() {
         data={contatosDaEmpresa}
         emptyLabel="Nenhum contato cadastrado para esta empresa"
         columns={[
-          { key: 'nome', header: 'Nome' },
-          { key: 'cargo', header: 'Cargo' },
-          { key: 'telefone', header: 'Telefone' },
-          { key: 'email', header: 'E-mail' },
+          { key: 'nome', header: t('contatos.nome') },
+          { key: 'cargo', header: t('contatos.cargo') },
+          { key: 'telefone', header: t('contatos.telefone') },
+          { key: 'email', header: t('contatos.email') },
           {
             key: 'categorias',
-            header: 'Categorias',
+            header: t('contatos.categorias'),
             render: (item) => nomesCategorias(item.categoriasIds),
             sortValue: (item) => nomesCategorias(item.categoriasIds),
           },

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import { sanitizarUrlImagem } from '../utils/sanitizarUrl.js'
@@ -17,6 +18,7 @@ function valoresIniciais(usuario) {
 
 export default function Settings() {
   const { usuarioLogado, usuarios, resetarTodosDados } = useData()
+  const { t } = useI18n()
   const [form, setForm] = useState(() => valoresIniciais(usuarioLogado))
   const [previewNoEmail, setPreviewNoEmail] = useState(false)
   const [salvo, setSalvo] = useState(false)
@@ -43,7 +45,7 @@ export default function Settings() {
 
   return (
     <div>
-      <PageHeader title="Minha Conta" subtitle="Assinatura de e-mail usada nos envios de oferta" />
+      <PageHeader title={t('conta.titulo')} subtitle={t('conta.subtitulo')} />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <form onSubmit={salvar} className="flex flex-col gap-4 rounded border border-ayamo-border bg-ayamo-surface p-5">

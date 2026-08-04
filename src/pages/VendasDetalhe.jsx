@@ -1,23 +1,28 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { BellRing, FileText, MessageCircle, Pencil, Trash2 } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import { obterNotaCambio } from '../data/cambio.js'
 import StatusBadge from '../components/StatusBadge.jsx'
+import Botao from '../components/Botao.jsx'
+import MenuAcoes from '../components/MenuAcoes.jsx'
+import CabecalhoDetalhe from '../components/CabecalhoDetalhe.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import HistoricoNegociacao from './vendas/HistoricoNegociacao.jsx'
 import TabelaItensProposta from './vendas/TabelaItensProposta.jsx'
 import ModalFechamento from './vendas/ModalFechamento.jsx'
+import ModalEditarItens from './vendas/ModalEditarItens.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import ModalEnviarWhatsApp from '../components/ModalEnviarWhatsApp.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
+import SecaoInteracoes from '../components/SecaoInteracoes.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
-import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
-import { formatarData, formatarPreco } from '../utils/formato.js'
+import { formatarData } from '../utils/formato.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
-import { diasSemResposta, mensagemCobrancaProposta } from '../utils/mensagensWhatsApp.js'
+import { diasSemResposta, modeloCobrancaProposta, modeloPropostaCliente } from '../utils/mensagensWhatsApp.js'
 import { TONELADAS_POR_CONTAINER } from '../data/toneladasPorContainer.js'
 
 const TONE_STATUS = {
@@ -34,6 +39,7 @@ const TONE_STATUS = {
 export default function VendasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useI18n()
   const {
     propostas,
     ofertas,
@@ -58,12 +64,13 @@ export default function VendasDetalhe() {
   const [modalCompraAberto, setModalCompraAberto] = useState(false)
   const [modalWhatsappAberto, setModalWhatsappAberto] = useState(false)
   const [modalCobrancaAberto, setModalCobrancaAberto] = useState(false)
+  const [modalItensAberto, setModalItensAberto] = useState(false)
   const [erroCredito, setErroCredito] = useState(null)
 
   const proposta = propostas.items.find((p) => p.numero === id)
 
   if (!proposta) {
-    return <EmptyState title="Proposta não encontrada" />
+    return <EmptyState title={t('vendas.naoEncontrada')} />
   }
 
   const podeExcluir = podeExcluirRegistros(usuarioLogado.perfil)
@@ -86,20 +93,6 @@ export default function VendasDetalhe() {
   const propostasIrmas = proposta.grupoEnvioId
     ? propostas.items.filter((p) => p.grupoEnvioId === proposta.grupoEnvioId && p.id !== proposta.id)
     : []
-
-  function mensagemPropostaCliente() {
-    const produtoNome = getProduto(itemPrincipal.produtoId)?.nome ?? ''
-    return `Olá! Sobre a proposta ${proposta.numero} (${produtoNome}):
-
-- Quantidade: ${itemPrincipal.quantidade.toLocaleString('pt-BR')} ${itemPrincipal.unidade}${itemPrincipal.numeroContainers ? ` (${itemPrincipal.numeroContainers} contêiner${itemPrincipal.numeroContainers > 1 ? 'es' : ''})` : ''}
-- Preço: ${formatarPreco(itemPrincipal.precoVenda.valor, itemPrincipal.precoVenda.moeda, itemPrincipal.precoVenda.unidade)}
-- Incoterm: ${proposta.incoterm || '—'}
-- Embarque: ${proposta.embarqueDe || 'a definir'} até ${proposta.embarqueAte || 'a definir'}
-- Prazo de pagamento: ${proposta.prazoPagamento || '—'}
-- Status atual: ${proposta.status}
-
-Aguardamos seu retorno para seguirmos com o fechamento.`
-  }
 
   const podeCobrar = ['Rascunho', 'Enviada', 'Em negociação'].includes(proposta.status)
 
@@ -177,82 +170,74 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
 
   const nota = obterNotaCambio(itemPrincipal.precoCusto, itemPrincipal.precoVenda)
 
+  const acoesSecundarias = [
+    {
+      label: t('vendas.editarItens'),
+      icone: Pencil,
+      onClick: () => setModalItensAberto(true),
+    },
+    {
+      label: t('vendas.gerarProforma'),
+      icone: FileText,
+      tone: 'primario',
+      onClick: () => navigate(`/vendas/${proposta.numero}/proforma`),
+    },
+    {
+      label: t('vendas.excluirProposta'),
+      icone: Trash2,
+      tone: 'perigo',
+      onClick: excluirProposta,
+      desabilitado: !podeExcluir,
+      motivo: MOTIVOS.excluirRegistro,
+      separadorAntes: true,
+    },
+  ]
+
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => navigate('/vendas')}
-        className="mb-4 flex items-center gap-1 text-sm text-ayamo-text-mut hover:text-ayamo-text"
-      >
-        <ArrowLeft size={16} />
-        Voltar para Vendas
-      </button>
-
-      <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-ayamo-text">{proposta.numero}</h1>
-            <p className="text-sm text-ayamo-text-mut">
-              <PopoverContato empresaId={proposta.clienteId}>{getEmpresa(proposta.clienteId)?.nome}</PopoverContato> · Vendedor:{' '}
-              {getUsuario(proposta.vendedorId)?.nome} · Enviada em{' '}
-              {formatarData(proposta.dataEnvio)}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <StatusBadge label={proposta.status} tone={TONE_STATUS[proposta.status] ?? 'neutral'} />
-            <button
-              type="button"
-              onClick={() => setModalWhatsappAberto(true)}
-              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-success hover:bg-ayamo-bg"
-            >
-              Enviar via WhatsApp
-            </button>
+      <CabecalhoDetalhe
+        voltarLabel={t('vendas.voltar')}
+        onVoltar={() => navigate('/vendas')}
+        titulo={proposta.numero}
+        subtitulo={
+          <>
+            <PopoverContato empresaId={proposta.clienteId}>{getEmpresa(proposta.clienteId)?.nome}</PopoverContato> · Vendedor:{' '}
+            {getUsuario(proposta.vendedorId)?.nome} · Enviada em {formatarData(proposta.dataEnvio)}
+          </>
+        }
+        selos={<StatusBadge label={proposta.status} tone={TONE_STATUS[proposta.status] ?? 'neutral'} />}
+        acoes={
+          <>
             {podeCobrar && (
-              <button
-                type="button"
-                onClick={() => setModalCobrancaAberto(true)}
-                className="rounded border border-ayamo-warning px-3 py-1.5 text-xs font-medium text-ayamo-warning hover:bg-ayamo-bg"
-              >
-                Cobrar resposta ({diasSemResposta(proposta)}d)
-              </button>
+              <Botao variante="alerta" tamanho="sm" icone={BellRing} onClick={() => setModalCobrancaAberto(true)}>
+                {t('vendas.cobrarResposta', { dias: diasSemResposta(proposta) })}
+              </Botao>
             )}
-            <button
-              type="button"
-              onClick={() => navigate(`/vendas/${proposta.numero}/proforma`)}
-              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-            >
-              Gerar Proforma
-            </button>
-            <DisabledActionTooltip desabilitado={!podeExcluir} motivo={MOTIVOS.excluirRegistro}>
-              <button
-                type="button"
-                disabled={!podeExcluir}
-                onClick={excluirProposta}
-                className="flex items-center gap-1 rounded border border-ayamo-danger px-3 py-1.5 text-xs font-medium text-ayamo-danger hover:bg-ayamo-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Trash2 size={13} />
-                Excluir
-              </button>
-            </DisabledActionTooltip>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">Visualizar como:</span>
+            <Botao variante="sucesso" tamanho="sm" icone={MessageCircle} onClick={() => setModalWhatsappAberto(true)}>
+              {t('vendas.enviarWhatsApp')}
+            </Botao>
+            <MenuAcoes itens={acoesSecundarias} />
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-ayamo-text-mut">{t('vendas.visualizarComo')}</span>
           {['Vendedor', 'Comprador', 'Financeiro'].map((opcao) => (
             <button
               key={opcao}
               type="button"
               onClick={() => setPerfil(opcao)}
-              className={`rounded px-3 py-1 text-xs font-medium ${
-                perfil === opcao ? 'bg-ayamo-primary text-white' : 'border border-ayamo-border text-ayamo-text-mut'
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                perfil === opcao
+                  ? 'bg-ayamo-primary text-white'
+                  : 'border border-ayamo-border text-ayamo-text-mut hover:bg-ayamo-bg hover:text-ayamo-text'
               }`}
             >
               {opcao}
             </button>
           ))}
         </div>
-      </div>
+      </CabecalhoDetalhe>
 
       {propostasIrmas.length > 0 && (
         <div className="mb-6 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-4 py-3 text-sm text-ayamo-text">
@@ -312,7 +297,7 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
       </SecaoRecolhivel>
 
       <div className="mb-3 flex items-center gap-2">
-        <h2 className="text-base font-semibold text-ayamo-text">Itens</h2>
+        <h2 className="text-base font-semibold text-ayamo-text">{t('vendas.itens')}</h2>
         {proposta.mixContainer && (
           <span className="rounded-full border border-ayamo-accent/40 bg-ayamo-accent/10 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-ayamo-accent">
             Mix container
@@ -392,7 +377,11 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
         onRecusarCredito={handleRecusarCredito}
       />
 
+      <SecaoInteracoes empresaId={proposta.clienteId} refTipo="proposta" refId={proposta.numero} />
+
       <SecaoInspecoes contexto="Venda" refCodigo={proposta.numero} />
+
+      <ModalEditarItens open={modalItensAberto} onClose={() => setModalItensAberto(false)} proposta={proposta} />
 
       <ModalFechamento
         open={modalFechamentoAberto}
@@ -429,7 +418,7 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
         onClose={() => setModalWhatsappAberto(false)}
         titulo={`Enviar via WhatsApp — ${cliente?.nome ?? ''}`}
         contatos={contatosCliente}
-        mensagemInicial={mensagemPropostaCliente()}
+        modelo={modeloPropostaCliente(proposta, getProduto(itemPrincipal.produtoId)?.nome)}
       />
 
       <ModalEnviarWhatsApp
@@ -437,7 +426,7 @@ Aguardamos seu retorno para seguirmos com o fechamento.`
         onClose={() => setModalCobrancaAberto(false)}
         titulo={`Cobrar resposta via WhatsApp — ${cliente?.nome ?? ''}`}
         contatos={contatosCliente}
-        mensagemInicial={mensagemCobrancaProposta(proposta, getProduto(itemPrincipal.produtoId)?.nome ?? '')}
+        modelo={modeloCobrancaProposta(proposta, getProduto(itemPrincipal.produtoId)?.nome)}
       />
     </div>
   )

@@ -2,6 +2,8 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
+import Botao from '../components/Botao.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -29,6 +31,7 @@ const TONE_STATUS = {
 
 export default function Compras() {
   const { ofertas, produtos, empresas, divisoes, getDivisaoIdDeProduto, getProduto, getEmpresa } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -63,50 +66,42 @@ export default function Compras() {
 
   return (
     <div>
-      <PageHeader title="Compras" actionLabel="Nova oferta" onAction={() => setModalAberto(true)} />
+      <PageHeader title={t('compras.titulo')} actionLabel={t('compras.novaOferta')} onAction={() => setModalAberto(true)} />
 
       <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-1 border-b border-ayamo-border">
           {[
-            { id: 'ofertas', label: 'Ofertas' },
-            { id: 'precos', label: 'Histórico de preço' },
-          ].map((t) => (
+            { id: 'ofertas', label: t('compras.abaOfertas') },
+            { id: 'precos', label: t('compras.abaPrecos') },
+          ].map((item) => (
             <button
-              key={t.id}
+              key={item.id}
               type="button"
-              onClick={() => setAba(t.id)}
+              onClick={() => setAba(item.id)}
               className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                aba === t.id ? 'border-ayamo-primary text-ayamo-primary' : 'border-transparent text-ayamo-text-mut hover:text-ayamo-text'
+                aba === item.id ? 'border-ayamo-primary text-ayamo-primary' : 'border-transparent text-ayamo-text-mut hover:text-ayamo-text'
               }`}
             >
-              {t.label}
+              {item.label}
             </button>
           ))}
         </div>
         {aba === 'ofertas' && (
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setModalAgrupadaAberto(true)}
-              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
-            >
-              Oferta mix container
-            </button>
-            <button
-              type="button"
-              onClick={() => setImportarAberto((atual) => !atual)}
-              className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
-            >
-              {importarAberto ? 'Fechar importação' : 'Importar planilha'}
-            </button>
-            <button
-              type="button"
+            <Botao variante="secundario" tamanho="sm" onClick={() => setModalAgrupadaAberto(true)}>
+              {t('compras.mixContainer')}
+            </Botao>
+            <Botao variante="secundario" tamanho="sm" onClick={() => setImportarAberto((atual) => !atual)}>
+              {importarAberto ? t('compras.fecharImportacao') : t('compras.importarPlanilha')}
+            </Botao>
+            <Botao
+              variante="secundario"
+              tamanho="sm"
+              icone={Download}
               onClick={() => exportarOfertasExcel(ofertasFiltradas, { getProduto, getEmpresa })}
-              className="flex items-center gap-1.5 rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text-mut hover:bg-ayamo-bg"
             >
-              <Download size={14} />
-              Exportar Excel
-            </button>
+              {t('compras.exportarExcel')}
+            </Botao>
           </div>
         )}
       </div>
@@ -117,17 +112,17 @@ export default function Compras() {
         <>
           {importarAberto && (
             <div className="mb-4">
-              <Suspense fallback={<p className="text-sm text-ayamo-text-mut">Carregando importador...</p>}>
+              <Suspense fallback={<p className="text-sm text-ayamo-text-mut">{t('compras.carregandoImportador')}</p>}>
                 <ImportarPlanilha />
               </Suspense>
             </div>
           )}
 
           <FilterBar>
-            <Field label="Buscar">
-              <input className={inputClass} placeholder="Produto" value={busca} onChange={(e) => setBusca(e.target.value)} />
+            <Field label={t('comum.buscar')}>
+              <input className={inputClass} placeholder={t('comum.produto')} value={busca} onChange={(e) => setBusca(e.target.value)} />
             </Field>
-            <Field label="Produto">
+            <Field label={t('comum.produto')}>
               <select className={inputClass} value={produtoFiltro} onChange={(e) => setProdutoFiltro(e.target.value)}>
                 <option value="">Todos</option>
                 {produtosAtivos.map((p) => (
@@ -137,16 +132,16 @@ export default function Compras() {
                 ))}
               </select>
             </Field>
-            <Field label="Tipo">
+            <Field label={t('comum.tipo')}>
               <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-                <option value="">Todos</option>
-                <option value="Oferta">Oferta</option>
+                <option value="">{t('comum.todos')}</option>
+                <option value="Oferta">{t('pendencias.oferta')}</option>
                 <option value="Position">Position</option>
               </select>
             </Field>
-            <Field label="Divisão">
+            <Field label={t('comum.divisao')}>
               <select className={inputClass} value={divisaoFiltro} onChange={(e) => setDivisaoFiltro(e.target.value)}>
-                <option value="">Todas</option>
+                <option value="">{t('comum.todas')}</option>
                 {divisoes.items.map((d) => (
                   <option key={d.id} value={d.id}>
                     {d.nome}
@@ -154,9 +149,9 @@ export default function Compras() {
                 ))}
               </select>
             </Field>
-            <Field label="Fornecedor">
+            <Field label={t('comum.fornecedor')}>
               <select className={inputClass} value={fornecedorFiltro} onChange={(e) => setFornecedorFiltro(e.target.value)}>
-                <option value="">Todos</option>
+                <option value="">{t('comum.todos')}</option>
                 {fornecedores.map((f) => (
                   <option key={f.id} value={f.id}>
                     {f.nome}
@@ -164,9 +159,9 @@ export default function Compras() {
                 ))}
               </select>
             </Field>
-            <Field label="Status">
+            <Field label={t('comum.status')}>
               <select className={inputClass} value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
-                <option value="">Todos</option>
+                <option value="">{t('comum.todos')}</option>
                 {Object.keys(TONE_STATUS).map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -183,10 +178,10 @@ export default function Compras() {
             data={ofertasFiltradas}
             onRowClick={(item) => navigate(`/compras/${item.codigoBase}`)}
             columns={[
-              { key: 'codigo', header: 'Código' },
+              { key: 'codigo', header: t('comum.codigo') },
               {
                 key: 'tipoRegistro',
-                header: 'Tipo',
+                header: t('comum.tipo'),
                 toggleable: false,
                 render: (item) => (
                   <StatusBadge label={item.tipoRegistro ?? 'Position'} tone={(item.tipoRegistro ?? 'Position') === 'Position' ? 'info' : 'accent'} />
@@ -194,36 +189,36 @@ export default function Compras() {
               },
               {
                 key: 'produto',
-                header: 'Produto',
+                header: t('comum.produto'),
                 render: (item) => getProduto(item.produtoId)?.nome ?? '—',
                 sortValue: (item) => getProduto(item.produtoId)?.nome ?? '',
               },
               {
                 key: 'proteina',
-                header: 'Proteína %',
+                header: t('compras.proteina'),
                 render: (item) => (getProduto(item.produtoId)?.proteinaPercentual ? `${getProduto(item.produtoId).proteinaPercentual}%` : '—'),
               },
               {
                 key: 'fornecedor',
-                header: 'Fornecedor',
+                header: t('comum.fornecedor'),
                 render: (item) => (
                   <PopoverContato empresaId={item.fornecedorId}>{getEmpresa(item.fornecedorId)?.nome ?? '—'}</PopoverContato>
                 ),
                 sortValue: (item) => getEmpresa(item.fornecedorId)?.nome ?? '',
               },
-              { key: 'mfgSite', header: 'Site de fabricação', render: (item) => item.mfgSite || '—' },
+              { key: 'mfgSite', header: t('compras.mfgSite'), render: (item) => item.mfgSite || '—' },
               {
                 key: 'precoCusto',
-                header: 'Preço de custo',
+                header: t('compras.precoCusto'),
                 render: (item) => formatarPreco(item.precoCusto.valor, item.precoCusto.moeda, item.precoCusto.unidade),
                 sortValue: (item) => item.precoCusto.valor,
               },
               {
                 key: 'quantidade',
-                header: 'Vendido / restante',
+                header: t('compras.vendidoRestante'),
                 render: (item) =>
                   item.quantidade == null ? (
-                    <span className="text-ayamo-text-mut">A definir</span>
+                    <span className="text-ayamo-text-mut">{t('compras.aDefinir')}</span>
                   ) : (
                     <BarraEstoque total={item.quantidadeOriginal ?? item.quantidade} restante={item.quantidade} unidade={item.unidade} />
                   ),
@@ -231,12 +226,12 @@ export default function Compras() {
               },
               {
                 key: 'status',
-                header: 'Status',
+                header: t('comum.status'),
                 render: (item) => <StatusBadge label={item.status} tone={TONE_STATUS[item.status] ?? 'neutral'} />,
               },
               {
                 key: 'statusProducao',
-                header: 'Produção',
+                header: t('compras.producao'),
                 render: (item) =>
                   item.statusProducao ? (
                     <StatusBadge label={item.statusProducao} tone={TONE_STATUS_PRODUCAO[item.statusProducao] ?? 'neutral'} />
@@ -244,8 +239,8 @@ export default function Compras() {
                     '—'
                   ),
               },
-              { key: 'validade', header: 'Validade', render: (item) => <SeloValidade validadeAte={item.validadeAte} /> },
-              { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+              { key: 'validade', header: t('compras.validade'), render: (item) => <SeloValidade validadeAte={item.validadeAte} /> },
+              { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
             ]}
           />
         </>

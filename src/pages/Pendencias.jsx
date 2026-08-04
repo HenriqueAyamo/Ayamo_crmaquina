@@ -1,20 +1,24 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
+import Botao from '../components/Botao.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import ModalEnviarWhatsApp from '../components/ModalEnviarWhatsApp.jsx'
 import { formatarData } from '../utils/formato.js'
-import { mensagemCobrancaProposta } from '../utils/mensagensWhatsApp.js'
+import { modeloCobrancaProposta } from '../utils/mensagensWhatsApp.js'
+import { linkDaPendencia } from '../utils/pendencias.js'
 
-const ROTULO_TIPO = { proposta: 'Proposta', oferta: 'Oferta' }
 const STATUS_COBRAVEIS = ['Rascunho', 'Enviada', 'Em negociação']
 
 export default function Pendencias() {
   const { usuarioLogado, getPendencias, propostas, contatos, getProduto } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
+  const rotuloTipo = { proposta: t('pendencias.proposta'), oferta: t('pendencias.oferta'), followup: t('pendencias.followup') }
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [cobrancaAlvo, setCobrancaAlvo] = useState(null)
 
@@ -36,16 +40,17 @@ export default function Pendencias() {
   return (
     <div>
       <PageHeader
-        title="Pendências"
-        subtitle={`Visão de ${usuarioLogado.nome} (${usuarioLogado.perfil}) — troque o usuário logado no topo da tela para ver outra visão`}
+        title={t('pendencias.titulo')}
+        subtitle={t('pendencias.subtitulo', { nome: usuarioLogado.nome, perfil: usuarioLogado.perfil })}
       />
 
       <FilterBar>
-        <Field label="Tipo">
+        <Field label={t('comum.tipo')}>
           <select className={inputClass} value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-            <option value="">Todos</option>
-            <option value="proposta">Proposta</option>
-            <option value="oferta">Oferta</option>
+            <option value="">{t('comum.todos')}</option>
+            <option value="proposta">{t('pendencias.proposta')}</option>
+            <option value="oferta">{t('pendencias.oferta')}</option>
+            <option value="followup">{t('pendencias.followup')}</option>
           </select>
         </Field>
       </FilterBar>
@@ -53,13 +58,13 @@ export default function Pendencias() {
       <CardList
         rowKey={(item) => `${item.tipo}-${item.id}-${item.data}`}
         data={pendenciasFiltradas}
-        emptyLabel="Nada pendente para este usuário"
-        onRowClick={(item) => navigate(item.tipo === 'oferta' ? `/compras/${item.id}` : `/vendas/${item.id}`)}
+        emptyLabel={t('pendencias.vazio')}
+        onRowClick={(item) => navigate(linkDaPendencia(item))}
         columns={[
-          { key: 'titulo', header: 'Título' },
-          { key: 'tipo', header: 'Tipo', render: (item) => ROTULO_TIPO[item.tipo] ?? item.tipo },
-          { key: 'descricao', header: 'Descrição' },
-          { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+          { key: 'titulo', header: t('comum.titulo') },
+          { key: 'tipo', header: t('comum.tipo'), render: (item) => rotuloTipo[item.tipo] ?? item.tipo },
+          { key: 'descricao', header: t('comum.descricao') },
+          { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
           {
             key: '_acoes',
             header: '',
@@ -67,16 +72,16 @@ export default function Pendencias() {
               const proposta = propostaCobravel(item)
               if (!proposta) return null
               return (
-                <button
-                  type="button"
+                <Botao
+                  variante="alerta"
+                  tamanho="sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     setCobrancaAlvo(proposta)
                   }}
-                  className="rounded border border-ayamo-warning px-3 py-1.5 text-xs font-medium text-ayamo-warning hover:bg-ayamo-bg"
                 >
-                  Cobrar via WhatsApp
-                </button>
+                  {t('pendencias.cobrarWhatsApp')}
+                </Botao>
               )
             },
           },
@@ -88,7 +93,7 @@ export default function Pendencias() {
         onClose={() => setCobrancaAlvo(null)}
         titulo={`Cobrar resposta via WhatsApp — ${cobrancaAlvo?.numero ?? ''}`}
         contatos={contatosAlvo}
-        mensagemInicial={cobrancaAlvo ? mensagemCobrancaProposta(cobrancaAlvo, getProduto(cobrancaAlvo.itens[0].produtoId)?.nome ?? '') : ''}
+        modelo={cobrancaAlvo ? modeloCobrancaProposta(cobrancaAlvo, getProduto(cobrancaAlvo.itens[0].produtoId)?.nome) : null}
       />
     </div>
   )

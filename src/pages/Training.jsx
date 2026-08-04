@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 
@@ -54,9 +55,10 @@ const PASSOS = [
 ]
 
 export default function Training() {
+  const { t } = useI18n()
   return (
     <div>
-      <PageHeader title="Training" subtitle="Guia rápido de como usar o sistema" />
+      <PageHeader title={t('training.titulo')} subtitle={t('training.subtitulo')} />
 
       <div className="flex flex-col gap-3">
         {PASSOS.map((passo, indice) => (

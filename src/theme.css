@@ -69,10 +69,21 @@ body {
   }
 }
 
-/* Recipe de "card" reaproveitada por qualquer elemento com essas 3 classes juntas */
-.rounded.border.border-ayamo-border.bg-ayamo-surface {
+/* Recipe de "card" reaproveitada por qualquer elemento com essas classes juntas */
+.rounded.border.border-ayamo-border.bg-ayamo-surface,
+.rounded-lg.border.border-ayamo-border.bg-ayamo-surface {
   box-shadow: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 6px -2px rgb(15 23 42 / 0.06);
   transition: box-shadow 0.18s ease, transform 0.18s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+:root[data-theme='dark'] .rounded.border.border-ayamo-border.bg-ayamo-surface,
+:root[data-theme='dark'] .rounded-lg.border.border-ayamo-border.bg-ayamo-surface {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 6px -2px rgb(0 0 0 / 0.4);
+}
+
+/* Cabeçalho de tabela e rótulos de campo: mesma escala tipográfica em todo o sistema */
+th {
+  letter-spacing: 0.04em;
 }
 
 a,
@@ -90,6 +101,15 @@ input:focus,
 select:focus,
 textarea:focus {
   box-shadow: 0 0 0 3px rgb(20 67 150 / 0.12);
+}
+
+/* Foco visível por teclado sem poluir o clique do mouse */
+:focus-visible {
+  outline: 2px solid var(--ayamo-primary);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 ::-webkit-scrollbar {

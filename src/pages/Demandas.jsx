@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { PackageSearch, X } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -24,6 +25,7 @@ function carregarDispensadas() {
 
 export default function Demandas() {
   const { demandas, ofertas, propostas, empresas, produtos, usuarioLogado, getProduto, getEmpresa } = useData()
+  const { t } = useI18n()
 
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('Aberta')
@@ -92,7 +94,12 @@ export default function Demandas() {
 
   return (
     <div>
-      <PageHeader title="Demandas" subtitle="O que os clientes estão procurando comprar" actionLabel="Nova demanda" onAction={abrirNova} />
+      <PageHeader
+        title={t('demandas.titulo')}
+        subtitle={t('demandas.subtitulo')}
+        actionLabel={t('demandas.nova')}
+        onAction={abrirNova}
+      />
 
       {sugestoes.length > 0 && (
         <div className="mb-6 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 p-4">
@@ -130,7 +137,7 @@ export default function Demandas() {
                     type="button"
                     onClick={() => dispensarSugestao(oferta.codigoBase)}
                     className="text-ayamo-text-mut hover:text-ayamo-text"
-                    title="Dispensar"
+                    title={t('demandas.dispensar')}
                   >
                     <X size={16} />
                   </button>
@@ -142,12 +149,12 @@ export default function Demandas() {
       )}
 
       <FilterBar>
-        <Field label="Buscar">
-          <input className={inputClass} placeholder="Produto" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <Field label={t('comum.buscar')}>
+          <input className={inputClass} placeholder={t('comum.produto')} value={busca} onChange={(e) => setBusca(e.target.value)} />
         </Field>
-        <Field label="Status">
+        <Field label={t('comum.status')}>
           <select className={inputClass} value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)}>
-            <option value="">Todos</option>
+            <option value="">{t('comum.todos')}</option>
             <option value="Aberta">Aberta</option>
             <option value="Atendida">Atendida</option>
             <option value="Cancelada">Cancelada</option>
@@ -161,11 +168,11 @@ export default function Demandas() {
         stickyFirstColumn
         data={demandasFiltradas}
         onRowClick={(item) => abrirEdicao(item)}
-        emptyLabel="Nenhuma demanda registrada"
+        emptyLabel={t('demandas.vazio')}
         columns={[
           {
             key: 'cliente',
-            header: 'Cliente',
+            header: t('comum.cliente'),
             render: (item) => (
               <span className="flex items-center gap-2">
                 {getEmpresa(item.clienteId)?.nome ?? (item.origemAutomatica ? 'A definir' : '—')}
@@ -180,22 +187,22 @@ export default function Demandas() {
           },
           {
             key: 'produto',
-            header: 'Produto',
+            header: t('comum.produto'),
             render: (item) => getProduto(item.produtoId)?.nome ?? '—',
             sortValue: (item) => getProduto(item.produtoId)?.nome ?? '',
           },
-          { key: 'quantidade', header: 'Volume', render: (item) => `${item.quantidade.toLocaleString('pt-BR')} MT` },
+          { key: 'quantidade', header: t('demandas.volume'), render: (item) => `${item.quantidade.toLocaleString('pt-BR')} MT` },
           {
             key: 'precoAlvo',
-            header: 'Preço alvo',
+            header: t('demandas.precoAlvo'),
             render: (item) => (item.precoAlvo ? formatarValor(item.precoAlvo.valor, item.precoAlvo.moeda) : '—'),
           },
           { key: 'incoterm', header: 'Incoterm' },
-          { key: 'destino', header: 'Destino', render: (item) => item.destino || '—' },
-          { key: 'mesEmbarque', header: 'Embarque', render: (item) => item.mesEmbarque || '—' },
+          { key: 'destino', header: t('demandas.destino'), render: (item) => item.destino || '—' },
+          { key: 'mesEmbarque', header: t('demandas.embarque'), render: (item) => item.mesEmbarque || '—' },
           {
             key: 'ofertasCompativeis',
-            header: 'Ofertas compatíveis',
+            header: t('demandas.ofertasCompativeis'),
             render: (item) => {
               const n = contarOfertasCompativeis(item.produtoId)
               return <span className={n > 0 ? 'font-medium text-ayamo-success' : 'text-ayamo-text-mut'}>{n}</span>
@@ -203,10 +210,10 @@ export default function Demandas() {
           },
           {
             key: 'status',
-            header: 'Status',
+            header: t('comum.status'),
             render: (item) => <StatusBadge label={item.status} tone={TONE_STATUS[item.status] ?? 'neutral'} />,
           },
-          { key: 'data', header: 'Data', render: (item) => formatarData(item.data) },
+          { key: 'data', header: t('comum.data'), render: (item) => formatarData(item.data) },
           {
             key: '_acoes',
             header: '',

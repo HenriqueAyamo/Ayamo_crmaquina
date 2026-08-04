@@ -37,7 +37,7 @@ export default function CardList({ columns, data, rowKey, onRowClick, emptyLabel
           <div
             key={chave}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`rounded border border-ayamo-border bg-ayamo-surface p-4 ${onRowClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-ayamo-primary/30 hover:shadow-card-hover' : ''}`}
+            className={`rounded-lg border border-ayamo-border bg-ayamo-surface p-4 ${onRowClick ? 'cursor-pointer hover:-translate-y-0.5 hover:border-ayamo-primary/30 hover:shadow-card-hover' : ''}`}
           >
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="text-sm font-semibold text-ayamo-text">

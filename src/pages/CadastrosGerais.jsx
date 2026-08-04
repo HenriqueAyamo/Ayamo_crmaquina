@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import AbaDivisoes from './cadastros/AbaDivisoes.jsx'
 import AbaFamilias from './cadastros/AbaFamilias.jsx'
@@ -17,12 +18,13 @@ const ABAS = [
 ]
 
 export default function CadastrosGerais() {
+  const { t } = useI18n()
   const [abaAtiva, setAbaAtiva] = useState(ABAS[0].id)
   const Aba = ABAS.find((a) => a.id === abaAtiva).Componente
 
   return (
     <div>
-      <PageHeader title="Cadastros gerais" />
+      <PageHeader title={t('cadastros.titulo')} />
 
       <div className="mb-5 flex gap-1 border-b border-ayamo-border">
         {ABAS.map((aba) => (

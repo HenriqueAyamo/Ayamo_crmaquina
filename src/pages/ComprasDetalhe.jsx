@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Trash2, Truck } from 'lucide-react'
+import { FileText, History, MessageCircle, MessageSquarePlus, Pencil, Send, ShoppingBag, SlidersHorizontal, Trash2, Truck } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
+import Botao from '../components/Botao.jsx'
+import MenuAcoes from '../components/MenuAcoes.jsx'
+import CabecalhoDetalhe from '../components/CabecalhoDetalhe.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import ModalRevisao from './compras/ModalRevisao.jsx'
+import ModalEditarOferta from './compras/ModalEditarOferta.jsx'
 import ModalNotaOferta from './compras/ModalNotaOferta.jsx'
 import ModalAlterarStatus from './compras/ModalAlterarStatus.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
@@ -12,11 +17,12 @@ import ModalEnviarOferta from './compras/ModalEnviarOferta.jsx'
 import ModalEnviarWhatsApp from '../components/ModalEnviarWhatsApp.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import SecaoInspecoes from '../components/SecaoInspecoes.jsx'
+import SecaoInteracoes from '../components/SecaoInteracoes.jsx'
 import PopoverContato from '../components/PopoverContato.jsx'
-import DisabledActionTooltip from '../components/DisabledActionTooltip.jsx'
 import { formatarPreco, formatarData } from '../utils/formato.js'
 import { TONE_STATUS_PRODUCAO } from '../data/statusProducao.js'
 import { MOTIVOS, podeExcluirRegistros } from '../utils/permissoes.js'
+import { modeloNegociacaoFornecedor } from '../utils/mensagensWhatsApp.js'
 import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 
 const TONE_STATUS = {
@@ -29,10 +35,12 @@ const TONE_STATUS = {
 export default function ComprasDetalhe() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { t } = useI18n()
   const {
     ofertas,
     empresas,
     contatos,
+    produtos,
     getProduto,
     getEmpresa,
     getUsuario,
@@ -43,6 +51,7 @@ export default function ComprasDetalhe() {
     dadosAyamo,
   } = useData()
   const [modalRevisaoAberto, setModalRevisaoAberto] = useState(false)
+  const [modalEditarAberto, setModalEditarAberto] = useState(false)
   const [modalNotaAberto, setModalNotaAberto] = useState(false)
   const [modalStatusAberto, setModalStatusAberto] = useState(false)
   const [modalVendaAberto, setModalVendaAberto] = useState(false)
@@ -58,7 +67,7 @@ export default function ComprasDetalhe() {
     .sort((a, b) => a.versao - b.versao)
 
   if (versoes.length === 0) {
-    return <EmptyState title="Oferta não encontrada" />
+    return <EmptyState title={t('compras.naoEncontrada')} />
   }
 
   const atual = versoes[versoes.length - 1]
@@ -71,46 +80,69 @@ export default function ComprasDetalhe() {
     ? obterOfertasAtuais(ofertas.items).filter((o) => o.grupoContainerId === atual.grupoContainerId && o.codigoBase !== atual.codigoBase)
     : []
 
-  function mensagemNegociacaoFornecedor() {
-    return `Olá! Sobre a negociação de ${produto?.nome ?? ''} (${atual.codigo}):
-
-- Preço atual: ${formatarPreco(atual.precoCusto.valor, atual.precoCusto.moeda, atual.precoCusto.unidade)}
-- Quantidade: ${atual.quantidade == null ? 'a definir' : `${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade}`}${atual.numeroContainers ? ` (${atual.numeroContainers} contêiner${atual.numeroContainers > 1 ? 'es' : ''})` : ''}
-- Incoterm: ${atual.incoterm || '—'}
-- Embarque: ${atual.embarqueDe || 'a definir'} até ${atual.embarqueAte || 'a definir'}
-- Prazo de pagamento: ${atual.prazoPagamento || '—'}
-- Validade da oferta: ${atual.validadeAte || '—'}
-
-Poderia confirmar se segue tudo certo ou se há alguma atualização?`
-  }
-
   function excluirOferta() {
     if (!window.confirm(`Excluir a oferta ${atual.codigoBase} e todas as suas ${versoes.length} revisão(ões)? Essa ação não pode ser desfeita.`)) return
     versoes.forEach((v) => ofertas.remover(v.id))
     navigate('/compras')
   }
 
+  const podeOfertar = podeVender && atual.status === 'Disponível' && atual.quantidade > 0
+
+  const acoesSecundarias = [
+    podeNegociar && {
+      label: t('compras.editarDados'),
+      icone: Pencil,
+      onClick: () => setModalEditarAberto(true),
+    },
+    podeNegociar && {
+      label: t('compras.registrarContato'),
+      icone: MessageSquarePlus,
+      onClick: () => setModalNotaAberto(true),
+    },
+    podeNegociar && {
+      label: t('compras.enviarWhatsApp'),
+      icone: MessageCircle,
+      tone: 'sucesso',
+      onClick: () => setModalWhatsappAberto(true),
+    },
+    podeNegociar && {
+      label: t('compras.alterarStatus'),
+      icone: SlidersHorizontal,
+      onClick: () => setModalStatusAberto(true),
+      separadorAntes: true,
+    },
+    podeNegociar &&
+      (atual.tipoRegistro ?? 'Position') === 'Position' && {
+        label: t('compras.gerarPO'),
+        icone: FileText,
+        tone: 'primario',
+        onClick: () => navigate(`/compras/${atual.codigoBase}/po`),
+      },
+    {
+      label: t('compras.excluirOferta'),
+      icone: Trash2,
+      tone: 'perigo',
+      onClick: excluirOferta,
+      desabilitado: !podeExcluir,
+      motivo: MOTIVOS.excluirRegistro,
+      separadorAntes: true,
+    },
+  ]
+
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => navigate('/compras')}
-        className="mb-4 flex items-center gap-1 text-sm text-ayamo-text-mut hover:text-ayamo-text"
-      >
-        <ArrowLeft size={16} />
-        Voltar para Compras
-      </button>
-
-      <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
-        <div className="mb-4 flex items-start justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-ayamo-text">{atual.codigo}</h1>
-            <p className="text-sm text-ayamo-text-mut">
-              {produto?.nome} · {divisao?.nome} ·{' '}
-              <PopoverContato empresaId={atual.fornecedorId}>{fornecedor?.nome}</PopoverContato>
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      <CabecalhoDetalhe
+        voltarLabel={t('compras.voltar')}
+        onVoltar={() => navigate('/compras')}
+        titulo={atual.codigo}
+        subtitulo={
+          <>
+            {produto?.nome} · {divisao?.nome} ·{' '}
+            <PopoverContato empresaId={atual.fornecedorId}>{fornecedor?.nome}</PopoverContato>
+          </>
+        }
+        selos={
+          <>
             <StatusBadge
               label={atual.tipoRegistro ?? 'Position'}
               tone={(atual.tipoRegistro ?? 'Position') === 'Position' ? 'info' : 'accent'}
@@ -119,103 +151,53 @@ Poderia confirmar se segue tudo certo ou se há alguma atualização?`
             {atual.statusProducao && (
               <StatusBadge label={atual.statusProducao} tone={TONE_STATUS_PRODUCAO[atual.statusProducao] ?? 'neutral'} />
             )}
-            {podeVender && atual.status === 'Disponível' && atual.quantidade > 0 && (
+          </>
+        }
+        acoes={
+          <>
+            {podeOfertar && (
               <>
-                <button
-                  type="button"
-                  onClick={() => setModalEnviarAberto(true)}
-                  className="rounded border border-ayamo-primary px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-                >
-                  Enviar oferta
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalVendaAberto(true)}
-                  className="rounded bg-ayamo-primary px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
-                >
-                  Gerar venda
-                </button>
+                <Botao variante="primario" tamanho="sm" icone={ShoppingBag} onClick={() => setModalVendaAberto(true)}>
+                  {t('compras.gerarVenda')}
+                </Botao>
+                <Botao variante="contorno" tamanho="sm" icone={Send} onClick={() => setModalEnviarAberto(true)}>
+                  {t('compras.enviarOferta')}
+                </Botao>
               </>
             )}
             {podeNegociar && (
-              <>
-                {(atual.tipoRegistro ?? 'Position') === 'Position' && (
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/compras/${atual.codigoBase}/po`)}
-                    className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-                  >
-                    Gerar PO
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setModalNotaAberto(true)}
-                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
-                >
-                  Registrar contato com fornecedor
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalWhatsappAberto(true)}
-                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-success hover:bg-ayamo-bg"
-                >
-                  Enviar via WhatsApp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalStatusAberto(true)}
-                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-text hover:bg-ayamo-bg"
-                >
-                  Alterar status
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModalRevisaoAberto(true)}
-                  className="rounded border border-ayamo-border px-3 py-1.5 text-xs font-medium text-ayamo-primary hover:bg-ayamo-bg"
-                >
-                  Registrar revisão
-                </button>
-              </>
+              <Botao variante="secundario" tamanho="sm" icone={History} onClick={() => setModalRevisaoAberto(true)}>
+                {t('compras.registrarRevisao')}
+              </Botao>
             )}
-            <DisabledActionTooltip desabilitado={!podeExcluir} motivo={MOTIVOS.excluirRegistro}>
-              <button
-                type="button"
-                disabled={!podeExcluir}
-                onClick={excluirOferta}
-                className="flex items-center gap-1 rounded border border-ayamo-danger px-3 py-1.5 text-xs font-medium text-ayamo-danger hover:bg-ayamo-danger/10 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                <Trash2 size={13} />
-                Excluir
-              </button>
-            </DisabledActionTooltip>
-          </div>
-        </div>
-
+            <MenuAcoes itens={acoesSecundarias} />
+          </>
+        }
+      >
         <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
           <div>
-            <dt className="text-ayamo-text-mut">Preço de custo</dt>
+            <dt className="text-ayamo-text-mut">{t('compras.precoCusto')}</dt>
             <dd className="font-medium text-ayamo-text">
               {formatarPreco(atual.precoCusto.valor, atual.precoCusto.moeda, atual.precoCusto.unidade)}
             </dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Quantidade</dt>
+            <dt className="text-ayamo-text-mut">{t('comum.quantidade')}</dt>
             <dd className="font-medium text-ayamo-text">
               {atual.quantidade == null ? 'A definir' : `${atual.quantidade.toLocaleString('pt-BR')} ${atual.unidade}`}
               {atual.numeroContainers ? ` (${atual.numeroContainers} contêiner${atual.numeroContainers > 1 ? 'es' : ''})` : ''}
             </dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Data</dt>
+            <dt className="text-ayamo-text-mut">{t('comum.data')}</dt>
             <dd className="font-medium text-ayamo-text">{formatarData(atual.data)}</dd>
           </div>
           <div>
-            <dt className="text-ayamo-text-mut">Registrado por</dt>
+            <dt className="text-ayamo-text-mut">{t('compras.registradoPor')}</dt>
             <dd className="font-medium text-ayamo-text">{getUsuario(atual.usuarioId)?.nome ?? '—'}</dd>
           </div>
         </dl>
-      </div>
+      </CabecalhoDetalhe>
 
       {ofertasIrmas.length > 0 && (
         <div className="mb-6 rounded border border-ayamo-accent/40 bg-ayamo-accent/10 px-4 py-3 text-sm text-ayamo-text">
@@ -352,9 +334,18 @@ Poderia confirmar se segue tudo certo ou se há alguma atualização?`
         </ol>
       </SecaoRecolhivel>
 
+      <SecaoInteracoes empresaId={atual.fornecedorId} refTipo="oferta" refId={atual.codigoBase} />
+
       <SecaoInspecoes contexto="Compra" refCodigo={atual.codigoBase} />
 
       <ModalRevisao open={modalRevisaoAberto} onClose={() => setModalRevisaoAberto(false)} atual={atual} />
+      <ModalEditarOferta
+        open={modalEditarAberto}
+        onClose={() => setModalEditarAberto(false)}
+        atual={atual}
+        produtosAtivos={produtos.items.filter((p) => p.situacao === 'Ativo')}
+        fornecedores={empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')}
+      />
       <ModalNotaOferta open={modalNotaAberto} onClose={() => setModalNotaAberto(false)} atual={atual} />
       <ModalAlterarStatus open={modalStatusAberto} onClose={() => setModalStatusAberto(false)} atual={atual} />
       <NovaPropostaModal
@@ -380,7 +371,7 @@ Poderia confirmar se segue tudo certo ou se há alguma atualização?`
         onClose={() => setModalWhatsappAberto(false)}
         titulo={`Enviar via WhatsApp — ${fornecedor?.nome ?? ''}`}
         contatos={contatosFornecedor}
-        mensagemInicial={mensagemNegociacaoFornecedor()}
+        modelo={modeloNegociacaoFornecedor(atual, produto?.nome)}
       />
     </div>
   )

@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import CardList from '../components/CardList.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
@@ -12,6 +13,7 @@ const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Nã
 
 export default function Qualifications() {
   const { empresas } = useData()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const fornecedores = useMemo(
@@ -67,7 +69,7 @@ export default function Qualifications() {
 
   return (
     <div>
-      <PageHeader title="Qualificações por país" subtitle="Visão global da qualificação de todos os fornecedores" />
+      <PageHeader title={t('qualificacoes.titulo')} subtitle={t('qualificacoes.subtitulo')} />
 
       {aprovacoesPorPais.some((p) => p.valor > 0) && (
         <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
@@ -82,7 +84,7 @@ export default function Qualifications() {
         stickyFirstColumn
         data={fornecedores}
         onRowClick={(item) => navigate(`/empresas/${item.id}`)}
-        emptyLabel="Nenhum fornecedor ativo cadastrado"
+        emptyLabel={t('qualificacoes.vazio')}
         columns={colunas}
       />
     </div>
