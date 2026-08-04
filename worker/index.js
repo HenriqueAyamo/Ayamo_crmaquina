@@ -10,7 +10,8 @@ const ORIGENS_PERMITIDAS = [
 
 // Preco por 1M tokens -- atualizar aqui se a OpenAI mudar o preco do modelo.
 const PRECOS_MODELO = {
-  'gpt-5.4-mini': { input: 0.375, output: 2.25 },
+  'gpt-5.4-nano': { input: 0.20, output: 1.25 },
+  'gpt-5.4-mini': { input: 0.75, output: 4.50 },
 }
 
 const SCHEMA_OFERTA = {
@@ -95,7 +96,7 @@ function json(dados, status, origin) {
 }
 
 function calcularCustoUSD(modelo, tokensInput, tokensOutput) {
-  const preco = PRECOS_MODELO[modelo] ?? PRECOS_MODELO['gpt-5.4-mini']
+  const preco = PRECOS_MODELO[modelo] ?? PRECOS_MODELO['gpt-5.4-nano']
   return (tokensInput / 1e6) * preco.input + (tokensOutput / 1e6) * preco.output
 }
 
@@ -110,7 +111,7 @@ async function registrarUso(db, { tipo, usuario, modelo, tokensInput, tokensOutp
 }
 
 async function handleExtrair(request, env, origin) {
-  const modelo = 'gpt-5.4-mini'
+  const modelo = 'gpt-5.4-nano'
   let corpo
   try {
     corpo = await request.json()

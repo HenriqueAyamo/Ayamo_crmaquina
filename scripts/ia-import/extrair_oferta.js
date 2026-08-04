@@ -111,7 +111,7 @@ async function main() {
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'gpt-5.4-mini',
+      model: 'gpt-5.4-nano',
       input: [
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: conteudoUsuario },
