@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import Botao from '../components/Botao.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
@@ -17,6 +18,7 @@ const STATUS_COBRAVEIS = ['Rascunho', 'Enviada', 'Em negociação']
 export default function Pendencias() {
   const { usuarioLogado, getPendencias, propostas, contatos, getProduto } = useData()
   const { t } = useI18n()
+  const { divisaoAtivaId, divisaoAtiva } = useDivisao()
   const navigate = useNavigate()
   const rotuloTipo = {
     proposta: t('pendencias.proposta'),
@@ -27,7 +29,10 @@ export default function Pendencias() {
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [cobrancaAlvo, setCobrancaAlvo] = useState(null)
 
-  const pendencias = useMemo(() => getPendencias(usuarioLogado), [getPendencias, usuarioLogado])
+  const pendencias = useMemo(
+    () => getPendencias(usuarioLogado, divisaoAtivaId),
+    [getPendencias, usuarioLogado, divisaoAtivaId],
+  )
 
   const pendenciasFiltradas = useMemo(
     () => pendencias.filter((p) => !tipoFiltro || p.tipo === tipoFiltro),
@@ -46,7 +51,9 @@ export default function Pendencias() {
     <div>
       <PageHeader
         title={t('pendencias.titulo')}
-        subtitle={t('pendencias.subtitulo', { nome: usuarioLogado.nome, perfil: usuarioLogado.perfil })}
+        subtitle={`${t('pendencias.subtitulo', { nome: usuarioLogado.nome, perfil: usuarioLogado.perfil })}${
+          divisaoAtiva ? ` · Módulo ${divisaoAtiva.nome}` : ''
+        }`}
       />
 
       <FilterBar>

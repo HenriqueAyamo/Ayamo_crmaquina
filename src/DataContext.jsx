@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { divisoes as divisoesMock } from './data/divisoes.js'
 import { familias as familiasMock } from './data/familias.js'
 import { produtos as produtosMock } from './data/produtos.js'
@@ -151,6 +151,37 @@ export function DataProvider({ children, usuarioAutenticado }) {
     }
   }, [usuarios.items, usuarioAutenticado, usuarioLogadoId])
 
+  // Carimba divisaoId nos registros criados antes do escopo por divisão existir.
+  // Roda uma vez por sessão: a divisão passa a viver no próprio registro, e
+  // deixa de ser recalculada a partir de produto → família a cada leitura.
+  const migracaoFeita = useRef(false)
+  useEffect(() => {
+    if (migracaoFeita.current) return
+    if (familias.items.length === 0 || produtos.items.length === 0) return
+    migracaoFeita.current = true
+
+    const divisaoDoProduto = (produtoId) => {
+      const produto = produtos.items.find((p) => p.id === produtoId)
+      const familia = familias.items.find((f) => f.id === produto?.familiaId)
+      return familia?.divisaoId ?? null
+    }
+
+    const carimbar = (colecao, obterProdutoId) => {
+      const faltando = colecao.items.filter((item) => item.divisaoId == null)
+      if (faltando.length === 0) return
+      colecao.substituir(
+        colecao.items.map((item) =>
+          item.divisaoId == null ? { ...item, divisaoId: divisaoDoProduto(obterProdutoId(item)) } : item,
+        ),
+      )
+    }
+
+    carimbar(ofertas, (o) => o.produtoId)
+    carimbar(propostas, (p) => p.itens?.[0]?.produtoId)
+    carimbar(demandas, (d) => d.produtoId)
+    carimbar(claims, (c) => c.produtoId)
+  }, [familias.items, produtos.items, ofertas, propostas, demandas, claims])
+
   const getFamilia = useCallback((familiaId) => familias.items.find((f) => f.id === familiaId), [familias.items])
 
   const getProduto = useCallback((produtoId) => produtos.items.find((p) => p.id === produtoId), [produtos.items])
@@ -206,8 +237,10 @@ export function DataProvider({ children, usuarioAutenticado }) {
   )
 
   const getPendencias = useCallback(
-    (usuario) =>
-      calcularPendencias(usuario, {
+    (usuario, divisaoId = null) =>
+      calcularPendencias(
+        usuario,
+        {
         ofertas,
         propostas,
         interacoes,
@@ -216,8 +249,10 @@ export function DataProvider({ children, usuarioAutenticado }) {
         getEmpresa,
         getUsuario,
         getProduto,
-        getDivisaoIdDeProduto,
-      }),
+          getDivisaoIdDeProduto,
+        },
+        divisaoId,
+      ),
     [ofertas, propostas, interacoes, empresas, produtos, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
   )
 

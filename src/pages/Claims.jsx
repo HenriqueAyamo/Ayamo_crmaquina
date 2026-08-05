@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -16,6 +17,7 @@ const TONE_STATUS = { 'Não iniciado': 'neutral', 'Em andamento': 'warning', Res
 export default function Claims() {
   const { claims, empresas, produtos, getProduto, getEmpresa } = useData()
   const { t } = useI18n()
+  const { noEscopo } = useDivisao()
 
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
@@ -27,7 +29,7 @@ export default function Claims() {
 
   const claimsFiltrados = useMemo(() => {
     const termo = busca.toLowerCase()
-    return claims.items.filter((c) => {
+    return noEscopo(claims.items).filter((c) => {
       const combinaBusca =
         !termo ||
         getProduto(c.produtoId)?.nome.toLowerCase().includes(termo) ||
@@ -35,7 +37,7 @@ export default function Claims() {
       const combinaStatus = !statusFiltro || c.status === statusFiltro
       return combinaBusca && combinaStatus
     })
-  }, [claims.items, busca, statusFiltro, getProduto, getEmpresa])
+  }, [claims.items, noEscopo, busca, statusFiltro, getProduto, getEmpresa])
 
   const topImpacto = useMemo(() => {
     return claims.items

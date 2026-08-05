@@ -40,3 +40,6 @@ usuario*.sql
 *.njsproj
 *.sln
 *.sw?
+
+# Cache de scripts Python auxiliares
+__pycache__/

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Download } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import Botao from '../components/Botao.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
@@ -30,13 +31,13 @@ const TONE_STATUS = {
 }
 
 export default function Compras() {
-  const { ofertas, produtos, empresas, divisoes, getDivisaoIdDeProduto, getProduto, getEmpresa } = useData()
+  const { ofertas, produtos, empresas, getDivisaoIdDeProduto, getProduto, getEmpresa } = useData()
   const { t } = useI18n()
+  const { noEscopo, divisaoAtiva } = useDivisao()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
   const [produtoFiltro, setProdutoFiltro] = useState('')
-  const [divisaoFiltro, setDivisaoFiltro] = useState('')
   const [fornecedorFiltro, setFornecedorFiltro] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('')
   const [tipoFiltro, setTipoFiltro] = useState('')
@@ -46,9 +47,13 @@ export default function Compras() {
   const [aba, setAba] = useState('ofertas')
 
   const fornecedores = empresas.items.filter((e) => e.tipo === 'Fornecedor' && e.situacao === 'Ativo')
-  const produtosAtivos = produtos.items.filter((p) => p.situacao === 'Ativo')
+  // Produtos do módulo: a divisão vem da família do produto.
+  const produtosAtivos = produtos.items.filter(
+    (p) => p.situacao === 'Ativo' && (!divisaoAtiva || getDivisaoIdDeProduto(p.id) === divisaoAtiva.id),
+  )
 
-  const ofertasAtuais = useMemo(() => obterOfertasAtuais(ofertas.items), [ofertas.items])
+  // Só as ofertas do módulo aberto — o escopo vem antes de qualquer filtro de tela.
+  const ofertasAtuais = useMemo(() => noEscopo(obterOfertasAtuais(ofertas.items)), [ofertas.items, noEscopo])
 
   const ofertasFiltradas = useMemo(() => {
     const termo = busca.toLowerCase()
@@ -56,17 +61,21 @@ export default function Compras() {
       const produto = getProduto(o.produtoId)
       const combinaBusca = !termo || produto?.nome.toLowerCase().includes(termo)
       const combinaProduto = !produtoFiltro || o.produtoId === Number(produtoFiltro)
-      const combinaDivisao = !divisaoFiltro || getDivisaoIdDeProduto(o.produtoId) === Number(divisaoFiltro)
       const combinaFornecedor = !fornecedorFiltro || o.fornecedorId === Number(fornecedorFiltro)
       const combinaStatus = !statusFiltro || o.status === statusFiltro
       const combinaTipo = !tipoFiltro || (o.tipoRegistro ?? 'Position') === tipoFiltro
-      return combinaBusca && combinaProduto && combinaDivisao && combinaFornecedor && combinaStatus && combinaTipo
+      return combinaBusca && combinaProduto && combinaFornecedor && combinaStatus && combinaTipo
     })
-  }, [ofertasAtuais, busca, produtoFiltro, divisaoFiltro, fornecedorFiltro, statusFiltro, tipoFiltro, getProduto, getDivisaoIdDeProduto])
+  }, [ofertasAtuais, busca, produtoFiltro, fornecedorFiltro, statusFiltro, tipoFiltro, getProduto])
 
   return (
     <div>
-      <PageHeader title={t('compras.titulo')} actionLabel={t('compras.novaOferta')} onAction={() => setModalAberto(true)} />
+      <PageHeader
+        title={t('compras.titulo')}
+        subtitle={divisaoAtiva ? `Módulo ${divisaoAtiva.nome}` : undefined}
+        actionLabel={t('compras.novaOferta')}
+        onAction={() => setModalAberto(true)}
+      />
 
       <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-1 border-b border-ayamo-border">
@@ -124,7 +133,7 @@ export default function Compras() {
             </Field>
             <Field label={t('comum.produto')}>
               <select className={inputClass} value={produtoFiltro} onChange={(e) => setProdutoFiltro(e.target.value)}>
-                <option value="">Todos</option>
+                <option value="">{t('comum.todos')}</option>
                 {produtosAtivos.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.nome}
@@ -137,16 +146,6 @@ export default function Compras() {
                 <option value="">{t('comum.todos')}</option>
                 <option value="Oferta">{t('pendencias.oferta')}</option>
                 <option value="Position">Position</option>
-              </select>
-            </Field>
-            <Field label={t('comum.divisao')}>
-              <select className={inputClass} value={divisaoFiltro} onChange={(e) => setDivisaoFiltro(e.target.value)}>
-                <option value="">{t('comum.todas')}</option>
-                {divisoes.items.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.nome}
-                  </option>
-                ))}
               </select>
             </Field>
             <Field label={t('comum.fornecedor')}>

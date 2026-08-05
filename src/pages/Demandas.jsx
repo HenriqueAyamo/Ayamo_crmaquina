@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PackageSearch, X } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -26,6 +27,7 @@ function carregarDispensadas() {
 export default function Demandas() {
   const { demandas, ofertas, propostas, empresas, produtos, usuarioLogado, getProduto, getEmpresa } = useData()
   const { t } = useI18n()
+  const { noEscopo } = useDivisao()
 
   const [busca, setBusca] = useState('')
   const [statusFiltro, setStatusFiltro] = useState('Aberta')
@@ -71,12 +73,12 @@ export default function Demandas() {
 
   const demandasFiltradas = useMemo(() => {
     const termo = busca.toLowerCase()
-    return demandas.items.filter((d) => {
+    return noEscopo(demandas.items).filter((d) => {
       const combinaBusca = !termo || getProduto(d.produtoId)?.nome.toLowerCase().includes(termo)
       const combinaStatus = !statusFiltro || d.status === statusFiltro
       return combinaBusca && combinaStatus
     })
-  }, [demandas.items, busca, statusFiltro, getProduto])
+  }, [demandas.items, noEscopo, busca, statusFiltro, getProduto])
 
   function contarOfertasCompativeis(produtoId) {
     return obterOfertasAtuais(ofertas.items).filter((o) => o.produtoId === produtoId && o.status === 'Disponível').length

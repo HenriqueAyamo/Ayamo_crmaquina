@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
+import { useDivisao } from '../../divisoes/DivisaoContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
@@ -12,6 +13,7 @@ import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
 import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
 import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function proximoCodigo(ofertas) {
   const numeros = ofertas.map((o) => Number(o.codigoBase.replace('OF-', ''))).filter((n) => !Number.isNaN(n))
@@ -44,7 +46,9 @@ function valoresIniciais() {
 }
 
 export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornecedores, onCriada, inicial }) {
-  const { ofertas, produtos, empresas, dadosAyamo, usuarioLogado } = useData()
+  const { t } = useI18n()
+  const { ofertas, produtos, empresas, dadosAyamo, usuarioLogado, getDivisaoIdDeProduto } = useData()
+  const { divisaoAtiva } = useDivisao()
   const [form, setForm] = useState(valoresIniciais())
   const [erros, setErros] = useState({})
   const [iaAberto, setIaAberto] = useState(false)
@@ -141,6 +145,8 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
       codigoBase: codigo,
       versao: 0,
       tipoRegistro: form.tipoRegistro,
+      // A divisão sai do produto escolhido; o módulo aberto é só o padrão.
+      divisaoId: getDivisaoIdDeProduto(Number(form.produtoId)) ?? divisaoAtiva?.id ?? null,
       statusProducao: form.tipoRegistro === 'Position' ? form.statusProducao : null,
       produtoId: Number(form.produtoId),
       fornecedorId: Number(form.fornecedorId),
@@ -171,7 +177,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title="Nova oferta"
+      title={t('modal.tituloNovaOferta')}
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="oferta-form" />}
     >
       <form id="oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
@@ -229,7 +235,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           )}
         </div>
 
-        <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
+        <Field label={t('campo.tipoRegistro')} required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
           <div className="flex gap-2">
             {['Oferta', 'Position'].map((tipo) => (
               <button
@@ -249,7 +255,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         </Field>
 
         {form.tipoRegistro === 'Position' && (
-          <Field label="Status de produção" hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
+          <Field label={t('campo.statusProducao')} hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
             <select
               className={inputClass}
               value={form.statusProducao}
@@ -264,7 +270,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         )}
 
-        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
+        <Field label={t('campo.produto')} required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
@@ -273,7 +279,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           />
         </Field>
 
-        <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
+        <Field label={t('campo.fornecedor')} required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
           <SelectBusca
             value={form.fornecedorId}
             onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
@@ -283,7 +289,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         </Field>
 
         {entidadesAtivas.length > 0 && (
-          <Field label="Entidade Ayamo compradora" hint="Usada no PO — configurável em Cadastros gerais > Dados da Ayamo">
+          <Field label={t('campo.entidadeCompradora')} hint="Usada no PO — configurável em Cadastros gerais > Dados da Ayamo">
             <select
               className={inputClass}
               value={form.ayamoEntidadeId}
@@ -299,10 +305,10 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         )}
 
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Preço de custo" required>
+          <Field label={t('campo.precoCusto')} required>
             <CampoNumerico required value={form.valor} onChange={(valor) => setForm({ ...form, valor })} />
           </Field>
-          <Field label="Moeda" required>
+          <Field label={t('campo.moeda')} required>
             <select className={inputClass} value={form.moeda} onChange={(e) => setForm({ ...form, moeda: e.target.value })}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -311,7 +317,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
               ))}
             </select>
           </Field>
-          <Field label="Unidade" required>
+          <Field label={t('campo.unidade')} required>
             <select className={inputClass} value={form.unidade} onChange={(e) => setForm({ ...form, unidade: e.target.value })}>
               {UNIDADES_PESO.map((u) => (
                 <option key={u.codigo} value={u.codigo}>
@@ -323,7 +329,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Número de contêineres" hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
+          <Field label={t('campo.numeroConteineres')} hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
             <CampoNumerico
               value={form.numeroContainers}
               onChange={(numeroContainers) =>
@@ -336,7 +342,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             />
           </Field>
           <Field
-            label="Quantidade (ton)"
+            label={t('campo.quantidadeTon')}
             required={form.tipoRegistro === 'Position'}
             hint={form.tipoRegistro === 'Oferta' ? 'Opcional — o fornecedor pode não ter definido ainda.' : undefined}
           >
@@ -348,7 +354,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
           </Field>
         </div>
 
-        <Field label="Observação" hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
+        <Field label={t('campo.observacao')} hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
           <textarea
             className={inputClass}
             rows={2}
@@ -361,7 +367,7 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
         <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Número do contrato" hint="Ex.: P12179">
+              <Field label={t('campo.numeroContrato')} hint="Ex.: P12179">
                 <input className={inputClass} value={form.numeroContrato} onChange={(e) => setForm({ ...form, numeroContrato: e.target.value })} />
               </Field>
               <Field label="Incoterm">
@@ -376,27 +382,27 @@ export default function ModalNovaOferta({ open, onClose, produtosAtivos, fornece
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Porto de origem" hint="Ex.: Any Brazilian Port - Brazil">
+              <Field label={t('campo.portoOrigem')} hint="Ex.: Any Brazilian Port - Brazil">
                 <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
               </Field>
-              <Field label="Site / planta de fabricação">
+              <Field label={t('campo.mfgSite')}>
                 <input className={inputClass} value={form.mfgSite} onChange={(e) => setForm({ ...form, mfgSite: e.target.value })} />
               </Field>
             </div>
 
-            <Field label="Oferta válida até" hint="Usado para o selo de validade na lista de Compras">
+            <Field label={t('campo.ofertaValidaAte')} hint="Usado para o selo de validade na lista de Compras">
               <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
             </Field>
 
-            <Field label="Prazo de pagamento" hint="Ex.: 100% TT">
+            <Field label={t('campo.prazoPagamento')} hint="Ex.: 100% TT">
               <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Embarque de">
+              <Field label={t('campo.embarqueDe')}>
                 <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
               </Field>
-              <Field label="Embarque até">
+              <Field label={t('campo.embarqueAte')}>
                 <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
               </Field>
             </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useData } from '../../DataContext.jsx'
+import { useDivisao } from '../../divisoes/DivisaoContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
@@ -9,6 +10,7 @@ import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { useAutoSaveRascunho } from '../../hooks/useAutoSaveRascunho.js'
 import { obterOfertasAtuais } from '../../utils/ofertasAtuais.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 const CHAVE_RASCUNHO = 'ayamo_crm_v1_rascunho_novaProposta'
 
@@ -33,7 +35,10 @@ function valoresIniciaisProforma() {
 }
 
 export default function NovaPropostaModal({ open, onClose, clientes, onCriada, ofertaFixa, clienteFixo }) {
-  const { ofertas, propostas, demandas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta } = useData()
+  const { t } = useI18n()
+  const { ofertas, propostas, demandas, dadosAyamo, getProduto, usuarioLogado, ajustarEstoqueOferta, getDivisaoIdDeProduto } =
+    useData()
+  const { divisaoAtiva } = useDivisao()
 
   const [passo, setPasso] = useState(1)
   const [buscaCliente, setBuscaCliente] = useState('')
@@ -180,8 +185,13 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
         .filter((item) => item.quantidade > 0)
 
       const numero = `PROP-${base + index + 1}`
+      // A proposta herda a divisão do produto vendido, não do módulo aberto:
+      // é o produto que define a que time o negócio pertence.
+      const divisaoDaProposta = getDivisaoIdDeProduto(itensCliente[0]?.produtoId) ?? divisaoAtiva?.id ?? null
+
       propostas.criar({
         numero,
+        divisaoId: divisaoDaProposta,
         clienteId: cliente.id,
         vendedorId: usuarioLogado.id,
         status: 'Rascunho',
@@ -219,6 +229,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       if (faltante > 0) {
         demandas.criar({
           clienteId: null,
+          divisaoId: oferta.divisaoId ?? getDivisaoIdDeProduto(oferta.produtoId) ?? divisaoAtiva?.id ?? null,
           produtoId: oferta.produtoId,
           quantidade: faltante,
           precoAlvo: null,
@@ -328,7 +339,7 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
       )}
 
       {passo === 1 && (
-        <Field label="Clientes" required hint="Selecione um ou mais — uma proposta independente é criada para cada um.">
+        <Field label={t('campo.clientes')} required hint="Selecione um ou mais — uma proposta independente é criada para cada um.">
           <input
             className={`${inputClass} mb-2`}
             placeholder="Buscar cliente por nome ou país..."
@@ -400,10 +411,10 @@ export default function NovaPropostaModal({ open, onClose, clientes, onCriada, o
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Margem mínima aceitável" hint="Piso usado para colorir a margem em Vendas — não é mais fixo em 3%.">
+            <Field label={t('campo.margemMinima')} hint="Piso usado para colorir a margem em Vendas — não é mais fixo em 3%.">
               <CampoNumerico value={margemMinima} onChange={setMargemMinima} />
             </Field>
-            <Field label="Tipo de margem">
+            <Field label={t('campo.tipoMargem')}>
               <select className={inputClass} value={margemMinimaTipo} onChange={(e) => setMargemMinimaTipo(e.target.value)}>
                 <option value="percentual">% sobre o custo</option>
                 <option value="valor">US$ por tonelada</option>

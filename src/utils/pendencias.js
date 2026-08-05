@@ -1,5 +1,6 @@
 import { diasAte, ehFollowUpAberto } from './followups.js'
 import { empresaIncompleta, faltandoNaEmpresa, faltandoNoProduto, produtoIncompleto } from './cadastroPendente.js'
+import { filtrarPorDivisao } from './escopoDivisao.js'
 
 // Cadastros criados pela importação ficam só com o nome. Sem isso aqui, o aviso
 // só apareceria para quem abrisse a lista de Empresas ou Cadastros por acaso.
@@ -188,8 +189,18 @@ function pendenciasDiretor(usuario, ctx, { todos = false } = {}) {
     })
 }
 
-export function calcularPendencias(usuario, ctx) {
+export function calcularPendencias(usuario, ctxBruto, divisaoId = null) {
   if (!usuario) return []
+
+  // O escopo do módulo é aplicado uma vez, nas fontes, em vez de em cada regra.
+  // Assim nenhuma regra nova pode esquecer de filtrar.
+  const escopar = (colecao) => ({ ...colecao, items: filtrarPorDivisao(colecao.items, divisaoId) })
+  const ctx = {
+    ...ctxBruto,
+    ofertas: escopar(ctxBruto.ofertas),
+    propostas: escopar(ctxBruto.propostas),
+  }
+
   const pendencias = []
 
   if (usuario.perfil === 'Vendedor') pendencias.push(...pendenciasVendedor(usuario, ctx))

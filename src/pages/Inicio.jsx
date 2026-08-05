@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AlertCircle, ShoppingCart, TrendingUp, FileText, AlertTriangle, ClipboardList, Ship } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import CardList from '../components/CardList.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import { formatarData } from '../utils/formato.js'
@@ -53,26 +54,37 @@ function linkDaMovimentacao(item) {
 export default function Inicio() {
   const { ofertas, propostas, documentos, claims, demandas, fretes, getProduto, getEmpresa, usuarioLogado, getPendencias } = useData()
   const { t } = useI18n()
+  const { noEscopo, divisaoAtiva, divisaoAtivaId } = useDivisao()
   const navigate = useNavigate()
 
-  const ofertasAtivas = obterOfertasAtuais(ofertas.items).filter((o) => o.status === 'Disponível' || o.status === 'Em revisão').length
-  const propostasEmNegociacao = propostas.items.filter((p) => p.status === 'Em negociação').length
-  const propostasAguardandoAprovacao = propostas.items.filter((p) => p.status === 'Aguardando aprovação').length
+  // Tudo no Início respeita o módulo aberto — números somando divisões que a
+  // pessoa nem acompanha davam a impressão de movimento que não é dela.
+  const ofertasDoModulo = noEscopo(ofertas.items)
+  const propostasDoModulo = noEscopo(propostas.items)
+
+  const ofertasAtivas = obterOfertasAtuais(ofertasDoModulo).filter(
+    (o) => o.status === 'Disponível' || o.status === 'Em revisão',
+  ).length
+  const propostasEmNegociacao = propostasDoModulo.filter((p) => p.status === 'Em negociação').length
+  const propostasAguardandoAprovacao = propostasDoModulo.filter((p) => p.status === 'Aguardando aprovação').length
 
   const mesReferencia = documentos.items.reduce((max, d) => (d.data > max ? d.data : max), '0000-00-00').slice(0, 7)
   const documentosNoMes = documentos.items.filter((d) => d.data.slice(0, 7) === mesReferencia).length
 
-  const pendencias = useMemo(() => getPendencias(usuarioLogado), [getPendencias, usuarioLogado])
+  const pendencias = useMemo(
+    () => getPendencias(usuarioLogado, divisaoAtivaId),
+    [getPendencias, usuarioLogado, divisaoAtivaId],
+  )
 
   const movimentacoes = useMemo(() => {
-    const deOfertas = ofertas.items.map((o) => ({
+    const deOfertas = ofertasDoModulo.map((o) => ({
       data: o.data,
       tipo: 'Compras',
       refId: o.codigoBase,
       descricao: `${o.codigo} — ${getProduto(o.produtoId)?.nome ?? ''} (${o.status})`,
     }))
 
-    const deVendas = propostas.items.flatMap((p) =>
+    const deVendas = propostasDoModulo.flatMap((p) =>
       p.historicoNegociacao.map((r) => ({
         data: r.data,
         tipo: 'Vendas',
@@ -88,14 +100,14 @@ export default function Inicio() {
       descricao: `${d.numero} emitido para ${d.clienteNome}`,
     }))
 
-    const deClaims = claims.items.map((c) => ({
+    const deClaims = noEscopo(claims.items).map((c) => ({
       data: c.data,
       tipo: 'Claims',
       refId: null,
       descricao: `Claim registrado — ${getProduto(c.produtoId)?.nome ?? ''} × ${getEmpresa(c.fornecedorId)?.nome ?? ''} (${c.status})`,
     }))
 
-    const deDemandas = demandas.items.map((d) => ({
+    const deDemandas = noEscopo(demandas.items).map((d) => ({
       data: d.data,
       tipo: 'Demandas',
       refId: null,
@@ -112,12 +124,15 @@ export default function Inicio() {
     return [...deOfertas, ...deVendas, ...deDocumentos, ...deClaims, ...deDemandas, ...deFretes]
       .sort((a, b) => (a.data < b.data ? 1 : -1))
       .slice(0, 10)
-  }, [ofertas.items, propostas.items, documentos.items, claims.items, demandas.items, fretes.items, getProduto, getEmpresa])
+  }, [ofertasDoModulo, propostasDoModulo, noEscopo, documentos.items, claims.items, demandas.items, fretes.items, getProduto, getEmpresa])
 
   return (
     <div>
       <PopupNovidadesDemandas />
-      <h1 className="mb-5 text-2xl font-semibold tracking-tight text-ayamo-text">{t('inicio.titulo')}</h1>
+      <div className="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-ayamo-text">{t('inicio.titulo')}</h1>
+        {divisaoAtiva && <span className="text-sm text-ayamo-text-mut">Módulo {divisaoAtiva.nome}</span>}
+      </div>
 
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <CartaoNumerico label={t('inicio.ofertasAtivas')} valor={ofertasAtivas} icone={ShoppingCart} tom="primary" />

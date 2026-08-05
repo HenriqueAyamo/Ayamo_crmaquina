@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import { useDivisao } from '../divisoes/DivisaoContext.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -36,6 +37,7 @@ function formatarMargemAtual(avaliacao) {
 export default function Vendas() {
   const { propostas, empresas, usuarios, getEmpresa, getUsuario, getProduto, calcularResumoProposta } = useData()
   const { t } = useI18n()
+  const { noEscopo, divisaoAtiva } = useDivisao()
   const navigate = useNavigate()
 
   const [busca, setBusca] = useState('')
@@ -48,17 +50,22 @@ export default function Vendas() {
 
   const propostasFiltradas = useMemo(() => {
     const termo = busca.toLowerCase()
-    return propostas.items.filter((p) => {
+    return noEscopo(propostas.items).filter((p) => {
       const combinaBusca = !termo || getEmpresa(p.clienteId)?.nome.toLowerCase().includes(termo)
       const combinaVendedor = !vendedorFiltro || p.vendedorId === Number(vendedorFiltro)
       const combinaStatus = !statusFiltro || p.status === statusFiltro
       return combinaBusca && combinaVendedor && combinaStatus
     })
-  }, [propostas.items, busca, vendedorFiltro, statusFiltro, getEmpresa])
+  }, [propostas.items, noEscopo, busca, vendedorFiltro, statusFiltro, getEmpresa])
 
   return (
     <div>
-      <PageHeader title={t('vendas.titulo')} actionLabel={t('vendas.novaProposta')} onAction={() => setModalAberto(true)} />
+      <PageHeader
+        title={t('vendas.titulo')}
+        subtitle={divisaoAtiva ? `Módulo ${divisaoAtiva.nome}` : undefined}
+        actionLabel={t('vendas.novaProposta')}
+        onAction={() => setModalAberto(true)}
+      />
 
       <FilterBar>
         <Field label={t('comum.cliente')}>

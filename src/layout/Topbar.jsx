@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext.jsx'
 import { AUTH_HABILITADA } from '../auth/config.js'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import { IDIOMAS, useI18n } from '../i18n/I18nContext.jsx'
+import SeletorDivisao from '../divisoes/SeletorDivisao.jsx'
 
 export default function Topbar() {
   const { usuarios, usuarioLogado, setUsuarioLogadoId } = useData()
@@ -19,7 +20,11 @@ export default function Topbar() {
     .toUpperCase()
 
   return (
-    <header className="flex h-16 flex-shrink-0 items-center justify-end gap-4 border-b border-ayamo-border bg-ayamo-surface/90 px-6 backdrop-blur">
+    <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b border-ayamo-border bg-ayamo-surface/90 px-6 backdrop-blur">
+      <SeletorDivisao />
+
+      <div className="ml-auto" />
+
       <div
         className="flex items-center rounded-md border border-ayamo-border p-0.5"
         role="group"

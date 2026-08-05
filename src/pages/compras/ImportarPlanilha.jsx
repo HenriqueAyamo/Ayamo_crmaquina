@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
+import { useDivisao } from '../../divisoes/DivisaoContext.jsx'
 import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
 import { lerLinhasExcel, colunasDaPlanilha } from '../../utils/importarExcel.js'
 import { formatarPreco } from '../../utils/formato.js'
@@ -9,6 +10,7 @@ import PreviewImportacao from '../../components/PreviewImportacao.jsx'
 import MapeamentoColunas from '../../components/MapeamentoColunas.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 const COLUNAS_ACEITAS =
   'Ref., Product - Packing (ou Produto), Supplier (ou Fornecedor), Brand, Currency, Price, Volume FCL (ou Quantidade), Incoterm, Shipment Period, Destination, Offer Validity, Payment Term, Offer date, Purchase Trader, Comments'
@@ -107,7 +109,9 @@ function paraDataISO(bruto) {
 }
 
 export default function ImportarPlanilha({ onImportado }) {
-  const { ofertas, produtos, empresas, familias, usuarios, usuarioLogado } = useData()
+  const { t } = useI18n()
+  const { ofertas, produtos, empresas, familias, usuarios, usuarioLogado, getDivisaoIdDeProduto } = useData()
+  const { divisaoAtiva } = useDivisao()
   const [preview, setPreview] = useState(null)
   const [resumoFinal, setResumoFinal] = useState(null)
   const [linhasBrutas, setLinhasBrutas] = useState(null)
@@ -120,8 +124,15 @@ export default function ImportarPlanilha({ onImportado }) {
   // registros de verdade no sistema, e isso precisa ser uma escolha explícita.
   const [cadastrarFaltantes, setCadastrarFaltantes] = useState(false)
 
+  // O matching só considera produtos do módulo aberto. Sem isso, importar no
+  // módulo Seafood poderia vincular um produto de Meat e o registro nasceria na
+  // divisão errada.
+  const produtosDaDivisao = produtos.items.filter(
+    (p) => !divisaoAtiva || getDivisaoIdDeProduto(p.id) === divisaoAtiva.id,
+  )
+
   function acharProduto(nomeColuna) {
-    return acharProdutoPorNome(nomeColuna, produtos.items)
+    return acharProdutoPorNome(nomeColuna, produtosDaDivisao)
   }
 
   function acharFornecedor(nome) {
@@ -206,6 +217,7 @@ export default function ImportarPlanilha({ onImportado }) {
 
     const dadosCriacao = {
       tipoRegistro: 'Position',
+      divisaoId: divisaoAtiva?.id ?? null,
       // Pode ser null quando o registro ainda vai ser criado na confirmação —
       // aí o id real é preenchido em confirmarImportacao.
       produtoId: produto?.id ?? null,
@@ -375,9 +387,14 @@ export default function ImportarPlanilha({ onImportado }) {
           // A coluna "Business" da planilha (Chicken, Pork...) casa com o cadastro
           // de famílias; sem ela o produto cai na primeira família disponível.
           const nomeFamilia = String(item.familia ?? '').trim().toLowerCase()
+          // A família precisa ser da divisão aberta, senão o produto novo nasceria
+          // fora do módulo de quem importou.
+          const familiasDaDivisao = familias.items.filter(
+            (f) => f.situacao === 'Ativo' && (!divisaoAtiva || f.divisaoId === divisaoAtiva.id),
+          )
           const familia =
-            familias.items.find((f) => f.nome.toLowerCase() === nomeFamilia) ??
-            familias.items.find((f) => f.situacao === 'Ativo') ??
+            familiasDaDivisao.find((f) => f.nome.toLowerCase() === nomeFamilia) ??
+            familiasDaDivisao[0] ??
             familias.items[0]
 
           produtosCriados.set(
@@ -515,7 +532,7 @@ export default function ImportarPlanilha({ onImportado }) {
             OU uma planilha — o sistema identifica sozinho o que fazer com cada tipo. Nada é gravado até você
             conferir e confirmar.
           </p>
-          <Field label="Texto da oferta (opcional se enviar arquivo)">
+          <Field label={t('campo.textoOferta')}>
             <textarea
               className={inputClass}
               rows={4}

@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { DataProvider } from './DataContext.jsx'
 import { I18nProvider } from './i18n/I18nContext.jsx'
 import { AuthProvider, useAuth } from './auth/AuthContext.jsx'
+import { DivisaoProvider } from './divisoes/DivisaoContext.jsx'
 import PortaoAuth from './auth/PortaoAuth.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import Shell from './layout/Shell.jsx'
@@ -42,6 +43,7 @@ function CRM() {
   const { usuario } = useAuth()
   return (
     <DataProvider usuarioAutenticado={usuario}>
+      <DivisaoProvider>
           <Suspense fallback={<CarregandoPagina />}>
             <Routes>
               <Route element={<Shell />}>
@@ -72,6 +74,7 @@ function CRM() {
               <Route path="/vendas/:id/proforma" element={<DocumentoProforma />} />
             </Routes>
           </Suspense>
+      </DivisaoProvider>
     </DataProvider>
   )
 }
