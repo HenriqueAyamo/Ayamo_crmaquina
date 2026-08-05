@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { Download, Eye } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { useI18n } from '../i18n/I18nContext.jsx'
+import SeloCadastroPendente from '../components/SeloCadastroPendente.jsx'
+import { empresaIncompleta, faltandoNaEmpresa } from '../utils/cadastroPendente.js'
 import PageHeader from '../components/PageHeader.jsx'
 import FilterBar from '../components/FilterBar.jsx'
 import CardList from '../components/CardList.jsx'
@@ -260,7 +262,17 @@ export default function Empresas() {
           )
         }}
         columns={[
-          { key: 'nome', header: t('contatos.nome') },
+          {
+            key: 'nome',
+            header: t('contatos.nome'),
+            render: (item) => (
+              <span className="inline-flex flex-wrap items-center gap-1.5">
+                {item.nome}
+                {empresaIncompleta(item) && <SeloCadastroPendente faltando={faltandoNaEmpresa(item)} compacto />}
+              </span>
+            ),
+            sortValue: (item) => item.nome,
+          },
           { key: 'pais', header: t('empresas.pais') },
           {
             key: 'responsavel',

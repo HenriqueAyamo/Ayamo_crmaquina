@@ -1,8 +1,47 @@
 import { diasAte, ehFollowUpAberto } from './followups.js'
+import { empresaIncompleta, faltandoNaEmpresa, faltandoNoProduto, produtoIncompleto } from './cadastroPendente.js'
+
+// Cadastros criados pela importação ficam só com o nome. Sem isso aqui, o aviso
+// só apareceria para quem abrisse a lista de Empresas ou Cadastros por acaso.
+function pendenciasDeCadastro(ctx) {
+  const { empresas, produtos } = ctx
+  if (!empresas || !produtos) return []
+  const pendencias = []
+
+  empresas.items
+    .filter((e) => e.situacao === 'Ativo' && empresaIncompleta(e))
+    .forEach((e) => {
+      const faltando = faltandoNaEmpresa(e)
+      pendencias.push({
+        tipo: 'cadastro',
+        id: `empresa-${e.id}`,
+        empresaId: e.id,
+        titulo: e.nome,
+        descricao: `Cadastro de ${(e.tipo ?? 'empresa').toLowerCase()} incompleto${faltando.length > 0 ? ` — falta: ${faltando.join(', ')}` : ' — criado pela importação'}`,
+        data: new Date().toISOString().slice(0, 10),
+      })
+    })
+
+  produtos.items
+    .filter((p) => p.situacao === 'Ativo' && produtoIncompleto(p))
+    .forEach((p) => {
+      const faltando = faltandoNoProduto(p)
+      pendencias.push({
+        tipo: 'cadastro',
+        id: `produto-${p.id}`,
+        titulo: p.nome,
+        descricao: `Cadastro de produto incompleto${faltando.length > 0 ? ` — falta: ${faltando.join(', ')}` : ' — criado pela importação'}`,
+        data: new Date().toISOString().slice(0, 10),
+      })
+    })
+
+  return pendencias
+}
 
 // Uma pendência pode apontar para uma oferta, uma proposta ou um follow-up (que herda o
 // destino do registro de origem, ou cai na empresa quando não veio de compra/venda).
 export function linkDaPendencia(item) {
+  if (item.tipo === 'cadastro') return item.empresaId ? `/empresas/${item.empresaId}` : '/cadastros'
   if (item.tipo === 'oferta') return `/compras/${item.id}`
   if (item.tipo === 'proposta') return `/vendas/${item.id}`
   if (item.refTipo === 'oferta' && item.refId) return `/compras/${item.refId}`
@@ -154,7 +193,9 @@ export function calcularPendencias(usuario, ctx) {
   const pendencias = []
 
   if (usuario.perfil === 'Vendedor') pendencias.push(...pendenciasVendedor(usuario, ctx))
-  if (usuario.perfil === 'Comprador') pendencias.push(...pendenciasComprador(usuario, ctx))
+  if (usuario.perfil === 'Comprador') {
+    pendencias.push(...pendenciasComprador(usuario, ctx), ...pendenciasDeCadastro(ctx))
+  }
   if (usuario.perfil === 'Financeiro') pendencias.push(...pendenciasFinanceiro(ctx))
   if (usuario.perfil === 'Diretor') pendencias.push(...pendenciasDiretor(usuario, ctx))
 
@@ -167,6 +208,7 @@ export function calcularPendencias(usuario, ctx) {
       ...pendenciasFinanceiro(ctx),
       ...pendenciasDiretor(usuario, ctx, { todos: true }),
       ...pendenciasDeFollowUp(usuario, ctx, { todos: true }),
+      ...pendenciasDeCadastro(ctx),
     )
   } else {
     pendencias.push(...pendenciasDeFollowUp(usuario, ctx))

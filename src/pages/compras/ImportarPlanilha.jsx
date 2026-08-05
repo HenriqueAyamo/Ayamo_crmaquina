@@ -22,11 +22,13 @@ const ALIASES = {
   preco: ['preço', 'preco', 'price'],
   quantidade: ['quantidade', 'volume fcl', 'volume', 'qty'],
   incoterm: ['incoterm'],
-  embarque: ['shipment period', 'embarque'],
+  // Aliases no plural e nas variações que aparecem nas planilhas reais — a de
+  // compras usa "Shipment" e "Payment Terms", que antes não casavam com nada.
+  embarque: ['shipment period', 'shipment', 'shipment month', 'embarque', 'periodo de embarque', 'período de embarque'],
   destino: ['destination', 'destino'],
-  validade: ['offer validity', 'validade'],
-  prazoPagamento: ['payment term', 'prazo de pagamento', 'prazo pagamento'],
-  data: ['offer date', 'data'],
+  validade: ['offer validity', 'validity', 'validade', 'validade da oferta'],
+  prazoPagamento: ['payment terms', 'payment term', 'payment', 'prazo de pagamento', 'prazo pagamento'],
+  data: ['offer date', 'date', 'data', 'data da oferta'],
   trader: ['purchase trader', 'trader', 'comprador'],
   familia: ['business', 'familia', 'família', 'categoria'],
   comentarios: ['comments', 'comentarios', 'comentários', 'market'],
@@ -192,7 +194,12 @@ export default function ImportarPlanilha({ onImportado }) {
     const comentariosBrutos = [
       bruto.comentarios,
       bruto.destino ? `Destination: ${bruto.destino}` : null,
-      bruto.brand && bruto.brand.toLowerCase() !== (fornecedor.marca ?? '').toLowerCase() ? `Brand: ${bruto.brand}` : null,
+      // fornecedor pode ser null quando ainda vai ser cadastrado na confirmação.
+      // A marca só é redundante quando já existe cadastro para comparar.
+      String(bruto.brand ?? '').trim() &&
+      String(bruto.brand).trim().toLowerCase() !== String(fornecedor?.marca ?? '').toLowerCase()
+        ? `Brand: ${String(bruto.brand).trim()}`
+        : null,
     ]
       .filter(Boolean)
       .join(' — ')

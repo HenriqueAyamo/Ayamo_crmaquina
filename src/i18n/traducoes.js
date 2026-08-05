@@ -74,6 +74,7 @@ export const TRADUCOES = {
     'pendencias.oferta': 'Oferta',
     'pendencias.followup': 'Follow-up',
     'pendencias.cobrarWhatsApp': 'Cobrar via WhatsApp',
+    'pendencias.cadastro': 'Cadastro',
     'pendencias.vazio': 'Nada pendente para este usuário',
 
     // Compras / detalhe
@@ -330,6 +331,7 @@ export const TRADUCOES = {
     'pendencias.oferta': 'Offer',
     'pendencias.followup': 'Follow-up',
     'pendencias.cobrarWhatsApp': 'Follow up via WhatsApp',
+    'pendencias.cadastro': 'Master data',
     'pendencias.vazio': 'Nothing pending for this user',
 
     'compras.voltar': 'Back to Purchases',
@@ -569,6 +571,7 @@ export const TRADUCOES = {
     'pendencias.oferta': 'Oferta',
     'pendencias.followup': 'Seguimiento',
     'pendencias.cobrarWhatsApp': 'Dar seguimiento por WhatsApp',
+    'pendencias.cadastro': 'Registro',
     'pendencias.vazio': 'Nada pendiente para este usuario',
 
     'compras.voltar': 'Volver a Compras',

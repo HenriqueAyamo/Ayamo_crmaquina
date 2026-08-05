@@ -18,7 +18,12 @@ export default function Pendencias() {
   const { usuarioLogado, getPendencias, propostas, contatos, getProduto } = useData()
   const { t } = useI18n()
   const navigate = useNavigate()
-  const rotuloTipo = { proposta: t('pendencias.proposta'), oferta: t('pendencias.oferta'), followup: t('pendencias.followup') }
+  const rotuloTipo = {
+    proposta: t('pendencias.proposta'),
+    oferta: t('pendencias.oferta'),
+    followup: t('pendencias.followup'),
+    cadastro: t('pendencias.cadastro'),
+  }
   const [tipoFiltro, setTipoFiltro] = useState('')
   const [cobrancaAlvo, setCobrancaAlvo] = useState(null)
 
@@ -51,6 +56,7 @@ export default function Pendencias() {
             <option value="proposta">{t('pendencias.proposta')}</option>
             <option value="oferta">{t('pendencias.oferta')}</option>
             <option value="followup">{t('pendencias.followup')}</option>
+            <option value="cadastro">{t('pendencias.cadastro')}</option>
           </select>
         </Field>
       </FilterBar>

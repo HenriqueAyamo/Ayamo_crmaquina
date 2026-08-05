@@ -1,5 +1,7 @@
 import { useData } from '../../DataContext.jsx'
 import CrudTab, { colunaSituacao } from './CrudTab.jsx'
+import SeloCadastroPendente from '../../components/SeloCadastroPendente.jsx'
+import { produtoIncompleto, faltandoNoProduto } from '../../utils/cadastroPendente.js'
 import RevisaoProdutosDuplicados from './RevisaoProdutosDuplicados.jsx'
 
 export default function AbaProdutos() {
@@ -37,7 +39,17 @@ export default function AbaProdutos() {
           { key: 'parametros', label: 'Outros parâmetros', type: 'text' },
         ]}
         columns={[
-          { key: 'nome', header: 'Nome' },
+          {
+            key: 'nome',
+            header: 'Nome',
+            render: (item) => (
+              <span className="inline-flex flex-wrap items-center gap-1.5">
+                {item.nome}
+                {produtoIncompleto(item) && <SeloCadastroPendente faltando={faltandoNoProduto(item)} compacto />}
+              </span>
+            ),
+            sortValue: (item) => item.nome,
+          },
           { key: 'apelido', header: 'Apelido' },
           { key: 'nomeCientifico', header: 'Nome científico', render: (item) => item.nomeCientifico || '—' },
           { key: 'familia', header: 'Família', render: (item) => nomeFamilia(item.familiaId) },

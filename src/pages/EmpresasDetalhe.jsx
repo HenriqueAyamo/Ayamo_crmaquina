@@ -13,6 +13,8 @@ import ModalNovaOferta from './compras/ModalNovaOferta.jsx'
 import NovaPropostaModal from './vendas/NovaPropostaModal.jsx'
 import SecaoRecolhivel from '../components/SecaoRecolhivel.jsx'
 import SecaoInteracoes from '../components/SecaoInteracoes.jsx'
+import { empresaIncompleta, faltandoNaEmpresa } from '../utils/cadastroPendente.js'
+import { AlertTriangle } from 'lucide-react'
 import { formatarValor, formatarData } from '../utils/formato.js'
 import { PAISES_QUALIFICACAO, contarAprovacoes } from '../data/qualificacaoPaises.js'
 import { ultimaInteracaoEmpresa, toneUltimaInteracao } from '../utils/ultimaInteracao.js'
@@ -69,6 +71,21 @@ export default function EmpresasDetalhe() {
         <ArrowLeft size={16} />
         Voltar para Empresas
       </button>
+
+      {empresaIncompleta(empresa) && (
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-ayamo-warning/40 bg-ayamo-warning/10 px-4 py-3">
+          <AlertTriangle size={18} className="mt-0.5 flex-shrink-0 text-ayamo-warning" />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium text-ayamo-warning">Cadastro incompleto</p>
+            <p className="mt-0.5 text-ayamo-text-mut">
+              {faltandoNaEmpresa(empresa).length > 0
+                ? `Falta preencher: ${faltandoNaEmpresa(empresa).join(', ')}.`
+                : 'Criado automaticamente pela importação — confira os dados.'}{' '}
+              Use o botão Editar para completar.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mb-6 rounded border border-ayamo-border bg-ayamo-surface p-5">
         <div className="mb-4 flex items-start justify-between">

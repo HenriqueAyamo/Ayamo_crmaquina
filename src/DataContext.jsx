@@ -207,8 +207,18 @@ export function DataProvider({ children, usuarioAutenticado }) {
 
   const getPendencias = useCallback(
     (usuario) =>
-      calcularPendencias(usuario, { ofertas, propostas, interacoes, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto }),
-    [ofertas, propostas, interacoes, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
+      calcularPendencias(usuario, {
+        ofertas,
+        propostas,
+        interacoes,
+        empresas,
+        produtos,
+        getEmpresa,
+        getUsuario,
+        getProduto,
+        getDivisaoIdDeProduto,
+      }),
+    [ofertas, propostas, interacoes, empresas, produtos, getEmpresa, getUsuario, getProduto, getDivisaoIdDeProduto],
   )
 
   const resetarTodosDados = useCallback(() => {
