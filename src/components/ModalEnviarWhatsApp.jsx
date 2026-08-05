@@ -6,6 +6,7 @@ import Field, { inputClass } from './Field.jsx'
 import CampoNumerico from './CampoNumerico.jsx'
 import SeletorContatos from './SeletorContatos.jsx'
 import { MOEDAS, UNIDADES_PESO } from '../data/unidades.js'
+import { useI18n } from '../i18n/I18nContext.jsx'
 import {
   IDIOMAS_MENSAGEM,
   NOTA_CAMBIO,
@@ -54,6 +55,7 @@ const CAMPOS_TEXTO = {
 // os valores, escolhe o idioma (PT/EN/ES) e converte moeda e unidade; à direita vê o preview.
 // Quem edita o texto direto no preview assume o controle e o remonte automático para.
 export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, modelo, mensagemInicial }) {
+  const { t } = useI18n()
   const [selecionados, setSelecionados] = useState([])
   const [telefoneManual, setTelefoneManual] = useState('')
   const [idioma, setIdioma] = useState('pt')
@@ -148,11 +150,11 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
     >
       <div className="grid gap-5 md:grid-cols-2">
         <div className="flex flex-col gap-4">
-          <Field label="Contatos cadastrados" hint="Marque um ou vários — cada um abre em uma conversa própria">
+          <Field label={t('campo.contatosCadastrados')} hint="Marque um ou vários — cada um abre em uma conversa própria">
             <SeletorContatos contatos={contatos ?? []} selecionados={selecionados} onChange={setSelecionados} />
           </Field>
 
-          <Field label="Outros números (com DDI)" hint="Separados por vírgula, para quem não está cadastrado">
+          <Field label={t('campo.outrosNumeros')} hint="Separados por vírgula, para quem não está cadastrado">
             <input
               className={inputClass}
               value={telefoneManual}
@@ -170,7 +172,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
 
           {modelo && dados && (
             <>
-              <Field label="Idioma da mensagem" hint="Troca as frases geradas pelo sistema; o que você digitou é mantido.">
+              <Field label={t('campo.idiomaMensagem')} hint="Troca as frases geradas pelo sistema; o que você digitou é mantido.">
                 <div className="flex gap-2">
                   {IDIOMAS_MENSAGEM.map((op) => (
                     <button
@@ -195,13 +197,13 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
                 </p>
                 <div className="flex flex-col gap-3">
                   <div className="grid grid-cols-3 gap-3">
-                    <Field label="Preço">
+                    <Field label={t('campo.preco')}>
                       <CampoNumerico
                         value={dados.preco.valor}
                         onChange={(valor) => setDados((a) => ({ ...a, preco: { ...a.preco, valor: Number(valor) || 0 } }))}
                       />
                     </Field>
-                    <Field label="Moeda" hint={NOTA_CAMBIO}>
+                    <Field label={t('campo.moeda')} hint={NOTA_CAMBIO}>
                       <select className={inputClass} value={dados.preco.moeda} onChange={(e) => trocarMoeda(e.target.value)}>
                         {MOEDAS.map((m) => (
                           <option key={m.codigo} value={m.codigo}>
@@ -210,7 +212,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
                         ))}
                       </select>
                     </Field>
-                    <Field label="Unidade" hint="Converte preço e quantidade">
+                    <Field label={t('campo.unidade')} hint="Converte preço e quantidade">
                       <select className={inputClass} value={dados.preco.unidade} onChange={(e) => trocarUnidade(e.target.value)}>
                         {UNIDADES_PESO.map((u) => (
                           <option key={u.codigo} value={u.codigo}>
@@ -233,7 +235,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
                         }
                       />
                     </Field>
-                    <Field label="Contêineres">
+                    <Field label={t('campo.conteineres')}>
                       <CampoNumerico
                         value={dados.numeroContainers ?? ''}
                         onChange={(valor) =>
@@ -250,7 +252,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
                   Ajustar textos da mensagem
                 </p>
                 <div className="flex flex-col gap-3">
-                  <Field label="Saudação">
+                  <Field label={t('campo.saudacao')}>
                     <input
                       className={inputClass}
                       value={dados.saudacao}
@@ -266,7 +268,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
                       />
                     </Field>
                   ))}
-                  <Field label="Pedido final">
+                  <Field label={t('campo.pedidoFinal')}>
                     <textarea
                       className={inputClass}
                       rows={2}
@@ -298,7 +300,7 @@ export default function ModalEnviarWhatsApp({ open, onClose, titulo, contatos, m
           <div className="rounded-lg border border-ayamo-border bg-ayamo-bg p-3">
             <div className="ml-auto max-w-[92%] rounded-lg rounded-br-sm bg-ayamo-success/15 px-3 py-2">
               <textarea
-                aria-label="Mensagem"
+                aria-label={t('campo.mensagem')}
                 className="max-h-[46vh] min-h-[300px] w-full resize-none border-0 bg-transparent p-0 text-[13px] leading-relaxed text-ayamo-text outline-none"
                 value={mensagem}
                 onChange={(e) => setTextoManual(e.target.value)}

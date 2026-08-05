@@ -149,7 +149,7 @@ export default function EmpresasDetalhe() {
             <dt className="text-ayamo-text-mut">Última negociação/contato</dt>
             <dd>
               {ultimaInteracao.dias == null ? (
-                <StatusBadge label="Nunca negociamos" tone="neutral" />
+                <StatusBadge label={t('campo.nuncaNegociamos')} tone="neutral" />
               ) : (
                 <StatusBadge
                   label={`${formatarData(ultimaInteracao.data)} — há ${ultimaInteracao.dias} dia(s)`}

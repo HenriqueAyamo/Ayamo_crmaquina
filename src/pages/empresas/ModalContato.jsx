@@ -3,6 +3,7 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresIniciais(contato) {
   return {
@@ -15,6 +16,7 @@ function valoresIniciais(contato) {
 }
 
 export default function ModalContato({ open, onClose, empresaId, contatoEditando, categoriasAtivas }) {
+  const { t } = useI18n()
   const { contatos } = useData()
   const [form, setForm] = useState(valoresIniciais(contatoEditando))
 
@@ -47,16 +49,16 @@ export default function ModalContato({ open, onClose, empresaId, contatoEditando
       footer={<ModalFooterAcoes onCancelar={onClose} formId="contato-form" />}
     >
       <form id="contato-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Nome" required>
+        <Field label={t('campo.nome')} required>
           <input className={inputClass} required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
         </Field>
-        <Field label="Cargo" required>
+        <Field label={t('campo.cargo')} required>
           <input className={inputClass} required value={form.cargo} onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
         </Field>
-        <Field label="Telefone" required>
+        <Field label={t('campo.telefone')} required>
           <input className={inputClass} required value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
         </Field>
-        <Field label="E-mail" required>
+        <Field label={t('campo.email')} required>
           <input
             type="email"
             className={inputClass}
@@ -65,7 +67,7 @@ export default function ModalContato({ open, onClose, empresaId, contatoEditando
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
         </Field>
-        <Field label="Categorias">
+        <Field label={t('campo.categorias')}>
           <div className="flex flex-wrap gap-3">
             {categoriasAtivas.map((c) => (
               <label key={c.id} className="flex items-center gap-1.5 text-sm text-ayamo-text">

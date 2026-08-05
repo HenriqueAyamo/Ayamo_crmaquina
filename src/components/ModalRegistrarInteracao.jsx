@@ -5,10 +5,12 @@ import ModalFooterAcoes from './ModalFooterAcoes.jsx'
 import Field, { inputClass } from './Field.jsx'
 import { TIPOS_INTERACAO } from '../data/interacoes.js'
 import { hojeISO } from '../utils/followups.js'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 // Registra um contato com a empresa (cliente ou fornecedor) e, opcionalmente, já agenda o
 // retorno. Interação e follow-up são o mesmo registro: "falei com X, volto em Y".
 export default function ModalRegistrarInteracao({ open, onClose, empresaId, refTipo = null, refId = null, titulo }) {
+  const { t } = useI18n()
   const { interacoes, contatos, usuarios, usuarioLogado, getEmpresa } = useData()
   const [form, setForm] = useState(null)
 
@@ -59,7 +61,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
     >
       <form id="interacao-form" onSubmit={salvar} className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Tipo de contato" required>
+          <Field label={t('campo.tipoContato')} required>
             <select className={inputClass} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
               {TIPOS_INTERACAO.map((tipo) => (
                 <option key={tipo} value={tipo}>
@@ -68,7 +70,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
               ))}
             </select>
           </Field>
-          <Field label="Data" required>
+          <Field label={t('campo.data')} required>
             <input
               type="date"
               className={inputClass}
@@ -79,7 +81,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
           </Field>
         </div>
 
-        <Field label="Contato" hint={contatosEmpresa.length === 0 ? 'Nenhum contato cadastrado nesta empresa' : undefined}>
+        <Field label={t('campo.contato')} hint={contatosEmpresa.length === 0 ? 'Nenhum contato cadastrado nesta empresa' : undefined}>
           <select className={inputClass} value={form.contatoId} onChange={(e) => setForm({ ...form, contatoId: e.target.value })}>
             <option value="">— Não especificado —</option>
             {contatosEmpresa.map((c) => (
@@ -91,7 +93,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
           </select>
         </Field>
 
-        <Field label="O que foi tratado" required>
+        <Field label={t('campo.oQueFoiTratado')} required>
           <textarea
             className={inputClass}
             rows={4}
@@ -115,7 +117,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
 
           {form.agendarFollowUp && (
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <Field label="Retornar em" required>
+              <Field label={t('campo.retornarEm')} required>
                 <input
                   type="date"
                   className={inputClass}
@@ -125,7 +127,7 @@ export default function ModalRegistrarInteracao({ open, onClose, empresaId, refT
                   onChange={(e) => setForm({ ...form, followUpEm: e.target.value })}
                 />
               </Field>
-              <Field label="Responsável" required>
+              <Field label={t('campo.responsavel')} required>
                 <select
                   className={inputClass}
                   value={form.followUpResponsavelId}

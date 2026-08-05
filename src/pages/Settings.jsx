@@ -49,19 +49,19 @@ export default function Settings() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <form onSubmit={salvar} className="flex flex-col gap-4 rounded border border-ayamo-border bg-ayamo-surface p-5">
-          <Field label="Nome" required>
+          <Field label={t('campo.nome')} required>
             <input className={inputClass} required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
           </Field>
-          <Field label="Cargo">
+          <Field label={t('campo.cargo')}>
             <input className={inputClass} value={form.cargo} onChange={(e) => setForm({ ...form, cargo: e.target.value })} />
           </Field>
-          <Field label="Empresa">
+          <Field label={t('campo.empresa')}>
             <input className={inputClass} value={form.empresa} onChange={(e) => setForm({ ...form, empresa: e.target.value })} />
           </Field>
-          <Field label="Telefone">
+          <Field label={t('campo.telefone')}>
             <input className={inputClass} value={form.telefone} onChange={(e) => setForm({ ...form, telefone: e.target.value })} />
           </Field>
-          <Field label="URL do logo (opcional)" hint="Apenas http(s) ou imagem em base64 — outros esquemas são bloqueados.">
+          <Field label={t('campo.urlLogo')} hint="Apenas http(s) ou imagem em base64 — outros esquemas são bloqueados.">
             <input className={inputClass} value={form.logoUrl} onChange={(e) => setForm({ ...form, logoUrl: e.target.value })} />
           </Field>
           <div className="flex items-center gap-2">

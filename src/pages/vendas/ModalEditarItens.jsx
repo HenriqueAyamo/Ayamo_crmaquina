@@ -10,6 +10,7 @@ import SelectBusca from '../../components/SelectBusca.jsx'
 import { calcularMargem } from '../../data/cambio.js'
 import { formatarPercentual } from '../../utils/formato.js'
 import { MOEDAS, UNIDADES_PESO } from '../../data/unidades.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 // Edição direta dos itens da proposta. Serve pra corrigir o que foi digitado errado e pra
 // montar propostas com mais de um produto — antes o preço/quantidade só mudavam registrando
@@ -55,6 +56,7 @@ function paraItem(linha) {
 }
 
 export default function ModalEditarItens({ open, onClose, proposta }) {
+  const { t } = useI18n()
   const { propostas, produtos } = useData()
   const [linhas, setLinhas] = useState([])
   const [erro, setErro] = useState(null)
@@ -139,7 +141,7 @@ export default function ModalEditarItens({ open, onClose, proposta }) {
               </div>
 
               <div className="flex flex-col gap-3">
-                <Field label="Produto" required>
+                <Field label={t('campo.produto')} required>
                   <SelectBusca
                     value={linha.produtoId}
                     onChange={(produtoId) => atualizar(indice, { produtoId })}
@@ -148,10 +150,10 @@ export default function ModalEditarItens({ open, onClose, proposta }) {
                 </Field>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <Field label="Quantidade" required>
+                  <Field label={t('campo.quantidade')} required>
                     <CampoNumerico required value={linha.quantidade} onChange={(quantidade) => atualizar(indice, { quantidade })} />
                   </Field>
-                  <Field label="Unidade" required>
+                  <Field label={t('campo.unidade')} required>
                     <select className={inputClass} value={linha.unidade} onChange={(e) => atualizar(indice, { unidade: e.target.value })}>
                       {UNIDADES_PESO.map((u) => (
                         <option key={u.codigo} value={u.codigo}>
@@ -160,7 +162,7 @@ export default function ModalEditarItens({ open, onClose, proposta }) {
                       ))}
                     </select>
                   </Field>
-                  <Field label="Contêineres">
+                  <Field label={t('campo.conteineres')}>
                     <CampoNumerico
                       value={linha.numeroContainers}
                       onChange={(numeroContainers) => atualizar(indice, { numeroContainers })}
@@ -169,10 +171,10 @@ export default function ModalEditarItens({ open, onClose, proposta }) {
                 </div>
 
                 <div className="grid grid-cols-4 gap-3">
-                  <Field label="Preço de custo" required>
+                  <Field label={t('campo.precoCusto')} required>
                     <CampoNumerico required value={linha.custoValor} onChange={(custoValor) => atualizar(indice, { custoValor })} />
                   </Field>
-                  <Field label="Moeda">
+                  <Field label={t('campo.moeda')}>
                     <select className={inputClass} value={linha.custoMoeda} onChange={(e) => atualizar(indice, { custoMoeda: e.target.value })}>
                       {MOEDAS.map((m) => (
                         <option key={m.codigo} value={m.codigo}>
@@ -181,10 +183,10 @@ export default function ModalEditarItens({ open, onClose, proposta }) {
                       ))}
                     </select>
                   </Field>
-                  <Field label="Preço de venda" required>
+                  <Field label={t('campo.precoVenda')} required>
                     <CampoNumerico required value={linha.vendaValor} onChange={(vendaValor) => atualizar(indice, { vendaValor })} />
                   </Field>
-                  <Field label="Moeda">
+                  <Field label={t('campo.moeda')}>
                     <select className={inputClass} value={linha.vendaMoeda} onChange={(e) => atualizar(indice, { vendaMoeda: e.target.value })}>
                       {MOEDAS.map((m) => (
                         <option key={m.codigo} value={m.codigo}>

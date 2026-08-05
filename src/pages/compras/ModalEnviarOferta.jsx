@@ -7,6 +7,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import SeletorContatos from '../../components/SeletorContatos.jsx'
 import { INCOTERMS } from '../../data/unidades.js'
 import { formatarValor } from '../../utils/formato.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresIniciais(oferta) {
   return {
@@ -22,6 +23,7 @@ function valoresIniciais(oferta) {
 }
 
 export default function ModalEnviarOferta({ open, onClose, oferta, produto, fornecedor, clientes }) {
+  const { t } = useI18n()
   const { contatos: contatosCadastro, getEmpresa } = useData()
   const [form, setForm] = useState(valoresIniciais(oferta))
   const [assunto, setAssunto] = useState('')
@@ -134,7 +136,7 @@ Best regards,`)
     >
       <div className="grid grid-cols-2 gap-5">
         <div className="flex flex-col gap-3">
-          <Field label="Cliente (opcional)" hint="Preenche nome e destino automaticamente">
+          <Field label={t('campo.clienteOpcional')} hint="Preenche nome e destino automaticamente">
             <select className={inputClass} value={form.clienteId} onChange={(e) => selecionarCliente(e.target.value)}>
               <option value="">Selecione ou preencha manualmente</option>
               {clientes.map((c) => (
@@ -144,14 +146,14 @@ Best regards,`)
               ))}
             </select>
           </Field>
-          <Field label="Nome do cliente (saudação)">
+          <Field label={t('campo.nomeClienteSaudacao')}>
             <input className={inputClass} value={form.nomeCliente} onChange={(e) => setForm({ ...form, nomeCliente: e.target.value })} />
           </Field>
-          <Field label="Destino">
+          <Field label={t('campo.destino')}>
             <input className={inputClass} value={form.destino} onChange={(e) => setForm({ ...form, destino: e.target.value })} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Incoterm oferecido">
+            <Field label={t('campo.incotermOferecido')}>
               <select className={inputClass} value={form.incoterm} onChange={(e) => setForm({ ...form, incoterm: e.target.value })}>
                 {INCOTERMS.map((i) => (
                   <option key={i} value={i}>
@@ -160,7 +162,7 @@ Best regards,`)
                 ))}
               </select>
             </Field>
-            <Field label="Prazo de pagamento">
+            <Field label={t('campo.prazoPagamento')}>
               <input
                 className={inputClass}
                 value={form.prazoPagamento}
@@ -168,14 +170,14 @@ Best regards,`)
               />
             </Field>
           </div>
-          <Field label="Margem / ton (interno)" hint="Nunca é enviado ao cliente">
+          <Field label={t('campo.margemTon')} hint="Nunca é enviado ao cliente">
             <CampoNumerico value={form.margem} onChange={(margem) => setForm({ ...form, margem })} />
           </Field>
-          <Field label="Preço final ao cliente" hint="Custo + margem, calculado">
+          <Field label={t('campo.precoFinalCliente')} hint="Custo + margem, calculado">
             <input className={`${inputClass} bg-ayamo-bg`} disabled value={formatarValor(precoFinal, oferta.precoCusto.moeda)} />
           </Field>
           <Field
-            label="Destinatários cadastrados"
+            label={t('campo.destinatariosCadastrados')}
             hint="Marque quantos quiser — o envio é em lote, uma aba de WhatsApp por contato e um único e-mail em Cco"
           >
             <SeletorContatos
@@ -185,19 +187,19 @@ Best regards,`)
               vazioLabel="Nenhum contato de cliente cadastrado — use os campos abaixo"
             />
           </Field>
-          <Field label="Outros e-mails" hint="Separados por vírgula">
+          <Field label={t('campo.outrosEmails')} hint="Separados por vírgula">
             <input className={inputClass} value={form.emails} onChange={(e) => setForm({ ...form, emails: e.target.value })} />
           </Field>
-          <Field label="Outros WhatsApp" hint="Separados por vírgula, com DDI">
+          <Field label={t('campo.outrosWhatsapp')} hint="Separados por vírgula, com DDI">
             <input className={inputClass} value={form.whatsapps} onChange={(e) => setForm({ ...form, whatsapps: e.target.value })} />
           </Field>
         </div>
 
         <div className="flex flex-col gap-3">
-          <Field label="Assunto">
+          <Field label={t('campo.assunto')}>
             <input className={inputClass} value={assunto} onChange={(e) => setAssunto(e.target.value)} />
           </Field>
-          <Field label="Mensagem">
+          <Field label={t('campo.mensagem')}>
             <textarea className={inputClass} rows={16} value={mensagem} onChange={(e) => setMensagem(e.target.value)} />
           </Field>
           <p className="rounded border border-ayamo-warning bg-ayamo-warning/10 px-3 py-2 text-xs text-ayamo-warning">

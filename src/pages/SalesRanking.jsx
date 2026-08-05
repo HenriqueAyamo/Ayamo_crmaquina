@@ -7,6 +7,7 @@ import KpiCard from '../components/KpiCard.jsx'
 import Field, { inputClass } from '../components/Field.jsx'
 import { formatarValor, formatarPercentual } from '../utils/formato.js'
 import { chartColor } from '../utils/chartColors.js'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 const PERIODOS = [
   { valor: '3', rotulo: 'Últimos 3 meses' },
@@ -16,6 +17,7 @@ const PERIODOS = [
 ]
 
 export default function SalesRanking() {
+  const { t } = useI18n()
   const { propostas, usuarios, getProduto, getUsuario, calcularResumoProposta } = useData()
   const [periodo, setPeriodo] = useState('')
   const [vendedorFiltro, setVendedorFiltro] = useState('')
@@ -83,7 +85,7 @@ export default function SalesRanking() {
       <PageHeader title="Sales Ranking" subtitle="Ranking de vendas fechadas e conversão de propostas" />
 
       <div className="mb-6 grid max-w-xl grid-cols-2 gap-3">
-        <Field label="Período">
+        <Field label={t('campo.periodo')}>
           <select className={inputClass} value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
             {PERIODOS.map((p) => (
               <option key={p.valor} value={p.valor}>
@@ -92,7 +94,7 @@ export default function SalesRanking() {
             ))}
           </select>
         </Field>
-        <Field label="Vendedor">
+        <Field label={t('campo.vendedor')}>
           <select className={inputClass} value={vendedorFiltro} onChange={(e) => setVendedorFiltro(e.target.value)}>
             <option value="">Todos</option>
             {vendedores.map((v) => (
@@ -105,10 +107,10 @@ export default function SalesRanking() {
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiCard label="Propostas criadas" value={conversao.total} tone="primary" />
-        <KpiCard label="Aceitas" value={conversao.aceitas} tone="success" />
-        <KpiCard label="Recusadas" value={conversao.recusadas} tone="danger" />
-        <KpiCard label="Taxa de conversão" value={formatarPercentual(conversao.taxa)} tone="teal" />
+        <KpiCard label={t('campo.propostasCriadas')} value={conversao.total} tone="primary" />
+        <KpiCard label={t('campo.aceitas')} value={conversao.aceitas} tone="success" />
+        <KpiCard label={t('campo.recusadas')} value={conversao.recusadas} tone="danger" />
+        <KpiCard label={t('campo.taxaConversao')} value={formatarPercentual(conversao.taxa)} tone="teal" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

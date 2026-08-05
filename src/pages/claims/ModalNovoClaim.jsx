@@ -6,6 +6,7 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS } from '../../data/unidades.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresIniciais() {
   return {
@@ -20,6 +21,7 @@ function valoresIniciais() {
 }
 
 export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAtivos, editando }) {
+  const { t } = useI18n()
   const { claims, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
   const [erros, setErros] = useState({})
@@ -71,7 +73,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
       footer={<ModalFooterAcoes onCancelar={onClose} formId="claim-form" />}
     >
       <form id="claim-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
+        <Field label={t('campo.fornecedor')} required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
           <SelectBusca
             value={form.fornecedorId}
             onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
@@ -80,7 +82,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
           />
         </Field>
 
-        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
+        <Field label={t('campo.produto')} required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
@@ -89,7 +91,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
           />
         </Field>
 
-        <Field label="Descrição" required>
+        <Field label={t('campo.descricao')} required>
           <textarea
             className={inputClass}
             rows={2}
@@ -100,10 +102,10 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Impacto financeiro (opcional)">
+          <Field label={t('campo.impactoFinanceiro')}>
             <CampoNumerico value={form.impacto} onChange={(v) => setForm({ ...form, impacto: v })} />
           </Field>
-          <Field label="Moeda">
+          <Field label={t('campo.moeda')}>
             <select className={inputClass} value={form.moedaImpacto} onChange={(e) => setForm({ ...form, moedaImpacto: e.target.value })}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -114,7 +116,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
           </Field>
         </div>
 
-        <Field label="Status">
+        <Field label={t('campo.status')}>
           <select className={inputClass} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
             <option value="Não iniciado">Não iniciado</option>
             <option value="Em andamento">Em andamento</option>
@@ -123,7 +125,7 @@ export default function ModalNovoClaim({ open, onClose, fornecedores, produtosAt
           </select>
         </Field>
 
-        <Field label="Comentários">
+        <Field label={t('campo.comentarios')}>
           <textarea
             className={inputClass}
             rows={2}

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { X } from 'lucide-react'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 const WIDTH_CLASSES = {
   sm: 'max-w-md',
@@ -8,6 +9,7 @@ const WIDTH_CLASSES = {
 }
 
 export default function Modal({ open, onClose, title, children, footer, width = 'md' }) {
+  const { t } = useI18n()
   useEffect(() => {
     if (!open) return
     function aoTeclar(e) {
@@ -35,7 +37,7 @@ export default function Modal({ open, onClose, title, children, footer, width = 
             type="button"
             onClick={onClose}
             className="rounded p-1 text-ayamo-text-mut hover:bg-ayamo-bg"
-            aria-label="Fechar"
+            aria-label={t('campo.fechar')}
           >
             <X size={18} />
           </button>

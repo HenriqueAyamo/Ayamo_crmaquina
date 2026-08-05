@@ -3,8 +3,10 @@ import Modal from '../../components/Modal.jsx'
 import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 export default function ModalRodada({ open, tipo, itemAtual, onClose, onConfirmar }) {
+  const { t } = useI18n()
   const exigePreco = tipo === 'Contraproposta do cliente'
 
   const [preco, setPreco] = useState('')
@@ -43,12 +45,12 @@ export default function ModalRodada({ open, tipo, itemAtual, onClose, onConfirma
             <Field label={`Preço (${itemAtual.precoVenda.moeda})`} required>
               <CampoNumerico required value={preco} onChange={setPreco} />
             </Field>
-            <Field label="Quantidade" required>
+            <Field label={t('campo.quantidade')} required>
               <CampoNumerico required value={quantidade} onChange={setQuantidade} />
             </Field>
           </div>
         )}
-        <Field label="Observação">
+        <Field label={t('campo.observacao')}>
           <textarea className={inputClass} rows={3} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
         </Field>
       </form>

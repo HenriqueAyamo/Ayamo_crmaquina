@@ -227,13 +227,13 @@ export default function Usuarios() {
         footer={<ModalFooterAcoes onCancelar={() => setModalAberto(false)} formId="usuario-form" />}
       >
         <form id="usuario-form" onSubmit={salvar} className="flex flex-col gap-4">
-          <Field label="Nome" required>
+          <Field label={t('campo.nome')} required>
             <input className={inputClass} required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
           </Field>
-          <Field label="E-mail" required>
+          <Field label={t('campo.email')} required>
             <input type="email" className={inputClass} required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </Field>
-          <Field label="Perfil" required>
+          <Field label={t('campo.perfil')} required>
             <select className={inputClass} value={form.perfil} onChange={(e) => setForm({ ...form, perfil: e.target.value })}>
               {PERFIS.map((p) => (
                 <option key={p} value={p}>

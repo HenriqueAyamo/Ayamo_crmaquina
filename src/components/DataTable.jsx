@@ -1,6 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronRight, Maximize2, Minimize2, Columns3 } from 'lucide-react'
 import EmptyState from './EmptyState.jsx'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 function valorPadrao(row, col) {
   return col.sortValue ? col.sortValue(row) : row[col.key]
@@ -34,6 +35,7 @@ export default function DataTable({
   stickyFirstColumn = false,
   linhaExpandida,
 }) {
+  const { t } = useI18n()
   const [ordenacao, setOrdenacao] = useState({ chave: null, direcao: 'asc' })
   const [telaCheia, setTelaCheia] = useState(false)
   const [colunasOcultas, setColunasOcultas] = useState(() => carregarOcultas(storageKey))
@@ -100,7 +102,7 @@ export default function DataTable({
                 type="button"
                 onClick={() => setMenuColunasAberto((atual) => !atual)}
                 className="flex items-center gap-1.5 rounded border border-ayamo-border bg-ayamo-surface px-2.5 py-1.5 text-xs text-ayamo-text-mut hover:bg-ayamo-bg hover:text-ayamo-text"
-                title="Mostrar/ocultar colunas"
+                title={t('modal.mostrarOcultarColunas')}
               >
                 <Columns3 size={14} />
                 Colunas

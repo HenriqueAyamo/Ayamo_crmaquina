@@ -6,6 +6,7 @@ import Field, { inputClass } from '../../components/Field.jsx'
 import CampoNumerico from '../../components/CampoNumerico.jsx'
 import SelectBusca from '../../components/SelectBusca.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresIniciais() {
   return {
@@ -25,6 +26,7 @@ function valoresIniciais() {
 }
 
 export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtivos, editando }) {
+  const { t } = useI18n()
   const { demandas, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
   const [erros, setErros] = useState({})
@@ -86,7 +88,7 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
       footer={<ModalFooterAcoes onCancelar={onClose} formId="demanda-form" />}
     >
       <form id="demanda-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Cliente" required error={erros.clienteId ? 'Selecione o cliente.' : undefined}>
+        <Field label={t('campo.cliente')} required error={erros.clienteId ? 'Selecione o cliente.' : undefined}>
           <SelectBusca
             value={form.clienteId}
             onChange={(clienteId) => setForm({ ...form, clienteId })}
@@ -95,7 +97,7 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
           />
         </Field>
 
-        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
+        <Field label={t('campo.produto')} required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
@@ -105,19 +107,19 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Proteína % (opcional)">
+          <Field label={t('campo.proteinaOpcional')}>
             <CampoNumerico value={form.proteinaPercentual} onChange={(v) => setForm({ ...form, proteinaPercentual: v })} />
           </Field>
-          <Field label="Volume (MT)" required>
+          <Field label={t('campo.volumeMT')} required>
             <CampoNumerico required value={form.quantidade} onChange={(quantidade) => setForm({ ...form, quantidade })} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Preço alvo / MT (opcional)">
+          <Field label={t('campo.precoAlvo')}>
             <CampoNumerico value={form.precoAlvo} onChange={(v) => setForm({ ...form, precoAlvo: v })} />
           </Field>
-          <Field label="Moeda">
+          <Field label={t('campo.moeda')}>
             <select className={inputClass} value={form.moedaAlvo} onChange={(e) => setForm({ ...form, moedaAlvo: e.target.value })}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -138,24 +140,24 @@ export default function ModalNovaDemanda({ open, onClose, clientes, produtosAtiv
               ))}
             </select>
           </Field>
-          <Field label="Origem">
+          <Field label={t('campo.origem')}>
             <input className={inputClass} value={form.origem} onChange={(e) => setForm({ ...form, origem: e.target.value })} />
           </Field>
-          <Field label="Destino">
+          <Field label={t('campo.destino')}>
             <input className={inputClass} value={form.destino} onChange={(e) => setForm({ ...form, destino: e.target.value })} />
           </Field>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Embalagem">
+          <Field label={t('campo.embalagem')}>
             <input className={inputClass} value={form.embalagem} onChange={(e) => setForm({ ...form, embalagem: e.target.value })} />
           </Field>
-          <Field label="Mês de embarque" hint="Ex.: Agosto 2026">
+          <Field label={t('campo.mesEmbarque')} hint="Ex.: Agosto 2026">
             <input className={inputClass} value={form.mesEmbarque} onChange={(e) => setForm({ ...form, mesEmbarque: e.target.value })} />
           </Field>
         </div>
 
-        <Field label="Comentários">
+        <Field label={t('campo.comentarios')}>
           <textarea
             className={inputClass}
             rows={2}

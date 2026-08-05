@@ -4,8 +4,10 @@ import Modal from './Modal.jsx'
 import ModalFooterAcoes from './ModalFooterAcoes.jsx'
 import Field, { inputClass } from './Field.jsx'
 import { redimensionarImagem } from '../utils/redimensionarImagem.js'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 export default function ModalInspecao({ open, onClose, contexto, refCodigo }) {
+  const { t } = useI18n()
   const { inspecoes, usuarioLogado } = useData()
   const [observacao, setObservacao] = useState('')
   const [imagem, setImagem] = useState(null)
@@ -46,15 +48,15 @@ export default function ModalInspecao({ open, onClose, contexto, refCodigo }) {
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title="Registrar inspeção do produto"
+      title={t('modal.tituloInspecao')}
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="inspecao-form" labelSalvar="Registrar" disabled={processandoImagem} />}
     >
       <form id="inspecao-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Observação" required hint="Ex.: cor, embalagem, temperatura, avarias — o que foi conferido na inspeção.">
+        <Field label={t('campo.observacao')} required hint="Ex.: cor, embalagem, temperatura, avarias — o que foi conferido na inspeção.">
           <textarea className={inputClass} rows={3} required value={observacao} onChange={(e) => setObservacao(e.target.value)} />
         </Field>
 
-        <Field label="Foto (opcional)">
+        <Field label={t('campo.fotoOpcional')}>
           <input type="file" accept="image/*" onChange={selecionarImagem} className="text-sm text-ayamo-text-mut" />
         </Field>
 

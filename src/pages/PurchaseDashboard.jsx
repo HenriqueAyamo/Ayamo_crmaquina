@@ -7,8 +7,10 @@ import BarraDuasCores from '../components/BarraDuasCores.jsx'
 import BarraRanking from '../components/BarraRanking.jsx'
 import { obterOfertasAtuais } from '../utils/ofertasAtuais.js'
 import { chartColor } from '../utils/chartColors.js'
+import { useI18n } from '../i18n/I18nContext.jsx'
 
 export default function PurchaseDashboard() {
+  const { t } = useI18n()
   const { ofertas, getProduto, getEmpresa } = useData()
 
   const posicoesAtivas = useMemo(
@@ -68,10 +70,10 @@ export default function PurchaseDashboard() {
       <PageHeader title="Painel de Compras" subtitle="Visão consolidada das posições de compra ativas" />
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiCard label="Posições ativas" value={kpis.posicoes} icon={Container} tone="primary" />
-        <KpiCard label="Volume total" value={`${kpis.volumeTotal.toLocaleString('pt-BR')} MT`} icon={Package} tone="teal" />
-        <KpiCard label="Vendido" value={`${kpis.vendido.toLocaleString('pt-BR')} MT`} icon={CheckCircle2} tone="success" />
-        <KpiCard label="Restante" value={`${kpis.restante.toLocaleString('pt-BR')} MT`} icon={TrendingUp} tone="warning" />
+        <KpiCard label={t('campo.posicoesAtivas')} value={kpis.posicoes} icon={Container} tone="primary" />
+        <KpiCard label={t('campo.volumeTotal')} value={`${kpis.volumeTotal.toLocaleString('pt-BR')} MT`} icon={Package} tone="teal" />
+        <KpiCard label={t('campo.vendido')} value={`${kpis.vendido.toLocaleString('pt-BR')} MT`} icon={CheckCircle2} tone="success" />
+        <KpiCard label={t('campo.restante')} value={`${kpis.restante.toLocaleString('pt-BR')} MT`} icon={TrendingUp} tone="warning" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

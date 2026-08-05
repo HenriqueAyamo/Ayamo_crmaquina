@@ -4,8 +4,10 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import { formatarPreco, formatarValor, formatarData, formatarPercentual } from '../../utils/formato.js'
 import { avaliarMargem } from '../../data/cambio.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 export default function ModalFechamento({ open, onClose, proposta, itemAtual, produtoNome, resumoMargem }) {
+  const { t } = useI18n()
   const { documentos, ofertas, getEmpresa } = useData()
   const navigate = useNavigate()
   const [visualizando, setVisualizando] = useState(null)
@@ -47,7 +49,7 @@ export default function ModalFechamento({ open, onClose, proposta, itemAtual, pr
   }
 
   return (
-    <Modal open={open} onClose={fechar} title="Proposta fechada" width="md">
+    <Modal open={open} onClose={fechar} title={t('modal.tituloPropostaFechada')} width="md">
       {!visualizando && (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-ayamo-text-mut">Valores travados no fechamento:</p>

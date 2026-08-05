@@ -10,6 +10,7 @@ import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, UNIDADES_PESO, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 // Correção dos dados da versão atual da oferta, sem criar revisão nova.
 // Serve pra consertar o que foi digitado errado — mudança negociada com o fornecedor
@@ -39,6 +40,7 @@ function valoresDe(oferta) {
 }
 
 export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos, fornecedores }) {
+  const { t } = useI18n()
   const { ofertas, dadosAyamo } = useData()
   const [form, setForm] = useState(() => valoresDe(atual))
   const [erros, setErros] = useState({})
@@ -103,7 +105,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
           negociada com o fornecedor, use <strong>Registrar revisão</strong> — assim o histórico de preço é preservado.
         </p>
 
-        <Field label="Tipo de registro" required>
+        <Field label={t('campo.tipoRegistro')} required>
           <div className="flex gap-2">
             {['Oferta', 'Position'].map((tipo) => (
               <button
@@ -123,7 +125,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
         </Field>
 
         {form.tipoRegistro === 'Position' && (
-          <Field label="Status de produção">
+          <Field label={t('campo.statusProducao')}>
             <select
               className={inputClass}
               value={form.statusProducao}
@@ -138,7 +140,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
           </Field>
         )}
 
-        <Field label="Produto" required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
+        <Field label={t('campo.produto')} required error={erros.produtoId ? 'Selecione o produto.' : undefined}>
           <SelectBusca
             value={form.produtoId}
             onChange={(produtoId) => setForm({ ...form, produtoId })}
@@ -147,7 +149,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
           />
         </Field>
 
-        <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
+        <Field label={t('campo.fornecedor')} required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
           <SelectBusca
             value={form.fornecedorId}
             onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
@@ -157,10 +159,10 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
         </Field>
 
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Preço de custo" required>
+          <Field label={t('campo.precoCusto')} required>
             <CampoNumerico required value={form.valor} onChange={(valor) => setForm({ ...form, valor })} />
           </Field>
-          <Field label="Moeda" required>
+          <Field label={t('campo.moeda')} required>
             <select className={inputClass} value={form.moeda} onChange={(e) => setForm({ ...form, moeda: e.target.value })}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -169,7 +171,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
               ))}
             </select>
           </Field>
-          <Field label="Unidade" required>
+          <Field label={t('campo.unidade')} required>
             <select className={inputClass} value={form.unidade} onChange={(e) => setForm({ ...form, unidade: e.target.value })}>
               {UNIDADES_PESO.map((u) => (
                 <option key={u.codigo} value={u.codigo}>
@@ -181,7 +183,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Número de contêineres" hint={`${TONELADAS_POR_CONTAINER} ton por contêiner`}>
+          <Field label={t('campo.numeroConteineres')} hint={`${TONELADAS_POR_CONTAINER} ton por contêiner`}>
             <CampoNumerico
               value={form.numeroContainers}
               onChange={(numeroContainers) =>
@@ -194,7 +196,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
             />
           </Field>
           <Field
-            label="Quantidade disponível"
+            label={t('campo.quantidadeDisponivel')}
             required={form.tipoRegistro === 'Position'}
             hint="Corrigir aqui desloca também a quantidade original, preservando o já vendido."
           >
@@ -206,7 +208,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
           </Field>
         </div>
 
-        <Field label="Observação">
+        <Field label={t('campo.observacao')}>
           <textarea
             className={inputClass}
             rows={2}
@@ -218,7 +220,7 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
         <SecaoRecolhivel titulo="Dados para o PO" aberturaInicial={false}>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Número do contrato">
+              <Field label={t('campo.numeroContrato')}>
                 <input className={inputClass} value={form.numeroContrato} onChange={(e) => setForm({ ...form, numeroContrato: e.target.value })} />
               </Field>
               <Field label="Incoterm">
@@ -233,32 +235,32 @@ export default function ModalEditarOferta({ open, onClose, atual, produtosAtivos
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Porto de origem">
+              <Field label={t('campo.portoOrigem')}>
                 <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
               </Field>
-              <Field label="Site / planta de fabricação">
+              <Field label={t('campo.mfgSite')}>
                 <input className={inputClass} value={form.mfgSite} onChange={(e) => setForm({ ...form, mfgSite: e.target.value })} />
               </Field>
             </div>
 
-            <Field label="Prazo de pagamento">
+            <Field label={t('campo.prazoPagamento')}>
               <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
             </Field>
 
             <div className="grid grid-cols-3 gap-3">
-              <Field label="Embarque de">
+              <Field label={t('campo.embarqueDe')}>
                 <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
               </Field>
-              <Field label="Embarque até">
+              <Field label={t('campo.embarqueAte')}>
                 <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
               </Field>
-              <Field label="Oferta válida até">
+              <Field label={t('campo.ofertaValidaAte')}>
                 <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
               </Field>
             </div>
 
             {entidadesAtivas.length > 0 && (
-              <Field label="Entidade Ayamo compradora">
+              <Field label={t('campo.entidadeCompradora')}>
                 <select
                   className={inputClass}
                   value={form.ayamoEntidadeId}

@@ -6,6 +6,7 @@ import BarraRanking from '../../components/BarraRanking.jsx'
 import { CATEGORIAS_PRODUTO, classificarProduto } from '../../utils/categoriaProdutos.js'
 import { contarAprovacoes } from '../../data/qualificacaoPaises.js'
 import { chartColor } from '../../utils/chartColors.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function TarefaCard({ titulo, empresas }) {
   const [aberto, setAberto] = useState(false)
@@ -35,6 +36,7 @@ function TarefaCard({ titulo, empresas }) {
 }
 
 export default function SupplierDashboard({ fornecedores, contatos }) {
+  const { t } = useI18n()
   const kpis = useMemo(() => {
     const totalProdutos = fornecedores.reduce((soma, e) => soma + (e.produtosCapacidade ?? []).length, 0)
     const volumeMensalTotal = fornecedores.reduce(
@@ -74,15 +76,15 @@ export default function SupplierDashboard({ fornecedores, contatos }) {
   return (
     <div className="mb-6 flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <KpiCard label="Fornecedores" value={kpis.totalFornecedores} icon={Building2} tone="primary" />
-        <KpiCard label="Produtos cadastrados" value={kpis.totalProdutos} icon={Package} tone="teal" />
+        <KpiCard label={t('campo.fornecedores')} value={kpis.totalFornecedores} icon={Building2} tone="primary" />
+        <KpiCard label={t('campo.produtosCadastrados')} value={kpis.totalProdutos} icon={Package} tone="teal" />
         <KpiCard
-          label="Qualificações"
+          label={t('campo.qualificacoes')}
           value={kpis.paisesTotal > 0 ? `${kpis.paisesAprovados}/${kpis.paisesTotal}` : '—'}
           icon={Globe}
           tone="success"
         />
-        <KpiCard label="Volume mensal (ton)" value={kpis.volumeMensalTotal.toLocaleString('pt-BR')} icon={Boxes} tone="warning" />
+        <KpiCard label={t('campo.volumeMensal')} value={kpis.volumeMensalTotal.toLocaleString('pt-BR')} icon={Boxes} tone="warning" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

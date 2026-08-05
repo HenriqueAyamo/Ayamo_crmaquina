@@ -7,6 +7,7 @@ import CampoNumerico from '../../components/CampoNumerico.jsx'
 import { MOEDAS } from '../../data/unidades.js'
 import SecaoCapacidadeProdutos from './SecaoCapacidadeProdutos.jsx'
 import SecaoQualificacaoPaises from './SecaoQualificacaoPaises.jsx'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresIniciais(empresa) {
   return {
@@ -28,6 +29,7 @@ function valoresIniciais(empresa) {
 }
 
 export default function ModalEditarEmpresa({ open, onClose, empresa }) {
+  const { t } = useI18n()
   const { empresas, usuarios } = useData()
   const [form, setForm] = useState(valoresIniciais(empresa))
 
@@ -52,35 +54,35 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
     <Modal
       open={open}
       onClose={onClose}
-      title="Editar empresa"
+      title={t('modal.tituloEditarEmpresa')}
       footer={<ModalFooterAcoes onCancelar={onClose} formId="empresa-edit-form" />}
     >
       <form id="empresa-edit-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Nome" required>
+        <Field label={t('campo.nome')} required>
           <input className={inputClass} required value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} />
         </Field>
-        <Field label="País" required>
+        <Field label={t('campo.pais')} required>
           <input className={inputClass} required value={form.pais} onChange={(e) => setForm({ ...form, pais: e.target.value })} />
         </Field>
-        <Field label="Endereço completo" hint="Usado nos documentos de PO/Proforma">
+        <Field label={t('campo.enderecoCompleto')} hint="Usado nos documentos de PO/Proforma">
           <textarea className={inputClass} rows={2} value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="CNPJ">
+          <Field label={t('campo.cnpj')}>
             <input className={inputClass} value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
           </Field>
-          <Field label="SIF / SIPEAGRO">
+          <Field label={t('campo.sif')}>
             <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Tipo" required>
+          <Field label={t('campo.tipo')} required>
             <select className={inputClass} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
               <option value="Cliente">Cliente</option>
               <option value="Fornecedor">Fornecedor</option>
             </select>
           </Field>
-          <Field label="Situação" required>
+          <Field label={t('campo.situacao')} required>
             <select className={inputClass} value={form.situacao} onChange={(e) => setForm({ ...form, situacao: e.target.value })}>
               <option value="Ativo">Ativo</option>
               <option value="Inativo">Inativo</option>
@@ -88,7 +90,7 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
             </select>
           </Field>
         </div>
-        <Field label="Responsável Ayamo" required>
+        <Field label={t('campo.responsavelAyamo')} required>
           <select
             className={inputClass}
             required
@@ -102,7 +104,7 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
             ))}
           </select>
         </Field>
-        <Field label="Moeda padrão de negociação" required>
+        <Field label={t('campo.moedaPadrao')} required>
           <select className={inputClass} required value={form.moedaPadrao} onChange={(e) => setForm({ ...form, moedaPadrao: e.target.value })}>
             {MOEDAS.map((m) => (
               <option key={m.codigo} value={m.codigo}>
@@ -112,17 +114,17 @@ export default function ModalEditarEmpresa({ open, onClose, empresa }) {
           </select>
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Limite de crédito" required>
+          <Field label={t('campo.limiteCredito')} required>
             <CampoNumerico required value={form.limiteCredito} onChange={(limiteCredito) => setForm({ ...form, limiteCredito })} />
           </Field>
-          <Field label="Crédito utilizado" required>
+          <Field label={t('campo.creditoUtilizado')} required>
             <CampoNumerico required value={form.creditoUtilizado} onChange={(creditoUtilizado) => setForm({ ...form, creditoUtilizado })} />
           </Field>
         </div>
 
         {form.tipo === 'Fornecedor' && (
           <>
-            <Field label="Marca" hint="Usada nos documentos de PO/Proforma. Se em branco, usa o nome do fornecedor.">
+            <Field label={t('campo.marca')} hint="Usada nos documentos de PO/Proforma. Se em branco, usa o nome do fornecedor.">
               <input className={inputClass} value={form.marca} onChange={(e) => setForm({ ...form, marca: e.target.value })} />
             </Field>
             <SecaoCapacidadeProdutos

@@ -9,6 +9,7 @@ import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 import { STATUS_PRODUCAO } from '../../data/statusProducao.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function valoresPO(atual) {
   return {
@@ -25,6 +26,7 @@ function valoresPO(atual) {
 }
 
 export default function ModalRevisao({ open, onClose, atual }) {
+  const { t } = useI18n()
   const { registrarRevisaoOferta, dadosAyamo } = useData()
   const entidadesAtivas = dadosAyamo.items.filter((e) => e.situacao === 'Ativo')
 
@@ -75,7 +77,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="revisao-form" labelSalvar="Registrar" />}
     >
       <form id="revisao-form" onSubmit={salvar} className="flex flex-col gap-4">
-        <Field label="Tipo de registro" required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
+        <Field label={t('campo.tipoRegistro')} required hint="Oferta = ainda em negociação com o fornecedor. Position = compra já fechada.">
           <div className="flex gap-2">
             {['Oferta', 'Position'].map((tipo) => (
               <button
@@ -95,7 +97,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
         </Field>
 
         {tipoRegistro === 'Position' && (
-          <Field label="Status de produção" hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
+          <Field label={t('campo.statusProducao')} hint="Nem toda Position já está pronta — pode ser um pedido que só fica pronto depois.">
             <select className={inputClass} value={statusProducao} onChange={(e) => setStatusProducao(e.target.value)}>
               {STATUS_PRODUCAO.map((s) => (
                 <option key={s} value={s}>
@@ -107,10 +109,10 @@ export default function ModalRevisao({ open, onClose, atual }) {
         )}
 
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Novo preço" required>
+          <Field label={t('campo.novoPreco')} required>
             <CampoNumerico required value={valor} onChange={setValor} />
           </Field>
-          <Field label="Moeda" required>
+          <Field label={t('campo.moeda')} required>
             <select className={inputClass} value={moeda} onChange={(e) => setMoeda(e.target.value)}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -119,11 +121,11 @@ export default function ModalRevisao({ open, onClose, atual }) {
               ))}
             </select>
           </Field>
-          <Field label="Quantidade" required={tipoRegistro === 'Position'} hint={tipoRegistro === 'Oferta' ? 'Opcional' : undefined}>
+          <Field label={t('campo.quantidade')} required={tipoRegistro === 'Position'} hint={tipoRegistro === 'Oferta' ? 'Opcional' : undefined}>
             <CampoNumerico required={tipoRegistro === 'Position'} value={quantidade} onChange={setQuantidade} />
           </Field>
         </div>
-        <Field label="Número de contêineres" hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
+        <Field label={t('campo.numeroConteineres')} hint={`Preenche a quantidade automaticamente (${TONELADAS_POR_CONTAINER} ton/contêiner) — ajustável depois`}>
           <CampoNumerico
             value={numeroContainers}
             onChange={(valor) => {
@@ -132,7 +134,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
             }}
           />
         </Field>
-        <Field label="Status da revisão" required>
+        <Field label={t('campo.statusRevisao')} required>
           <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="Disponível">Disponível</option>
             <option value="Em revisão">Em revisão</option>
@@ -140,7 +142,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
             <option value="Expirada">Expirada</option>
           </select>
         </Field>
-        <Field label="Observação" hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
+        <Field label={t('campo.observacao')} hint="Campo de texto livre — escreva à mão qualquer detalhe relevante da negociação.">
           <textarea
             className={inputClass}
             rows={2}
@@ -153,7 +155,7 @@ export default function ModalRevisao({ open, onClose, atual }) {
         <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Número do contrato">
+              <Field label={t('campo.numeroContrato')}>
                 <input
                   className={inputClass}
                   value={dadosPO.numeroContrato}
@@ -171,11 +173,11 @@ export default function ModalRevisao({ open, onClose, atual }) {
               </Field>
             </div>
 
-            <Field label="Porto de origem">
+            <Field label={t('campo.portoOrigem')}>
               <input className={inputClass} value={dadosPO.portoOrigem} onChange={(e) => setDadosPO({ ...dadosPO, portoOrigem: e.target.value })} />
             </Field>
 
-            <Field label="Prazo de pagamento">
+            <Field label={t('campo.prazoPagamento')}>
               <input
                 className={inputClass}
                 value={dadosPO.prazoPagamento}
@@ -184,25 +186,25 @@ export default function ModalRevisao({ open, onClose, atual }) {
             </Field>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Embarque de">
+              <Field label={t('campo.embarqueDe')}>
                 <CampoData value={dadosPO.embarqueDe} onChange={(embarqueDe) => setDadosPO({ ...dadosPO, embarqueDe })} />
               </Field>
-              <Field label="Embarque até">
+              <Field label={t('campo.embarqueAte')}>
                 <CampoData value={dadosPO.embarqueAte} onChange={(embarqueAte) => setDadosPO({ ...dadosPO, embarqueAte })} />
               </Field>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Site / planta de fabricação">
+              <Field label={t('campo.mfgSite')}>
                 <input className={inputClass} value={dadosPO.mfgSite} onChange={(e) => setDadosPO({ ...dadosPO, mfgSite: e.target.value })} />
               </Field>
-              <Field label="Oferta válida até">
+              <Field label={t('campo.ofertaValidaAte')}>
                 <CampoData value={dadosPO.validadeAte} onChange={(validadeAte) => setDadosPO({ ...dadosPO, validadeAte })} />
               </Field>
             </div>
 
             {entidadesAtivas.length > 0 && (
-              <Field label="Entidade Ayamo compradora">
+              <Field label={t('campo.entidadeCompradora')}>
                 <select
                   className={inputClass}
                   value={dadosPO.ayamoEntidadeId}

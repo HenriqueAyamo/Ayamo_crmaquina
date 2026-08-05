@@ -8,6 +8,7 @@ import GraficoLinha from '../../components/GraficoLinha.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
 import { formatarPreco, formatarData } from '../../utils/formato.js'
 import { chartColor } from '../../utils/chartColors.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 const METRICAS = {
   media: { rotulo: 'Média', calcular: (valores) => valores.reduce((a, b) => a + b, 0) / valores.length },
@@ -16,6 +17,7 @@ const METRICAS = {
 }
 
 export default function HistoricoPreco() {
+  const { t } = useI18n()
   const { ofertas, produtos, empresas, getProduto, getEmpresa } = useData()
   const navigate = useNavigate()
 
@@ -59,7 +61,7 @@ export default function HistoricoPreco() {
   return (
     <div>
       <FilterBar>
-        <Field label="Produto">
+        <Field label={t('campo.produto')}>
           <select className={inputClass} value={produtoFiltro} onChange={(e) => setProdutoFiltro(e.target.value)}>
             <option value="">Todos</option>
             {produtos.items.map((p) => (
@@ -69,7 +71,7 @@ export default function HistoricoPreco() {
             ))}
           </select>
         </Field>
-        <Field label="Fornecedor">
+        <Field label={t('campo.fornecedor')}>
           <select className={inputClass} value={fornecedorFiltro} onChange={(e) => setFornecedorFiltro(e.target.value)}>
             <option value="">Todos</option>
             {fornecedores.map((f) => (
@@ -81,7 +83,7 @@ export default function HistoricoPreco() {
         </Field>
         {grafico && (
           <>
-            <Field label="Métrica">
+            <Field label={t('campo.metrica')}>
               <select className={inputClass} value={metrica} onChange={(e) => setMetrica(e.target.value)}>
                 {Object.entries(METRICAS).map(([chave, { rotulo }]) => (
                   <option key={chave} value={chave}>
@@ -90,7 +92,7 @@ export default function HistoricoPreco() {
                 ))}
               </select>
             </Field>
-            <Field label="Agrupar por">
+            <Field label={t('campo.agruparPor')}>
               <select
                 className={inputClass}
                 value={agruparPorFornecedor ? 'fornecedor' : 'produto'}

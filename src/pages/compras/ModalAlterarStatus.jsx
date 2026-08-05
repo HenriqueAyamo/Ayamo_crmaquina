@@ -3,10 +3,12 @@ import { useData } from '../../DataContext.jsx'
 import Modal from '../../components/Modal.jsx'
 import ModalFooterAcoes from '../../components/ModalFooterAcoes.jsx'
 import Field, { inputClass } from '../../components/Field.jsx'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 const STATUS_OPCOES = ['Disponível', 'Em revisão', 'Esgotada', 'Expirada']
 
 export default function ModalAlterarStatus({ open, onClose, atual }) {
+  const { t } = useI18n()
   const { alterarStatusOferta } = useData()
   const [status, setStatus] = useState(atual.status)
   const [observacao, setObservacao] = useState('')
@@ -27,7 +29,7 @@ export default function ModalAlterarStatus({ open, onClose, atual }) {
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title="Alterar status da oferta"
+      title={t('modal.tituloAlterarStatus')}
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="status-oferta-form" />}
     >
       <form id="status-oferta-form" onSubmit={salvar} className="flex flex-col gap-4">
@@ -35,7 +37,7 @@ export default function ModalAlterarStatus({ open, onClose, atual }) {
           Muda só o status da oferta atual — sem criar uma nova revisão de preço. Use quando o fornecedor confirmar o
           mesmo preço, ou quando precisar marcar a oferta como esgotada/expirada.
         </p>
-        <Field label="Novo status" required>
+        <Field label={t('campo.novoStatus')} required>
           <select className={inputClass} value={status} onChange={(e) => setStatus(e.target.value)}>
             {STATUS_OPCOES.map((s) => (
               <option key={s} value={s}>
@@ -44,7 +46,7 @@ export default function ModalAlterarStatus({ open, onClose, atual }) {
             ))}
           </select>
         </Field>
-        <Field label="Observação">
+        <Field label={t('campo.observacao')}>
           <textarea
             className={inputClass}
             rows={2}

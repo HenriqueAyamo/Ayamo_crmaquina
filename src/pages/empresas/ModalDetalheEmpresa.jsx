@@ -5,11 +5,13 @@ import Modal from '../../components/Modal.jsx'
 import StatusBadge from '../../components/StatusBadge.jsx'
 import { PAISES_QUALIFICACAO } from '../../data/qualificacaoPaises.js'
 import { formatarValor } from '../../utils/formato.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 const ABAS = ['Visão geral', 'Produtos', 'Contatos', 'Países']
 const TONE_QUALIFICACAO = { Aprovado: 'success', 'Em andamento': 'warning', 'Não iniciado': 'neutral', Vencido: 'danger' }
 
 function BotaoCopiar({ valor }) {
+  const { t } = useI18n()
   const [copiado, setCopiado] = useState(false)
   return (
     <button
@@ -20,7 +22,7 @@ function BotaoCopiar({ valor }) {
         setTimeout(() => setCopiado(false), 1500)
       }}
       className="text-ayamo-text-mut hover:text-ayamo-primary"
-      title="Copiar"
+      title={t('modal.copiar')}
     >
       {copiado ? <Check size={13} className="text-ayamo-success" /> : <Copy size={13} />}
     </button>

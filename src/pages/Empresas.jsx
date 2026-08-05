@@ -327,7 +327,7 @@ export default function Empresas() {
         footer={<ModalFooterAcoes onCancelar={() => setModalAberto(false)} formId="empresa-form" />}
       >
         <form id="empresa-form" onSubmit={salvar} className="flex flex-col gap-4">
-          <Field label="Nome" required>
+          <Field label={t('campo.nome')} required>
             <input className={inputClass} required value={form.nome} onChange={(e) => alterarNome(e.target.value)} />
           </Field>
           {sugestao && (
@@ -350,7 +350,7 @@ export default function Empresas() {
               Contatos de {empresas.items.find((e) => e.id === copiarContatosDe)?.nome} serão copiados ao salvar.
             </p>
           )}
-          <Field label="País" required>
+          <Field label={t('campo.pais')} required>
             <input
               className={inputClass}
               required
@@ -358,7 +358,7 @@ export default function Empresas() {
               onChange={(e) => setForm({ ...form, pais: e.target.value })}
             />
           </Field>
-          <Field label="Endereço completo" hint="Usado nos documentos de PO/Proforma">
+          <Field label={t('campo.enderecoCompleto')} hint="Usado nos documentos de PO/Proforma">
             <textarea
               className={inputClass}
               rows={2}
@@ -366,16 +366,16 @@ export default function Empresas() {
               onChange={(e) => setForm({ ...form, endereco: e.target.value })}
             />
           </Field>
-          <Field label="SIF / número de estabelecimento" hint="Se for fornecedor, usado no documento para o cliente final">
+          <Field label={t('campo.sifEstabelecimento')} hint="Se for fornecedor, usado no documento para o cliente final">
             <input className={inputClass} value={form.sif} onChange={(e) => setForm({ ...form, sif: e.target.value })} />
           </Field>
-          <Field label="Tipo" required>
+          <Field label={t('campo.tipo')} required>
             <select className={inputClass} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })}>
               <option value="Cliente">Cliente</option>
               <option value="Fornecedor">Fornecedor</option>
             </select>
           </Field>
-          <Field label="Responsável Ayamo" required>
+          <Field label={t('campo.responsavelAyamo')} required>
             <select
               className={inputClass}
               required
@@ -390,7 +390,7 @@ export default function Empresas() {
               ))}
             </select>
           </Field>
-          <Field label="Moeda padrão de negociação" required>
+          <Field label={t('campo.moedaPadrao')} required>
             <select
               className={inputClass}
               required
@@ -405,7 +405,7 @@ export default function Empresas() {
               ))}
             </select>
           </Field>
-          <Field label="Limite de crédito" required>
+          <Field label={t('campo.limiteCredito')} required>
             <CampoNumerico required value={form.limiteCredito} onChange={(limiteCredito) => setForm({ ...form, limiteCredito })} />
           </Field>
         </form>

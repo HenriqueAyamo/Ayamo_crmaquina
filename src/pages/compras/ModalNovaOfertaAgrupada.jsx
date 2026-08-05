@@ -11,6 +11,7 @@ import SecaoRecolhivel from '../../components/SecaoRecolhivel.jsx'
 import { MOEDAS, INCOTERMS } from '../../data/unidades.js'
 import { TIPOS_CONTAINER } from '../../data/tiposContainer.js'
 import { TONELADAS_POR_CONTAINER } from '../../data/toneladasPorContainer.js'
+import { useI18n } from '../../i18n/I18nContext.jsx'
 
 function proximoCodigo(ofertas, jaCriadosNesteLote) {
   const numeros = [...ofertas.map((o) => o.codigoBase), ...jaCriadosNesteLote]
@@ -44,6 +45,7 @@ function valoresIniciais() {
 }
 
 export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos, fornecedores, onCriada }) {
+  const { t } = useI18n()
   const { ofertas, dadosAyamo, usuarioLogado } = useData()
   const [form, setForm] = useState(valoresIniciais())
   const [erros, setErros] = useState({})
@@ -135,7 +137,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
     <Modal
       open={open}
       onClose={fecharEResetar}
-      title="Nova oferta — mix container"
+      title={t('modal.tituloNovaOfertaMix')}
       width="lg"
       footer={<ModalFooterAcoes onCancelar={fecharEResetar} formId="oferta-agrupada-form" />}
     >
@@ -146,7 +148,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
         </p>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Fornecedor" required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
+          <Field label={t('campo.fornecedor')} required error={erros.fornecedorId ? 'Selecione o fornecedor.' : undefined}>
             <SelectBusca
               value={form.fornecedorId}
               onChange={(fornecedorId) => setForm({ ...form, fornecedorId })}
@@ -154,7 +156,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
               erro={erros.fornecedorId}
             />
           </Field>
-          <Field label="Tipo de registro" required>
+          <Field label={t('campo.tipoRegistro')} required>
             <div className="flex gap-2">
               {['Oferta', 'Position'].map((tipo) => (
                 <button
@@ -175,7 +177,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Tipo de contêiner" required>
+          <Field label={t('campo.tipoConteiner')} required>
             <select className={inputClass} value={form.tipoContainer} onChange={(e) => setForm({ ...form, tipoContainer: e.target.value })}>
               {TIPOS_CONTAINER.map((t) => (
                 <option key={t} value={t}>
@@ -184,13 +186,13 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
               ))}
             </select>
           </Field>
-          <Field label="Número de contêineres" hint={`${TONELADAS_POR_CONTAINER} ton/contêiner — usado só como referência de capacidade`}>
+          <Field label={t('campo.numeroConteineres')} hint={`${TONELADAS_POR_CONTAINER} ton/contêiner — usado só como referência de capacidade`}>
             <CampoNumerico
               value={form.numeroContainersTotal}
               onChange={(numeroContainersTotal) => setForm({ ...form, numeroContainersTotal })}
             />
           </Field>
-          <Field label="Moeda" required>
+          <Field label={t('campo.moeda')} required>
             <select className={inputClass} value={form.moeda} onChange={(e) => setForm({ ...form, moeda: e.target.value })}>
               {MOEDAS.map((m) => (
                 <option key={m.codigo} value={m.codigo}>
@@ -251,7 +253,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
           </p>
         </div>
 
-        <Field label="Observação">
+        <Field label={t('campo.observacao')}>
           <textarea
             className={inputClass}
             rows={2}
@@ -263,7 +265,7 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
         <SecaoRecolhivel titulo="Dados para o PO (opcional)" aberturaInicial={false}>
           <div className="flex flex-col gap-4">
             {entidadesAtivas.length > 0 && (
-              <Field label="Entidade Ayamo compradora">
+              <Field label={t('campo.entidadeCompradora')}>
                 <select className={inputClass} value={form.ayamoEntidadeId} onChange={(e) => setForm({ ...form, ayamoEntidadeId: e.target.value })}>
                   {entidadesAtivas.map((ent) => (
                     <option key={ent.id} value={ent.id}>
@@ -283,21 +285,21 @@ export default function ModalNovaOfertaAgrupada({ open, onClose, produtosAtivos,
                   ))}
                 </select>
               </Field>
-              <Field label="Porto de origem">
+              <Field label={t('campo.portoOrigem')}>
                 <input className={inputClass} value={form.portoOrigem} onChange={(e) => setForm({ ...form, portoOrigem: e.target.value })} />
               </Field>
             </div>
-            <Field label="Prazo de pagamento">
+            <Field label={t('campo.prazoPagamento')}>
               <input className={inputClass} value={form.prazoPagamento} onChange={(e) => setForm({ ...form, prazoPagamento: e.target.value })} />
             </Field>
-            <Field label="Oferta válida até">
+            <Field label={t('campo.ofertaValidaAte')}>
               <CampoData value={form.validadeAte} onChange={(validadeAte) => setForm({ ...form, validadeAte })} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Embarque de">
+              <Field label={t('campo.embarqueDe')}>
                 <CampoData value={form.embarqueDe} onChange={(embarqueDe) => setForm({ ...form, embarqueDe })} />
               </Field>
-              <Field label="Embarque até">
+              <Field label={t('campo.embarqueAte')}>
                 <CampoData value={form.embarqueAte} onChange={(embarqueAte) => setForm({ ...form, embarqueAte })} />
               </Field>
             </div>
