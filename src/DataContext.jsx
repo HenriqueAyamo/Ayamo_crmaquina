@@ -118,11 +118,27 @@ export function DataProvider({ children, usuarioAutenticado }) {
   const fretes = useCollection('fretes', fretesMock)
   const interacoes = useCollection('interacoes', interacoesMock)
 
-  // Quem está logado vem da sessão do servidor, não de uma escolha no cliente.
-  // O cadastro local complementa com o que a sessão não carrega (responsabilidades
-  // por divisão, diretor aprovador), casando pelo e-mail. O perfil que vale é
-  // sempre o do servidor — mudar o cadastro local não concede permissão.
+  // Sem autenticação ligada, o usuário é escolhido no seletor da barra superior
+  // e fica guardado no navegador — é só uma simulação de perfil, não credencial.
+  const [usuarioLogadoId, setUsuarioLogadoIdState] = useState(() => {
+    const salvo = carregarStorage('usuarioLogadoId', null)
+    return salvo ?? usuariosMock[0]?.id ?? 1
+  })
+
+  const setUsuarioLogadoId = useCallback((id) => {
+    setUsuarioLogadoIdState(id)
+    salvarStorage('usuarioLogadoId', id)
+  }, [])
+
+  // Com autenticação ligada, quem está logado vem da sessão do servidor, não de
+  // uma escolha no cliente. O cadastro local complementa com o que a sessão não
+  // carrega (responsabilidades por divisão, diretor aprovador), casando pelo
+  // e-mail. O perfil que vale é sempre o do servidor — mudar o cadastro local
+  // não concede permissão.
   const usuarioLogado = useMemo(() => {
+    if (!usuarioAutenticado) {
+      return usuarios.items.find((u) => u.id === usuarioLogadoId) ?? usuarios.items[0]
+    }
     const doCadastro = usuarios.items.find((u) => u.email?.toLowerCase() === usuarioAutenticado.email?.toLowerCase())
     return {
       ...(doCadastro ?? {}),
@@ -133,7 +149,7 @@ export function DataProvider({ children, usuarioAutenticado }) {
       situacao: 'Ativo',
       responsabilidades: doCadastro?.responsabilidades ?? [],
     }
-  }, [usuarios.items, usuarioAutenticado])
+  }, [usuarios.items, usuarioAutenticado, usuarioLogadoId])
 
   const getFamilia = useCallback((familiaId) => familias.items.find((f) => f.id === familiaId), [familias.items])
 
@@ -215,6 +231,7 @@ export function DataProvider({ children, usuarioAutenticado }) {
       propostas,
       documentos,
       usuarioLogado,
+      setUsuarioLogadoId,
       dadosAyamo,
       demandas,
       claims,
@@ -251,6 +268,7 @@ export function DataProvider({ children, usuarioAutenticado }) {
       propostas,
       documentos,
       usuarioLogado,
+      setUsuarioLogadoId,
       dadosAyamo,
       demandas,
       claims,

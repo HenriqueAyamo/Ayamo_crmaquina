@@ -21,6 +21,19 @@ import {
   usuarioDaRequisicao,
 } from './auth.js'
 
+// Chave geral da autenticação — precisa ficar igual a AUTH_HABILITADA em
+// src/auth/config.js.
+//
+// false = as rotas de IA voltam a ficar abertas, sem exigir sessão. Todo o
+//         código de login, sessão, bloqueio e auditoria continua aqui, apenas
+//         não é acionado.
+//
+// ATENÇÃO: com false, qualquer pessoa que descubra a URL do Worker pode chamar
+// /api/ia/extrair e consumir a chave da OpenAI, e ler o histórico de uso em
+// /api/ia/uso. O rate limit por IP continua valendo e é a única barreira.
+// Ver SEGURANCA.md.
+const AUTH_HABILITADA = false
+
 // Origens liberadas para chamar a API de outro host. Em produção o front é
 // servido pelo próprio Worker, então a lista cobre só o desenvolvimento local.
 const ORIGENS_PERMITIDAS = ['http://localhost:5173', 'http://127.0.0.1:5173']
@@ -293,8 +306,11 @@ async function registrarUso(db, { tipo, usuario, modelo, tokensInput, tokensOutp
 }
 
 async function handleExtrair(request, env, origin, usuario) {
-  // A extração custa dinheiro por chamada — limite por usuário, não por IP.
-  if (!(await dentroDoLimite(env.DB, `ia:${usuario.id}`, { max: 60, janelaMs: 60 * 60 * 1000 }))) {
+  // A extração custa dinheiro por chamada. Com sessão, o limite é por usuário;
+  // sem autenticação todos seriam o mesmo id, então cai para o IP — senão a
+  // primeira pessoa a usar consumiria a cota de todo mundo.
+  const chaveLimite = usuario.id ? `ia:${usuario.id}` : `ia:ip:${ip(request)}`
+  if (!(await dentroDoLimite(env.DB, chaveLimite, { max: 60, janelaMs: 60 * 60 * 1000 }))) {
     await auditar(env.DB, { usuarioId: usuario.id, email: usuario.email, acao: 'ia.rate_limit', ip: ip(request), sucesso: false })
     return json({ erro: 'Limite de extrações por hora atingido. Tente novamente mais tarde.' }, 429, origin)
   }
@@ -443,27 +459,32 @@ export default {
         return handleMe(request, env, origin)
       }
 
-      // Daqui pra baixo, exige sessão válida.
-      const usuario = await usuarioDaRequisicao(env.DB, request)
+      // Daqui pra baixo exigiria sessão válida. Com a autenticação desligada
+      // seguimos com um usuário anônimo, que só serve para nomear o log de uso.
+      const usuario = AUTH_HABILITADA
+        ? await usuarioDaRequisicao(env.DB, request)
+        : { id: 0, nome: 'Anônimo (login desativado)', email: null, perfil: 'Administrador' }
+
       if (!usuario) return json({ erro: 'Não autenticado.' }, 401, origin)
 
       if (url.pathname === '/api/auth/senha' && request.method === 'POST') {
+        if (!AUTH_HABILITADA) return json({ erro: 'Autenticação desativada.' }, 404, origin)
         return handleTrocarSenha(request, env, origin, usuario)
       }
 
       if (url.pathname === '/api/ia/extrair' && request.method === 'POST') {
-        if (!temPerfil(usuario, ['Comprador', 'Vendedor', 'Administrador'])) {
+        if (AUTH_HABILITADA && !temPerfil(usuario, ['Comprador', 'Vendedor', 'Administrador'])) {
           return json({ erro: 'Seu perfil não pode usar a extração por IA.' }, 403, origin)
         }
         return handleExtrair(request, env, origin, usuario)
       }
 
       if (url.pathname === '/api/ia/uso' && request.method === 'GET') {
-        if (!temPerfil(usuario, ['Administrador'])) {
+        if (AUTH_HABILITADA && !temPerfil(usuario, ['Administrador'])) {
           return json({ erro: 'Apenas Administradores podem ver o uso de IA.' }, 403, origin)
         }
         // Limpeza oportunista das sessões vencidas, fora do caminho da resposta.
-        ctx.waitUntil(limparSessoesExpiradas(env.DB))
+        if (AUTH_HABILITADA) ctx.waitUntil(limparSessoesExpiradas(env.DB))
         return handleUso(request, env, origin)
       }
 

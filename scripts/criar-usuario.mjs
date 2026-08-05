@@ -16,7 +16,9 @@ import { promisify } from 'node:util'
 
 const derivar = promisify(pbkdf2)
 
-const ITERACOES = 210_000
+// Precisa ser igual ao ITERACOES_PBKDF2 de worker/auth.js — ver o comentário lá
+// sobre o limite de CPU do plano gratuito do Workers.
+const ITERACOES = 12_000
 const TAMANHO_BYTES = 32
 const PERFIS = ['Comprador', 'Vendedor', 'Diretor', 'Financeiro', 'Controladoria', 'Administrador']
 

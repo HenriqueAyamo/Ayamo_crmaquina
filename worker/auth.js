@@ -1,7 +1,18 @@
 // Autenticação do CRM: hash de senha, sessão por cookie e autorização por perfil.
 // Tudo com a WebCrypto do runtime do Worker — sem dependência externa.
 
-const ITERACOES_PBKDF2 = 210_000
+// 12k iterações, não as 210k que o OWASP recomenda para PBKDF2-SHA256: o plano
+// gratuito do Workers dá 10ms de CPU por requisição e 210k custam ~43ms, o que
+// derrubava o login com erro 1101. Com 12k o cálculo fica em ~2,5ms.
+//
+// Isso é uma concessão consciente: se o banco vazar, quebrar as senhas por força
+// bruta fica mais barato para um atacante. O que sustenta a segurança aqui é o
+// resto — salt por usuário, bloqueio após 5 tentativas e rate limit por IP —
+// além da exigência de senha longa.
+//
+// A coluna "iteracoes" é por usuário: ao migrar para o plano pago, basta subir
+// esta constante e recriar as senhas; as antigas continuam validando enquanto isso.
+const ITERACOES_PBKDF2 = 12_000
 const TAMANHO_CHAVE_BITS = 256
 const DURACAO_SESSAO_MS = 12 * 60 * 60 * 1000 // 12h — turno de trabalho
 const NOME_COOKIE = 'ayamo_sessao'

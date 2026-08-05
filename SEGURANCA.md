@@ -1,5 +1,26 @@
 # Segurança e implantação
 
+> ## ⚠️ A AUTENTICAÇÃO ESTÁ DESLIGADA
+>
+> `AUTH_HABILITADA = false` em `src/auth/config.js` **e** em `worker/index.js`.
+> Todo o código descrito abaixo existe e funciona — login, sessão, bloqueio por
+> tentativas, auditoria, autorização por perfil — mas **não está em vigor**.
+>
+> Enquanto estiver assim:
+>
+> - Qualquer pessoa com o link abre o sistema, sem senha.
+> - O seletor de usuário na barra superior voltou; trocar de perfil ali é livre
+>   e não é credencial nenhuma.
+> - **`/api/ia/extrair` e `/api/ia/uso` estão abertas na internet.** Quem
+>   descobrir a URL do Worker pode consumir a chave da OpenAI e ler o histórico
+>   de uso. A única barreira é o rate limit por IP (60 extrações/hora).
+> - O usuário criado no banco continua lá e não é usado por ninguém.
+>
+> **Para reativar:** troque as duas constantes para `true`, garanta que existe
+> um usuário no banco (`node scripts/criar-usuario.mjs ...`), e publique. As
+> duas precisam mudar juntas — só o frontend faz o login falhar sempre, só o
+> backend tranca o sistema inteiro.
+
 ## O que mudou
 
 O sistema deixou de ser um app estático sem autenticação. Agora existe login de
@@ -17,10 +38,25 @@ verdade, sessão no servidor e autorização por perfil.
 
 ## Como as senhas são guardadas
 
-PBKDF2-SHA256, 210.000 iterações, salt de 16 bytes por usuário, saída de 256
+PBKDF2-SHA256, **12.000 iterações**, salt de 16 bytes por usuário, saída de 256
 bits. A senha em si nunca é gravada nem trafega para lugar nenhum além do
 `POST /api/auth/login`. A comparação do hash é feita em tempo constante para não
 vazar, pelo tempo de resposta, quantos caracteres bateram.
+
+> **Concessão consciente.** O OWASP recomenda 210.000 iterações para
+> PBKDF2-SHA256. Esse valor custa ~43 ms de CPU e o plano gratuito do Cloudflare
+> Workers dá 10 ms por requisição — com 210k o login simplesmente falhava com
+> erro 1101. Com 12k o cálculo cai para ~2,5 ms e cabe.
+>
+> O custo disso é real: se o banco vazar, quebrar as senhas por força bruta fica
+> mais barato para um atacante. O que segura a barra aqui é o resto do conjunto —
+> salt por usuário, bloqueio após 5 tentativas, rate limit por IP e exigência de
+> senha longa. Não é equivalente a 210k, é uma troca aceita para caber no plano.
+>
+> A coluna `iteracoes` é por usuário justamente para permitir voltar atrás: ao
+> migrar para o Workers Paid, suba `ITERACOES_PBKDF2` em `worker/auth.js` e
+> `ITERACOES` em `scripts/criar-usuario.mjs`, depois recrie as senhas. As antigas
+> continuam validando enquanto a migração não termina.
 
 O cookie de sessão é `HttpOnly`, `Secure` e `SameSite=Strict` — o JavaScript da
 página não consegue lê-lo, então um XSS não rouba a sessão. No banco fica só o

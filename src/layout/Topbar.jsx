@@ -1,13 +1,15 @@
 import { LogOut } from 'lucide-react'
 import { useData } from '../DataContext.jsx'
 import { useAuth } from '../auth/AuthContext.jsx'
+import { AUTH_HABILITADA } from '../auth/config.js'
 import ThemeToggle from '../components/ThemeToggle.jsx'
 import { IDIOMAS, useI18n } from '../i18n/I18nContext.jsx'
 
 export default function Topbar() {
-  const { usuarioLogado } = useData()
+  const { usuarios, usuarioLogado, setUsuarioLogadoId } = useData()
   const { sair } = useAuth()
   const { idioma, setIdioma, t } = useI18n()
+  const opcoes = usuarios.items.filter((u) => u.situacao === 'Ativo' || u.id === usuarioLogado.id)
 
   const iniciais = usuarioLogado.nome
     .split(' ')
@@ -53,16 +55,31 @@ export default function Topbar() {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={sair}
-        title={t('topbar.sair')}
-        aria-label={t('topbar.sair')}
-        className="flex items-center gap-1.5 rounded-md border border-ayamo-border px-2.5 py-1.5 text-xs font-medium text-ayamo-text-mut transition-colors hover:border-ayamo-danger/40 hover:bg-ayamo-danger/10 hover:text-ayamo-danger"
-      >
-        <LogOut size={14} />
-        {t('topbar.sair')}
-      </button>
+      {AUTH_HABILITADA ? (
+        <button
+          type="button"
+          onClick={sair}
+          title={t('topbar.sair')}
+          aria-label={t('topbar.sair')}
+          className="flex items-center gap-1.5 rounded-md border border-ayamo-border px-2.5 py-1.5 text-xs font-medium text-ayamo-text-mut transition-colors hover:border-ayamo-danger/40 hover:bg-ayamo-danger/10 hover:text-ayamo-danger"
+        >
+          <LogOut size={14} />
+          {t('topbar.sair')}
+        </button>
+      ) : (
+        <select
+          className="rounded-md border border-ayamo-border bg-ayamo-surface px-2.5 py-1.5 text-xs text-ayamo-text-mut outline-none transition-colors hover:border-ayamo-primary/40 focus:border-ayamo-primary"
+          value={usuarioLogado.id}
+          onChange={(e) => setUsuarioLogadoId(Number(e.target.value))}
+          title={t('topbar.entrarComo')}
+        >
+          {opcoes.map((u) => (
+            <option key={u.id} value={u.id}>
+              {u.nome} — {u.perfil}
+            </option>
+          ))}
+        </select>
+      )}
     </header>
   )
 }

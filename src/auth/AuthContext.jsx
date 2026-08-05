@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { AUTH_HABILITADA } from './config.js'
 
 // Sessão do usuário. O token vive num cookie HttpOnly — o JavaScript não o
 // enxerga, então um XSS não consegue roubar a sessão. Aqui guardamos só os
@@ -8,11 +9,26 @@ const AuthContext = createContext(null)
 const BASE_API = import.meta.env.VITE_API_URL ?? ''
 
 async function chamar(caminho, opcoes = {}) {
-  const resposta = await fetch(`${BASE_API}${caminho}`, {
-    ...opcoes,
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...opcoes.headers },
-  })
+  let resposta
+  try {
+    resposta = await fetch(`${BASE_API}${caminho}`, {
+      ...opcoes,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...opcoes.headers },
+    })
+  } catch {
+    throw new Error('Não foi possível alcançar o servidor. Verifique se o backend está no ar.')
+  }
+
+  // Quando o backend não está atendendo, quem responde é o servidor de arquivos
+  // estáticos — devolvendo o index.html. Sem esta checagem o erro apareceria como
+  // um genérico "falha na comunicação", escondendo a causa real.
+  const tipo = resposta.headers.get('Content-Type') ?? ''
+  if (!tipo.includes('application/json')) {
+    throw new Error(
+      `O endereço ${caminho} não respondeu como API (recebido: ${tipo || 'sem tipo'}). O backend provavelmente não está rodando.`,
+    )
+  }
 
   let dados = null
   try {
@@ -22,7 +38,7 @@ async function chamar(caminho, opcoes = {}) {
   }
 
   if (!resposta.ok) {
-    const erro = new Error(dados?.erro ?? 'Falha na comunicação com o servidor.')
+    const erro = new Error(dados?.erro ?? `Erro ${resposta.status} do servidor.`)
     erro.status = resposta.status
     throw erro
   }
@@ -34,7 +50,12 @@ export function AuthProvider({ children }) {
   const [carregando, setCarregando] = useState(true)
 
   // Ao abrir o app, pergunta ao servidor se o cookie ainda vale.
+  // Com a autenticação desligada não há backend de sessão para consultar.
   useEffect(() => {
+    if (!AUTH_HABILITADA) {
+      setCarregando(false)
+      return undefined
+    }
     let cancelado = false
     chamar('/api/auth/me')
       .then((dados) => {
