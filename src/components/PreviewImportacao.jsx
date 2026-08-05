@@ -29,6 +29,15 @@ export default function PreviewImportacao({ linhas, validas, onConfirmar, onCanc
                 <>
                   <p className="text-sm font-medium text-ayamo-text">{linha.titulo}</p>
                   <p className="text-xs text-ayamo-text-mut">{linha.detalhe}</p>
+                  {linha.aCriar?.length > 0 && (
+                    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-ayamo-warning">
+                      <AlertCircle size={12} className="flex-shrink-0" />
+                      Será cadastrado:{' '}
+                      {linha.aCriar
+                        .map((item) => `${item.tipo === 'produto' ? 'produto' : 'fornecedor'} "${item.nome}"`)
+                        .join(' e ')}
+                    </p>
+                  )}
                   {linha.campos?.length > 0 && (
                     <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 rounded bg-ayamo-bg p-2 sm:grid-cols-3">
                       {linha.campos.map((campo) => (

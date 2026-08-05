@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useData } from '../../DataContext.jsx'
 import { acharProdutoPorNome, acharFornecedorPorNome } from '../../utils/matchCadastro.js'
-import { lerLinhasExcel } from '../../utils/importarExcel.js'
+import { lerLinhasExcel, colunasDaPlanilha } from '../../utils/importarExcel.js'
 import { formatarPreco } from '../../utils/formato.js'
 import { extrairOfertaIA, arquivoParaBase64 } from '../../utils/iaImport.js'
 import UploadPlanilha from '../../components/UploadPlanilha.jsx'
@@ -28,7 +28,8 @@ const ALIASES = {
   prazoPagamento: ['payment term', 'prazo de pagamento', 'prazo pagamento'],
   data: ['offer date', 'data'],
   trader: ['purchase trader', 'trader', 'comprador'],
-  comentarios: ['comments', 'comentarios', 'comentários', 'business', 'market'],
+  familia: ['business', 'familia', 'família', 'categoria'],
+  comentarios: ['comments', 'comentarios', 'comentários', 'market'],
 }
 
 const CAMPOS_MAPEAVEIS = [
@@ -46,13 +47,40 @@ const CAMPOS_MAPEAVEIS = [
   { chave: 'prazoPagamento', label: 'Prazo de pagamento', obrigatorio: false },
   { chave: 'data', label: 'Data da oferta', obrigatorio: false },
   { chave: 'trader', label: 'Trader / Comprador', obrigatorio: false },
+  { chave: 'familia', label: 'Família / Business', obrigatorio: false },
   { chave: 'comentarios', label: 'Comentários', obrigatorio: false },
 ]
 
+// Números vindos de planilha chegam como número (ótimo) ou como texto em formato
+// imprevisível: "USD 2.100", "2,100", "1.234,50". Tratar o ponto sempre como
+// decimal transformava 2.100 em 2,1 — erro de mil vezes no preço.
 function primeiroNumero(bruto) {
-  const texto = String(bruto ?? '').replace(',', '.')
-  const match = texto.match(/[\d.]+/)
-  return match ? Number(match[0]) : NaN
+  if (typeof bruto === 'number') return bruto
+  const texto = String(bruto ?? '').trim()
+  if (!texto) return NaN
+
+  const match = texto.match(/[\d.,]+/)
+  if (!match) return NaN
+  let numero = match[0]
+
+  const temPonto = numero.includes('.')
+  const temVirgula = numero.includes(',')
+
+  if (temPonto && temVirgula) {
+    // O separador decimal é o que aparece por último: "1.234,50" vs "1,234.50".
+    const decimal = numero.lastIndexOf(',') > numero.lastIndexOf('.') ? ',' : '.'
+    const milhar = decimal === ',' ? '.' : ','
+    numero = numero.split(milhar).join('').replace(decimal, '.')
+  } else if (temPonto || temVirgula) {
+    const sep = temPonto ? '.' : ','
+    const partes = numero.split(sep)
+    // Grupos de exatamente 3 dígitos depois do separador = milhar ("2.100").
+    const ehMilhar = partes.length > 1 && partes.slice(1).every((p) => p.length === 3)
+    numero = ehMilhar ? partes.join('') : numero.replace(sep, '.')
+  }
+
+  const valor = Number(numero)
+  return Number.isNaN(valor) ? NaN : valor
 }
 
 function separarPeriodo(bruto) {
@@ -77,7 +105,7 @@ function paraDataISO(bruto) {
 }
 
 export default function ImportarPlanilha({ onImportado }) {
-  const { ofertas, produtos, empresas, usuarios, usuarioLogado } = useData()
+  const { ofertas, produtos, empresas, familias, usuarios, usuarioLogado } = useData()
   const [preview, setPreview] = useState(null)
   const [resumoFinal, setResumoFinal] = useState(null)
   const [linhasBrutas, setLinhasBrutas] = useState(null)
@@ -86,6 +114,9 @@ export default function ImportarPlanilha({ onImportado }) {
   const [textoIA, setTextoIA] = useState('')
   const [carregandoIA, setCarregandoIA] = useState(false)
   const [erroIA, setErroIA] = useState(null)
+  // Cadastrar na hora o que não existe. Fica desligado por padrão: ligar cria
+  // registros de verdade no sistema, e isso precisa ser uma escolha explícita.
+  const [cadastrarFaltantes, setCadastrarFaltantes] = useState(false)
 
   function acharProduto(nomeColuna) {
     return acharProdutoPorNome(nomeColuna, produtos.items)
@@ -117,17 +148,44 @@ export default function ImportarPlanilha({ onImportado }) {
     const quantidade = primeiroNumero(bruto.quantidade)
     const moeda = String(bruto.moeda ?? '').trim().toUpperCase()
 
+    // Todos os problemas da linha de uma vez. Antes só o primeiro era mostrado,
+    // então corrigir um revelava o seguinte e a importação virava tentativa e erro.
+    const problemas = []
+
+    // Nome vazio nunca dá para resolver sozinho — não há o que cadastrar.
+    const nomeProduto = String(bruto.produtoNome ?? '').trim()
+    const nomeFornecedor = String(bruto.fornecedorNome ?? '').trim()
+    const aCriar = []
+
     if (!produto) {
-      return { numeroLinha, status: 'erro', mensagem: `Produto "${bruto.produtoNome ?? ''}" não encontrado (nem por nome parecido) no cadastro` }
+      if (!nomeProduto) {
+        problemas.push('Produto vazio nesta linha — confira se a coluna certa está mapeada em "Produto"')
+      } else if (cadastrarFaltantes) {
+        aCriar.push({ tipo: 'produto', nome: nomeProduto, familia: bruto.familia })
+      } else {
+        problemas.push(`Produto "${nomeProduto}" não encontrado no cadastro (nem por nome parecido)`)
+      }
     }
     if (!fornecedor) {
-      return { numeroLinha, status: 'erro', mensagem: `Fornecedor "${bruto.fornecedorNome ?? ''}" não encontrado` }
+      if (!nomeFornecedor) {
+        problemas.push('Fornecedor vazio nesta linha — confira o mapeamento da coluna')
+      } else if (cadastrarFaltantes) {
+        aCriar.push({ tipo: 'fornecedor', nome: nomeFornecedor })
+      } else {
+        problemas.push(`Fornecedor "${nomeFornecedor}" não está cadastrado`)
+      }
     }
     if (!valor || Number.isNaN(valor)) {
-      return { numeroLinha, status: 'erro', mensagem: 'Preço inválido' }
+      problemas.push(`Preço inválido${bruto.valor ? ` (lido: "${bruto.valor}")` : ' — coluna vazia ou não mapeada'}`)
     }
     if (!quantidade || Number.isNaN(quantidade)) {
-      return { numeroLinha, status: 'erro', mensagem: 'Quantidade inválida' }
+      problemas.push(
+        `Quantidade inválida${bruto.quantidade ? ` (lido: "${bruto.quantidade}")` : ' — coluna vazia ou não mapeada'}`,
+      )
+    }
+
+    if (problemas.length > 0) {
+      return { numeroLinha, status: 'erro', mensagem: problemas.join(' · '), problemas }
     }
 
     const trader = acharTrader(bruto.traderNome)
@@ -141,8 +199,10 @@ export default function ImportarPlanilha({ onImportado }) {
 
     const dadosCriacao = {
       tipoRegistro: 'Position',
-      produtoId: produto.id,
-      fornecedorId: fornecedor.id,
+      // Pode ser null quando o registro ainda vai ser criado na confirmação —
+      // aí o id real é preenchido em confirmarImportacao.
+      produtoId: produto?.id ?? null,
+      fornecedorId: fornecedor?.id ?? null,
       precoCusto: { valor, moeda: moeda || 'USD', unidade: 'ton' },
       quantidade,
       quantidadeOriginal: quantidade,
@@ -163,7 +223,8 @@ export default function ImportarPlanilha({ onImportado }) {
     return {
       numeroLinha,
       status: 'ok',
-      titulo: `${produto.nome} — ${fornecedor.nome}`,
+      aCriar,
+      titulo: `${produto?.nome ?? nomeProduto} — ${fornecedor?.nome ?? nomeFornecedor}`,
       detalhe: `${formatarPreco(valor, moeda || 'USD', 'ton')} · ${quantidade.toLocaleString('pt-BR')} ton · Trader: ${trader.nome}`,
       campos: [
         { label: 'Ref.', valor: bruto.ref ? String(bruto.ref) : '' },
@@ -185,7 +246,7 @@ export default function ImportarPlanilha({ onImportado }) {
       setResumoFinal({ total: 0, importadas: 0, erros: ['A planilha não tem nenhuma linha de dados.'] })
       return
     }
-    const colunas = Object.keys(linhas[0])
+    const colunas = colunasDaPlanilha(linhas)
     const sugestao = {}
     CAMPOS_MAPEAVEIS.forEach(({ chave }) => {
       const aliasesCampo = ALIASES[chave] ?? []
@@ -215,6 +276,7 @@ export default function ImportarPlanilha({ onImportado }) {
         validade: valorDaColuna('validade'),
         prazoPagamento: valorDaColuna('prazoPagamento'),
         traderNome: valorDaColuna('trader'),
+        familia: valorDaColuna('familia'),
         comentarios: valorDaColuna('comentarios'),
         data: valorDaColuna('data'),
       })
@@ -291,22 +353,100 @@ export default function ImportarPlanilha({ onImportado }) {
     }
   }
 
+  // Cria os cadastros que faltavam, uma vez por nome — 40 linhas do mesmo
+  // fornecedor viram um registro só. Tudo marcado com revisarCadastro para dar
+  // pra achar depois e completar os dados que a planilha não traz.
+  function criarCadastrosFaltantes() {
+    const produtosCriados = new Map()
+    const fornecedoresCriados = new Map()
+
+    preview.forEach((linha) => {
+      ;(linha.aCriar ?? []).forEach((item) => {
+        const chave = item.nome.toLowerCase()
+
+        if (item.tipo === 'produto' && !produtosCriados.has(chave)) {
+          // A coluna "Business" da planilha (Chicken, Pork...) casa com o cadastro
+          // de famílias; sem ela o produto cai na primeira família disponível.
+          const nomeFamilia = String(item.familia ?? '').trim().toLowerCase()
+          const familia =
+            familias.items.find((f) => f.nome.toLowerCase() === nomeFamilia) ??
+            familias.items.find((f) => f.situacao === 'Ativo') ??
+            familias.items[0]
+
+          produtosCriados.set(
+            chave,
+            produtos.criar({
+              nome: item.nome,
+              apelido: item.nome,
+              familiaId: familia?.id ?? null,
+              situacao: 'Ativo',
+              revisarCadastro: true,
+            }),
+          )
+        }
+
+        if (item.tipo === 'fornecedor' && !fornecedoresCriados.has(chave)) {
+          fornecedoresCriados.set(
+            chave,
+            empresas.criar({
+              nome: item.nome,
+              tipo: 'Fornecedor',
+              pais: '',
+              responsavelAyamoId: usuarioLogado.id,
+              moedaPadrao: 'USD',
+              limiteCredito: 0,
+              creditoUtilizado: 0,
+              situacao: 'Ativo',
+              produtosCapacidade: [],
+              qualificacoesPaises: {},
+              revisarCadastro: true,
+            }),
+          )
+        }
+      })
+    })
+
+    return { produtosCriados, fornecedoresCriados }
+  }
+
   function confirmarImportacao() {
     const jaImportadas = ofertas.items.filter((o) => o.codigo.startsWith('OF-IMP-')).length
     let importadas = 0
     const erros = []
+
+    const { produtosCriados, fornecedoresCriados } = criarCadastrosFaltantes()
 
     preview.forEach((linha) => {
       if (linha.status !== 'ok') {
         erros.push(`Linha ${linha.numeroLinha}: ${linha.mensagem}`)
         return
       }
+
+      // Resolve os ids que ficaram pendentes até os cadastros existirem.
+      const dados = { ...linha.dadosCriacao }
+      ;(linha.aCriar ?? []).forEach((item) => {
+        const chave = item.nome.toLowerCase()
+        if (item.tipo === 'produto') dados.produtoId = produtosCriados.get(chave)?.id ?? dados.produtoId
+        if (item.tipo === 'fornecedor') dados.fornecedorId = fornecedoresCriados.get(chave)?.id ?? dados.fornecedorId
+      })
+
+      if (!dados.produtoId || !dados.fornecedorId) {
+        erros.push(`Linha ${linha.numeroLinha}: não foi possível vincular produto ou fornecedor.`)
+        return
+      }
+
       const codigo = `OF-IMP-${jaImportadas + importadas + 1}`
       importadas += 1
-      ofertas.criar({ codigo, codigoBase: codigo, versao: 0, ...linha.dadosCriacao })
+      ofertas.criar({ codigo, codigoBase: codigo, versao: 0, ...dados })
     })
 
-    setResumoFinal({ total: preview.length, importadas, erros })
+    setResumoFinal({
+      total: preview.length,
+      importadas,
+      erros,
+      produtosCriados: produtosCriados.size,
+      fornecedoresCriados: fornecedoresCriados.size,
+    })
     setPreview(null)
     onImportado?.()
   }
@@ -315,6 +455,22 @@ export default function ImportarPlanilha({ onImportado }) {
 
   return (
     <div className="flex flex-col gap-3">
+      <label className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-dashed border-ayamo-border bg-ayamo-bg/50 px-4 py-3">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[var(--ayamo-primary)]"
+          checked={cadastrarFaltantes}
+          onChange={(e) => setCadastrarFaltantes(e.target.checked)}
+        />
+        <span className="text-sm text-ayamo-text">
+          Cadastrar automaticamente produtos e fornecedores que não existirem
+          <span className="mt-0.5 block text-xs text-ayamo-text-mut">
+            Útil para testar importações sem preparar o cadastro antes. Os registros criados ficam marcados para
+            revisão e vêm só com o nome — país, moeda, limite de crédito e família precisam ser conferidos depois.
+          </span>
+        </span>
+      </label>
+
       <UploadPlanilha
         onArquivo={(arquivo) => lerLinhasExcel(arquivo).then(iniciarMapeamento)}
         hint={
@@ -323,7 +479,13 @@ export default function ImportarPlanilha({ onImportado }) {
             planilha usar outros nomes de coluna, tudo bem — o próximo passo deixa você confirmar o mapeamento.
           </>
         }
-        mensagemResumo={resumoFinal && `${resumoFinal.importadas} de ${resumoFinal.total} linha(s) importadas com sucesso.`}
+        mensagemResumo={
+          resumoFinal &&
+          `${resumoFinal.importadas} de ${resumoFinal.total} linha(s) importadas.` +
+            (resumoFinal.fornecedoresCriados || resumoFinal.produtosCriados
+              ? ` Cadastrados automaticamente: ${resumoFinal.produtosCriados} produto(s) e ${resumoFinal.fornecedoresCriados} fornecedor(es) — revise em Cadastros e Empresas.`
+              : '')
+        }
         erros={resumoFinal?.erros}
       />
 
